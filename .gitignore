@@ -1,0 +1,13 @@
+# macOS/Linux cruft
+.DS_Store
+Thumbs.db
+*~
+.nfs*
+
+# backups
+.config_backup/
+
+# editor
+*.swp
+.idea/
+.vscode/

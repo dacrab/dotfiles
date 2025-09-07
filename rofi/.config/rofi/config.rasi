@@ -1,0 +1,103 @@
+/* Configuration */
+configuration {
+    modi: "drun";
+    font: "MesloLGL Nerd Font 10";
+    show-icons: true;
+}
+
+/* Global styles */
+* {
+    background-color: transparent;
+    text-color: #d8dee9;
+}
+
+/* Main window */
+window {
+    background-color: #2e3440;
+    border: 1px;
+    border-color: #4c566a;
+    border-radius: 10px;
+    width: 480px;
+    padding: 12px;
+}
+
+/* Layout containers */
+mainbox {
+    background-color: transparent;
+    children: [ inputbar, listview ];
+    spacing: 8px;
+}
+
+/* Input area */
+inputbar {
+    background-color: #3b4252;
+    text-color: #d8dee9;
+    border-radius: 6px;
+    padding: 10px;
+    children: [ entry ];
+}
+
+entry {
+    background-color: transparent;
+    text-color: #d8dee9;
+    placeholder: "Search applications...";
+    placeholder-color: #616e88;
+}
+
+/* List view */
+listview {
+    background-color: transparent;
+    lines: 8;
+    columns: 1;
+    spacing: 0px;
+    scrollbar: true;
+    scrollbar-width: 4px;
+    border: 0;
+}
+
+/* Scrollbar */
+scrollbar {
+    background-color: #4c566a;
+    handle-color: #5e81ac;
+    border-radius: 2px;
+    handle-width: 4px;
+}
+
+/* List elements */
+element {
+    background-color: transparent;
+    text-color: #d8dee9;
+    padding: 2px 8px;
+    orientation: horizontal;
+    children: [ element-icon, element-text ];
+    spacing: 8px;
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color: #d8dee9;
+}
+
+element alternate.normal {
+    background-color: transparent;
+    text-color: #d8dee9;
+}
+
+element selected.normal {
+    background-color: #5e81ac;
+    text-color: #2e3440;
+    border-radius: 6px;
+}
+
+/* Element components */
+element-icon {
+    background-color: transparent;
+    text-color: inherit;
+    size: 24px;
+}
+
+element-text {
+    background-color: transparent;
+    text-color: inherit;
+    vertical-align: 0.5;
+}
