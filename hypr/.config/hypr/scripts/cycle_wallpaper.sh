@@ -4,7 +4,7 @@
 WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord-background"
 
 # File to store the last wallpaper
-LAST_WP_FILE="$HOME/.config/hypr/last_wallpaper"
+LAST_WP_FILE="$HOME/.config/hypr/configs/last_wallpaper"
 
 # Get list of image files
 mapfile -t WALLPAPERS < <(find "$WALLPAPER_DIR" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.webp" \) | sort)

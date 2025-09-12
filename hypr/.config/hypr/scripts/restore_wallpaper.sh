@@ -26,7 +26,7 @@ if ! wait_for_hyprpaper; then
 fi
 
 # File to store the last wallpaper
-LAST_WP_FILE="$HOME/.config/hypr/last_wallpaper"
+LAST_WP_FILE="$HOME/.config/hypr/configs/last_wallpaper"
 
 # Check if last wallpaper file exists
 if [ -f "$LAST_WP_FILE" ]; then
