@@ -106,10 +106,10 @@ hyprctl dispatch exit
 - Mouse sensitivity and behavior
 - Touchpad settings and gestures
 
-### `gestures.conf`
-- Touchpad gesture recognition
-- Workspace switching gestures
-- Scroll and navigation gestures
+### `gestures.conf.disabled`
+- **Note**: Gestures configuration is disabled in Hyprland 0.51.0
+- Touchpad gestures are not supported in this version
+- File renamed to indicate it's not currently used
 
 ### `devices.conf`
 - Specific device configurations
