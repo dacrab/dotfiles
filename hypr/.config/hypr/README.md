@@ -22,9 +22,8 @@ hypr/.config/hypr/
 │   ├── hyprpaper.conf     # Wallpaper configuration
 │   └── last_wallpaper     # Current wallpaper state file
 └── scripts/               # Utility scripts
-    ├── cycle_wallpaper.sh # Cycle through wallpapers
-    ├── restore_wallpaper.sh # Restore last wallpaper on startup
-    └── toggle-edp.sh      # Toggle external display on/off
+    ├── wallpaper          # Wallpaper management (cycle, restore, list, etc.)
+    └── display            # Display management (toggle, status, list, etc.)
 ```
 
 ## 🎯 Benefits of This Organization
@@ -131,20 +130,39 @@ hyprctl dispatch exit
 
 ## 🚀 Scripts
 
-### `cycle_wallpaper.sh`
-- Cycles through wallpapers in the configured directory
-- Bound to `Super + W`
+### `wallpaper` - Wallpaper Management
+A unified script for all wallpaper operations:
+
+**Commands:**
+- `wallpaper cycle` - Cycle to the next wallpaper (bound to `Super + W`)
+- `wallpaper restore` - Restore last wallpaper on startup
+- `wallpaper list` - List all available wallpapers
+- `wallpaper current` - Show current wallpaper
+- `wallpaper set <path>` - Set a specific wallpaper
+
+**Features:**
+- Colorized output with status indicators
+- Error handling and retry logic
+- Support for multiple image formats (PNG, JPG, WEBP)
 - Maintains wallpaper state across sessions
+- Automatic hyprpaper initialization
 
-### `restore_wallpaper.sh`
-- Restores the last used wallpaper on startup
-- Runs automatically when Hyprland starts
-- Handles hyprpaper initialization
+### `display` - Display Management
+A unified script for all display operations:
 
-### `toggle-edp.sh`
-- Toggles the built-in display (eDP-1) on/off
-- Bound to `Super + P`
-- Useful for external monitor setups
+**Commands:**
+- `display toggle` - Toggle eDP-1 display on/off (bound to `Super + P`)
+- `display status` - Show current display status
+- `display list` - List all available displays
+- `display enable <name>` - Enable a specific display
+- `display disable <name>` - Disable a specific display
+
+**Features:**
+- Persistent state management
+- Automatic config file updates
+- Colorized output with status indicators
+- Support for multiple displays
+- Backup creation for safety
 
 ## 🔧 Customization
 
