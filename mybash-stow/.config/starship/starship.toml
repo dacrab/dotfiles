@@ -1,13 +1,13 @@
 format = """
-[ ](#43474E)\
+[ ](#44474E)\
 $python$username\
-[ ](bg:#8D9199 fg:#43474E)\
+[ ](bg:#8E9099 fg:#44474E)\
 $directory\
-[ ](fg:#8D9199 bg:#E1E2E8)\
+[ ](fg:#8E9099 bg:#E2E2E9)\
 $git_branch$git_status\
-[ ](fg:#E1E2E8 bg:#A1C9FD)\
+[ ](fg:#E2E2E9 bg:#ABC7FF)\
 $time\
-[ ](fg:#A1C9FD)\
+[ ](fg:#ABC7FF)\
 """
 command_timeout = 1200
 add_newline = false
@@ -15,12 +15,12 @@ add_newline = false
 # You can also replace your username with a neat symbol like  to save some space
 [username]
 show_always = true
-style_user = "bg:#43474E"
-style_root = "bg:#43474E"
+style_user = "bg:#44474E"
+style_root = "bg:#44474E"
 format = '[$user ]($style)'
 
 [directory]
-style = "bg:#8D9199"
+style = "bg:#8E9099"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -40,19 +40,19 @@ truncation_symbol = "…/"
 
 [git_branch]
 symbol = ""
-style = "bg:#E1E2E8"
+style = "bg:#E2E2E9"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bg:#E1E2E8"
+style = "bg:#E2E2E9"
 format = '[$all_status$ahead_behind ]($style)'
 
 [python]
-style = "bg:#43474E"
+style = "bg:#44474E"
 format = '[(\($virtualenv\) )]($style)'
 
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#A1C9FD"
+style = "bg:#ABC7FF"
 format = '[ $time ]($style)'
