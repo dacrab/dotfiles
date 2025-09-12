@@ -1,0 +1,3 @@
+[submodule "mybash"]
+	path = mybash
+	url = https://github.com/dacrab/mybash.git

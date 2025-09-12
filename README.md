@@ -12,6 +12,7 @@ This repository contains my personal dotfiles for a Linux desktop environment, f
 - **🖼️ Hyprland** - Dynamic tiling Wayland compositor
 - **🎛️ Hyprpanel** - Modern panel for Hyprland
 - **🔍 Rofi** - Application launcher and window switcher
+- **🐚 MyBash** - Custom bash configuration with Starship prompt
 
 All configurations are managed using [GNU Stow](https://www.gnu.org/software/stow/) for clean symlink management.
 
@@ -32,7 +33,7 @@ All configurations are managed using [GNU Stow](https://www.gnu.org/software/sto
 
 2. **Install all configurations:**
    ```bash
-   stow hypr hyprpanel rofi
+   stow hypr hyprpanel rofi mybash-stow
    ```
 
 3. **Or install specific packages:**
@@ -40,6 +41,7 @@ All configurations are managed using [GNU Stow](https://www.gnu.org/software/sto
    stow hypr        # Hyprland configuration
    stow hyprpanel   # Hyprpanel configuration
    stow rofi        # Rofi configuration
+   stow mybash-stow # Bash configuration with Starship
    ```
 
 ## 📁 Structure
@@ -66,6 +68,13 @@ dotfiles/
 │   └── .config/
 │       └── rofi/
 │           └── config.rasi        # Rofi theme and configuration
+├── mybash-stow/
+│   ├── .bashrc                    # Custom bash configuration
+│   └── .config/
+│       └── starship/
+│           └── starship.toml      # Starship prompt configuration
+├── mybash/                        # Git submodule (original mybash repo)
+│   └── [original mybash files]
 └── README.md
 ```
 
@@ -74,10 +83,11 @@ dotfiles/
 ### Install Packages
 ```bash
 # Install all packages
-stow hypr hyprpanel rofi
+stow hypr hyprpanel rofi mybash-stow
 
 # Install specific package
 stow hypr
+stow mybash-stow
 ```
 
 ### Uninstall Packages
@@ -86,13 +96,13 @@ stow hypr
 stow -D hypr
 
 # Uninstall all packages
-stow -D hypr hyprpanel rofi
+stow -D hypr hyprpanel rofi mybash-stow
 ```
 
 ### Reinstall Packages
 ```bash
 # Reinstall (useful after updates)
-stow -R hypr hyprpanel rofi
+stow -R hypr hyprpanel rofi mybash-stow
 ```
 
 ### Dry Run (Preview Changes)
