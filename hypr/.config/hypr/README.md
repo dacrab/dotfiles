@@ -146,6 +146,8 @@ A unified script for all wallpaper operations:
 - Support for multiple image formats (PNG, JPG, WEBP)
 - Maintains wallpaper state across sessions
 - Automatic hyprpaper initialization
+- **Material You theming** - Automatically generates colors from wallpapers
+- **Dynamic color updates** - Hyprland colors change with each wallpaper
 
 ### `display` - Display Management
 A unified script for all display operations:
@@ -163,6 +165,33 @@ A unified script for all display operations:
 - Colorized output with status indicators
 - Support for multiple displays
 - Backup creation for safety
+
+## 🎨 Material You Theming
+
+This configuration includes **Material You theming** powered by [matugen](https://github.com/InioX/matugen):
+
+### ✨ Features:
+- **Dynamic colors** generated from your current wallpaper
+- **Automatic theme updates** when cycling wallpapers
+- **Material Design 3** color schemes
+- **Seamless integration** with Hyprland
+
+### 🔧 How It Works:
+1. **Wallpaper changes** trigger matugen color generation
+2. **Colors are extracted** from the wallpaper using Material You algorithms
+3. **Hyprland colors.conf** is automatically updated
+4. **Configuration reloads** to apply new colors instantly
+
+### 🎯 Color Sources:
+- **Active borders** - Primary accent color from wallpaper
+- **Inactive borders** - Muted variant for inactive windows
+- **Background** - Dark surface color
+- **Text colors** - High contrast text for readability
+
+### 🛠️ Customization:
+- **Color scheme type**: Edit wallpaper script to change `--type` (default: `scheme-tonal-spot`)
+- **Theme mode**: Change `--mode` between `dark` and `light`
+- **Templates**: Modify `~/.config/matugen/templates/hyprland/colors.conf`
 
 ## 🔧 Customization
 

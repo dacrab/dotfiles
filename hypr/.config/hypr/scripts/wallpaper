@@ -95,6 +95,8 @@ set_wallpaper() {
     
     while [ $attempts -lt $max_attempts ]; do
         if hyprctl hyprpaper wallpaper "$monitor,$wallpaper_path" >/dev/null 2>&1; then
+            # Generate Material You colors from the wallpaper
+            generate_colors "$wallpaper_path"
             return 0
         fi
         attempts=$((attempts + 1))
@@ -103,6 +105,27 @@ set_wallpaper() {
     
     print_error "Failed to set wallpaper after $max_attempts attempts"
     return 1
+}
+
+# Generate Material You colors from wallpaper
+generate_colors() {
+    local wallpaper_path="$1"
+    
+    print_info "Generating Material You colors from wallpaper..."
+    
+    # Generate colors using matugen
+    if matugen image "$wallpaper_path" --mode dark --type scheme-tonal-spot >/dev/null 2>&1; then
+        print_success "Material You colors generated successfully"
+        
+        # Reload Hyprland to apply new colors
+        if hyprctl reload >/dev/null 2>&1; then
+            print_success "Hyprland configuration reloaded with new colors"
+        else
+            print_warning "Failed to reload Hyprland configuration"
+        fi
+    else
+        print_warning "Failed to generate Material You colors"
+    fi
 }
 
 # =============================================================================

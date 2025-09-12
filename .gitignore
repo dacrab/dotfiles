@@ -27,3 +27,10 @@ Thumbs.db
 # Personal notes
 NOTES.md
 TODO.md
+
+# Wallpaper state files
+last_wallpaper
+hypr/.config/hypr/configs/last_wallpaper
+
+# Matugen-generated files
+hypr/.config/hypr/hyprland/colors.conf
