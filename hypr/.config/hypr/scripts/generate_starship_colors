@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# generate_starship_colors - Generate Starship theme colors from matugen
+# This script extracts colors from matugen and creates a dynamic starship.toml
+
+set -e
+
+# Colors file path
+COLORS_FILE="$HOME/.config/hypr/hyprland/colors.conf"
+STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+STARSHIP_TEMPLATE="$HOME/.config/starship/starship.toml.template"
+
+# Create template if it doesn't exist
+if [[ ! -f "$STARSHIP_TEMPLATE" ]]; then
+    cat > "$STARSHIP_TEMPLATE" << 'EOF'
+format = """
+[ ](#{bg1})\
+$python$username\
+[ ](bg:#{bg2} fg:#{bg1})\
+$directory\
+[ ](fg:#{bg2} bg:#{bg3})\
+$git_branch$git_status\
+[ ](fg:#{bg3} bg:#{accent})\
+$time\
+[ ](fg:#{accent})\
+"""
+command_timeout = 1200
+add_newline = false
+
+# You can also replace your username with a neat symbol like  to save some space
+[username]
+show_always = true
+style_user = "bg:#{bg1}"
+style_root = "bg:#{bg1}"
+format = '[$user ]($style)'
+
+[directory]
+style = "bg:#{bg2}"
+format = "[ $path ]($style)"
+truncation_length = 3
+truncation_symbol = "…/"
+
+# Here is how you can shorten some long paths by text replacement
+# similar to mapped_locations in Oh My Posh:
+[directory.substitutions]
+"Documents" = " "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
+# Keep in mind that the order matters. For example:
+# "Important Documents" = "   "
+# will not be replaced, because "Documents" was already substituted before.
+# So either put "Important Documents" before "Documents" or use the substituted version:
+# "Important  " = "   "
+
+[git_branch]
+symbol = ""
+style = "bg:#{bg3}"
+format = '[ $symbol $branch ]($style)'
+
+[git_status]
+style = "bg:#{bg3}"
+format = '[$all_status$ahead_behind ]($style)'
+
+[python]
+style = "bg:#{bg1}"
+format = '[(\($virtualenv\) )]($style)'
+
+[time]
+disabled = false
+time_format = "%R" # Hour:Minute Format
+style = "bg:#{accent}"
+format = '[ $time ]($style)'
+EOF
+fi
+
+# Function to extract color from hyprland colors.conf
+extract_color() {
+    local pattern="$1"
+    local default="$2"
+    
+    if [[ -f "$COLORS_FILE" ]]; then
+        local color=$(grep -o "$pattern" "$COLORS_FILE" | head -1 | sed 's/.*rgba(\([^)]*\)).*/\1/' | tr '[:lower:]' '[:upper:]')
+        if [[ -n "$color" ]]; then
+            # Remove alpha values (last 2 characters)
+            local hex_color=$(echo "$color" | sed 's/..$//')
+            echo "$hex_color"
+        else
+            echo "$default"
+        fi
+    else
+        echo "$default"
+    fi
+}
+
+# Extract colors from matugen-generated colors.conf
+# Background colors (darker to lighter progression)
+BG1=$(extract_color "col.inactive_border.*rgba(\([^)]*\))" "43474e")
+BG2=$(extract_color "col.active_border.*rgba(\([^)]*\))" "8d9199") 
+BG3=$(extract_color "col.text.*rgba(\([^)]*\))" "e1e2e8")
+
+# Accent color (use the pinned window border color or fallback)
+ACCENT=$(extract_color "bordercolor.*rgba(\([^)]*\))" "a2c9fe")
+
+# Colors are already in the correct format with # prefix
+
+# Generate the starship config by replacing placeholders in template
+sed -e "s/#{bg1}/#$BG1/g" \
+    -e "s/#{bg2}/#$BG2/g" \
+    -e "s/#{bg3}/#$BG3/g" \
+    -e "s/#{accent}/#$ACCENT/g" \
+    "$STARSHIP_TEMPLATE" > "$STARSHIP_CONFIG"
+
+echo "✨ Generated Starship config with matugen colors:"
+echo "   Background 1: #$BG1"
+echo "   Background 2: #$BG2" 
+echo "   Background 3: #$BG3"
+echo "   Accent: #$ACCENT"
+echo "   Config: $STARSHIP_CONFIG"

@@ -117,6 +117,15 @@ generate_colors() {
     if matugen image "$wallpaper_path" --mode dark --type scheme-tonal-spot >/dev/null 2>&1; then
         print_success "Material You colors generated successfully"
         
+        # Generate Starship colors from matugen
+        if [[ -f "$HOME/.config/hypr/scripts/generate_starship_colors" ]]; then
+            if "$HOME/.config/hypr/scripts/generate_starship_colors" >/dev/null 2>&1; then
+                print_success "Starship colors updated with Material You theme"
+            else
+                print_warning "Failed to update Starship colors"
+            fi
+        fi
+        
         # Reload Hyprland to apply new colors
         if hyprctl reload >/dev/null 2>&1; then
             print_success "Hyprland configuration reloaded with new colors"
