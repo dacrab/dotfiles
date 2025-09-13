@@ -210,6 +210,36 @@ This configuration includes **Material You theming** powered by [matugen](https:
 2. Add new `windowrulev2` entries
 3. Use `hyprctl` to test rules
 
+## 🔧 Troubleshooting
+
+### Wallpaper Issues
+
+**Problem**: Wallpapers don't show up after reboot
+**Solution**: 
+- Hyprpaper requires an explicit config file path
+- The autostart configuration includes: `hyprpaper -c ~/.config/hyprpaper/hyprpaper.conf`
+- If issues persist, manually start: `hyprpaper -c ~/.config/hyprpaper/hyprpaper.conf &`
+
+**Problem**: Hyprpaper crashes on startup
+**Solution**:
+- Ensure the config file exists: `~/.config/hyprpaper/hyprpaper.conf`
+- Check that wallpaper paths in the config are valid
+- Verify hyprpaper is installed: `which hyprpaper`
+
+### Script Issues
+
+**Problem**: Wallpaper script fails to cycle
+**Solution**:
+- Check wallpaper directory exists: `ls ~/Pictures/wallpapers/nord-background/`
+- Verify script permissions: `chmod +x ~/.config/hypr/scripts/wallpaper`
+- Test manually: `./wallpaper cycle`
+
+**Problem**: Display script doesn't work
+**Solution**:
+- Check monitor names: `hyprctl monitors`
+- Verify script permissions: `chmod +x ~/.config/hypr/scripts/display`
+- Test manually: `./display status`
+
 ## 📚 Resources
 
 - [Hyprland Wiki](https://wiki.hyprland.org/)
