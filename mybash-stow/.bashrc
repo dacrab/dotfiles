@@ -170,7 +170,7 @@ cd() {
 }
 
 # Search text in files
-search() {
+search_files() {
     grep -rn --color=always "$1" . | less -R
 }
 
@@ -367,6 +367,8 @@ alias ippublic='curl -s https://ifconfig.me'
 alias serve='python3 -m http.server 8000'
 alias servep='python3 -m http.server 8000 --bind 127.0.0.1'
 
+alias cursor-reset='cd ~/Documents/GitHub/cursor-reset && ./cursor-reset.sh'
+
 #######################################################
 # CUSTOM KEYBINDINGS
 #######################################################
@@ -394,3 +396,6 @@ if [[ -z "$DISPLAY" ]] && [[ "$(tty)" = "/dev/tty1" ]]; then
 fi
 
 . "$HOME/.local/share/../bin/env"
+export PATH="/home/dacrab/.config/herd-lite/bin:$PATH"
+export PHP_INI_SCAN_DIR="/home/dacrab/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
+export PATH="$PATH:$HOME/.composer/vendor/bin"

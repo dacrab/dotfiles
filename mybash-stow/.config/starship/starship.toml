@@ -3,11 +3,11 @@ format = """
 $python$username\
 [ ](bg:#8D9199 fg:#43474E)\
 $directory\
-[ ](fg:#8D9199 bg:#E1E2E8)\
+[ ](fg:#8D9199 bg:#E1E2E9)\
 $git_branch$git_status\
-[ ](fg:#E1E2E8 bg:#A1CAFD)\
+[ ](fg:#E1E2E9 bg:#A4C9FE)\
 $time\
-[ ](fg:#A1CAFD)\
+[ ](fg:#A4C9FE)\
 """
 command_timeout = 1200
 add_newline = false
@@ -40,11 +40,11 @@ truncation_symbol = "…/"
 
 [git_branch]
 symbol = ""
-style = "bg:#E1E2E8"
+style = "bg:#E1E2E9"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bg:#E1E2E8"
+style = "bg:#E1E2E9"
 format = '[$all_status$ahead_behind ]($style)'
 
 [python]
@@ -54,5 +54,5 @@ format = '[(\($virtualenv\) )]($style)'
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#A1CAFD"
+style = "bg:#A4C9FE"
 format = '[ $time ]($style)'

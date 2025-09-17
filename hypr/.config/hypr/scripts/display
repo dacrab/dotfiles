@@ -129,6 +129,13 @@ enable_display() {
     update_monitors_config "$display_name" "$resolution,$position,1"
     update_state_file "$display_name" "enabled"
     print_success "✅ $display_name enabled"
+    
+    # Sync wallpaper to the newly enabled monitor
+    print_info "Syncing wallpaper to new monitor..."
+    local wallpaper_script="$HOME/.config/hypr/scripts/wallpaper"
+    if [[ -x "$wallpaper_script" ]]; then
+        "$wallpaper_script" sync &>/dev/null && print_success "Wallpaper synced" || print_warning "Failed to sync wallpaper"
+    fi
 }
 
 disable_display() {
