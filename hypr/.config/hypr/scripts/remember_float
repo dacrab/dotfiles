@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HYPRCTL="$(command -v hyprctl || true)"
+JQ="$(command -v jq || true)"
+RULES_FILE="$HOME/.config/hypr/configs/window_rules.conf"
+
+# If hyprctl isn't available, just toggle floating and exit
+if [ -z "$HYPRCTL" ]; then
+  exit 0
+fi
+
+json="$($HYPRCTL -j activewindow 2>/dev/null || echo '{}')"
+
+# If jq is missing or JSON failed, just toggle and exit
+if [ -z "$JQ" ] || [ "$json" = "{}" ]; then
+  "$HYPRCTL" dispatch togglefloating
+  exit 0
+fi
+
+class="$(echo "$json" | "$JQ" -r '.class // empty')"
+floating="$(echo "$json" | "$JQ" -r '.floating // false')"
+
+if [ -z "$class" ]; then
+  "$HYPRCTL" dispatch togglefloating
+  exit 0
+fi
+
+if [ "$floating" = "false" ]; then
+  # Will be floating after toggle
+  "$HYPRCTL" dispatch togglefloating
+  sleep 0.1
+
+  # Apply immediately for the current session
+  "$HYPRCTL" keyword windowrulev2 "float,class:^(\($class\))$" >/dev/null 2>&1 || true
+
+  # Persist in config for future sessions
+  if [ -f "$RULES_FILE" ]; then
+    line="windowrulev2 = float,class:^(\($class\))$"
+    if ! grep -Fxq "$line" "$RULES_FILE"; then
+      printf "%s\n" "$line" >> "$RULES_FILE"
+    fi
+  fi
+else
+  # Currently floating; just toggle back to tiled. We do not remove remembered rule (KISS).
+  "$HYPRCTL" dispatch togglefloating
+fi
+
+exit 0
+
+

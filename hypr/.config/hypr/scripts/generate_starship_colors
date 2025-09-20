@@ -78,12 +78,14 @@ fi
 extract_color() {
     local pattern="$1"
     local default="$2"
+    local color
     
     if [[ -f "$COLORS_FILE" ]]; then
-        local color=$(grep -o "$pattern" "$COLORS_FILE" | head -1 | sed 's/.*rgba(\([^)]*\)).*/\1/' | tr '[:lower:]' '[:upper:]')
+        color=$(grep -o "$pattern" "$COLORS_FILE" | head -1 | sed 's/.*rgba(\([^)]*\)).*/\1/' | tr '[:lower:]' '[:upper:]')
         if [[ -n "$color" ]]; then
             # Remove alpha values (last 2 characters)
-            local hex_color=$(echo "$color" | sed 's/..$//')
+            local hex_color
+            hex_color=${color%??}
             echo "$hex_color"
         else
             echo "$default"

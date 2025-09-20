@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1091
 
 # Check if running interactively
 [[ $- != *i* ]] && return
@@ -127,7 +128,7 @@ extract() {
 
 # Create directory and cd into it
 mkcd() {
-    mkdir -p "$1" && cd "$1"
+    mkdir -p "$1" && cd "$1" || return
 }
 
 # Go up n directories
@@ -137,7 +138,7 @@ up() {
     for ((i=0; i<levels; i++)); do
         path="../$path"
     done
-    cd "$path"
+    cd "$path" || return
 }
 
 # Auto-show directory contents (multi-column) after cd
@@ -320,7 +321,7 @@ esac
 
 alias vim='nvim'
 alias vi='nvim'
-alias edit='$EDITOR'
+alias edit='${EDITOR}'
 
 # Git shortcuts
 alias g='git'
@@ -357,7 +358,7 @@ alias dcl='docker compose logs -f'
 alias ping='ping -c 5'
 alias wget='wget -c'
 alias curl='curl -L'
-alias iplocal="hostname -I | awk '{print $1}'"
+iplocal() { hostname -I | awk '{print $1}'; }
 alias ippublic='curl -s https://ifconfig.me'
 
 #######################################################
@@ -399,3 +400,5 @@ fi
 export PATH="/home/dacrab/.config/herd-lite/bin:$PATH"
 export PHP_INI_SCAN_DIR="/home/dacrab/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
 export PATH="$PATH:$HOME/.composer/vendor/bin"
+
+export PATH=$PATH:/home/dacrab/.spicetify

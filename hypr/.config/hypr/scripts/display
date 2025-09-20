@@ -85,7 +85,8 @@ show_status() {
     print_info "Current display status:"
     echo
     
-    local monitors=$(get_all_monitors)
+    local monitors
+    monitors=$(get_all_monitors)
     
     if [ -z "$monitors" ]; then
         print_warning "No displays detected"
@@ -99,7 +100,8 @@ show_status() {
     done <<< "$monitors"
     
     if [ -f "$STATE_FILE" ]; then
-        local cached_state=$(cat "$STATE_FILE")
+        local cached_state
+        cached_state=$(cat "$STATE_FILE")
         echo "  📁 Cached eDP-1 state: $cached_state"
     fi
 }
@@ -134,7 +136,11 @@ enable_display() {
     print_info "Syncing wallpaper to new monitor..."
     local wallpaper_script="$HOME/.config/hypr/scripts/wallpaper"
     if [[ -x "$wallpaper_script" ]]; then
-        "$wallpaper_script" sync &>/dev/null && print_success "Wallpaper synced" || print_warning "Failed to sync wallpaper"
+        if "$wallpaper_script" sync &>/dev/null; then
+            print_success "Wallpaper synced"
+        else
+            print_warning "Failed to sync wallpaper"
+        fi
     fi
 }
 
