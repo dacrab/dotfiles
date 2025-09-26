@@ -112,7 +112,7 @@ sed -e "s/#{bg1}/#$BG1/g" \
     -e "s/#{accent}/#$ACCENT/g" \
     "$STARSHIP_TEMPLATE" > "$STARSHIP_CONFIG"
 
-echo "✨ Generated Starship config with matugen colors:"
+echo "✨ Generated Starship config with theme colors:"
 echo "   Background 1: #$BG1"
 echo "   Background 2: #$BG2" 
 echo "   Background 3: #$BG3"
