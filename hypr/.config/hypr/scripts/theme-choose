@@ -11,7 +11,16 @@ if (( ${#themes[@]:-0} == 0 )); then
   exit 0
 fi
 
-selection=$(printf '%s\n' "${themes[@]}" | rofi -dmenu -i -p "Theme" || true)
+if command -v rofi >/dev/null 2>&1; then
+  selection=$(printf '%s\n' "${themes[@]}" | rofi -dmenu -i -p "Theme" || true)
+else
+  # Fallback to simple PS3 select if rofi is missing
+  echo "Select theme:" >&2
+  PS3="> "
+  select t in "${themes[@]}"; do
+    selection="$t"; break
+  done
+fi
 
 if [[ -n "$selection" ]]; then
   "$HOME/.config/hypr/scripts/theme-set" "$selection"

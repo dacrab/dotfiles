@@ -27,6 +27,11 @@ ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 # Reload Hyprland to ensure any config that reads theme-specific files is applied
 hyprctl reload >/dev/null 2>&1 || true
 
+# Regenerate Starship colors from Hyprland colors
+if [[ -x "$HOME/.config/hypr/scripts/generate_starship_colors" ]]; then
+  "$HOME/.config/hypr/scripts/generate_starship_colors" >/dev/null 2>&1 || true
+fi
+
 notify-send "Theme changed" "$THEME_NAME" -t 1500 2>/dev/null || true
 
 
