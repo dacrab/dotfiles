@@ -19,6 +19,10 @@ if [[ ! -d "$THEME_PATH" ]]; then
 fi
 
 mkdir -p "$(dirname "$CURRENT_THEME_DIR")"
+# Ensure CURRENT_THEME_DIR is a symlink to the theme path
+if [[ -e "$CURRENT_THEME_DIR" && ! -L "$CURRENT_THEME_DIR" ]]; then
+  rm -rf "$CURRENT_THEME_DIR"
+fi
 ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
 
 # Set next background from theme and apply via hyprpaper + matugen + reload
