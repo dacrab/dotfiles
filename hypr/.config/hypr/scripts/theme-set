@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -euo pipefail
+
+if [[ -z ${1:-} ]]; then
+  echo "Usage: theme-set <theme-name>" >&2
+  exit 1
+fi
+
+THEMES_DIR="$HOME/.config/themes"
+CURRENT_THEME_DIR="$HOME/.config/themes/current/theme"
+
+THEME_NAME=$(echo "$1" | sed -E 's/<[^>]+>//g' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+THEME_PATH="$THEMES_DIR/$THEME_NAME"
+
+if [[ ! -d "$THEME_PATH" ]]; then
+  echo "Theme '$THEME_NAME' does not exist in $THEMES_DIR" >&2
+  exit 1
+fi
+
+mkdir -p "$(dirname "$CURRENT_THEME_DIR")"
+ln -nsf "$THEME_PATH" "$CURRENT_THEME_DIR"
+
+# Set next background from theme and apply via hyprpaper + matugen + reload
+"$HOME/.config/hypr/scripts/theme-bg-next"
+
+# Reload Hyprland to ensure any config that reads theme-specific files is applied
+hyprctl reload >/dev/null 2>&1 || true
+
+notify-send "Theme changed" "$THEME_NAME" -t 1500 2>/dev/null || true
+
+

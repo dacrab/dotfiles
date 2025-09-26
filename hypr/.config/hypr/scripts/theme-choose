@@ -1,0 +1,20 @@
+#!/bin/bash
+
+set -euo pipefail
+
+THEMES_DIR="$HOME/.config/themes"
+
+mapfile -t themes < <(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | sort)
+
+if (( ${#themes[@]:-0} == 0 )); then
+  notify-send "No themes found" "$THEMES_DIR" -t 2000 2>/dev/null || true
+  exit 0
+fi
+
+selection=$(printf '%s\n' "${themes[@]}" | rofi -dmenu -i -p "Theme" || true)
+
+if [[ -n "$selection" ]]; then
+  "$HOME/.config/hypr/scripts/theme-set" "$selection"
+fi
+
+
