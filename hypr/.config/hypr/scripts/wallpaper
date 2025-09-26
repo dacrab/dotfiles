@@ -7,7 +7,6 @@
 # 
 # Usage:
 #   wallpaper cycle     - Cycle to the next wallpaper
-#   wallpaper restore   - Restore the last wallpaper on startup
 #   wallpaper list      - List available wallpapers
 #   wallpaper current   - Show current wallpaper
 #   wallpaper set <path> - Set a specific wallpaper
@@ -18,10 +17,9 @@
 
 # Configuration
 readonly WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord-background"
-readonly LAST_WP_FILE="$HOME/.config/hypr/configs/last_wallpaper"
+readonly HYPERPAPER_CONF="$HOME/.config/hyprpaper/hyprpaper.conf"
 readonly SUPPORTED_FORMATS=("*.png" "*.jpg" "*.jpeg" "*.webp")
 readonly MAX_ATTEMPTS=5
-readonly HYPRPAPER_TIMEOUT=20
 
 # Colors for output
 readonly RED='\033[0;31m'
@@ -47,42 +45,33 @@ get_all_monitors() {
     hyprctl monitors | grep "Monitor" | cut -d' ' -f2 | tr -d '":' | grep -v "^$"
 }
 
-wait_for_hyprpaper() {
-    local attempt=0
-    
-    while (( attempt < HYPRPAPER_TIMEOUT )); do
-        if hyprctl hyprpaper listactive &>/dev/null; then
-            return 0
-        fi
-        ((attempt++))
-        sleep 0.5
-    done
-    
-    print_error "Timeout waiting for hyprpaper to be ready"
-    return 1
-}
+# hyprpaper is expected to be started by autostart with -c $HYPERPAPER_CONF
 
-generate_colors() {
+write_hyprpaper_config() {
     local wallpaper_path="$1"
-    
-    print_info "Generating Material You colors..."
-    
-    if matugen image "$wallpaper_path" --mode dark --type scheme-tonal-spot &>/dev/null; then
-        print_success "Material You colors generated"
-        
-        # Update Starship colors if script exists
-        local starship_script="$HOME/.config/hypr/scripts/generate_starship_colors"
-        if [[ -x "$starship_script" ]] && "$starship_script" &>/dev/null; then
-            print_success "Starship colors updated"
-        fi
-        
-        # Reload Hyprland configuration
-        if hyprctl reload &>/dev/null; then
-            print_success "Hyprland configuration reloaded"
-        fi
-    else
-        print_warning "Failed to generate Material You colors"
+    local config_dir
+    config_dir="$(dirname "$HYPERPAPER_CONF")"
+
+    mkdir -p "$config_dir"
+
+    local monitors
+    mapfile -t monitors < <(get_all_monitors)
+
+    if (( ${#monitors[@]} == 0 )); then
+        print_error "No monitors detected for config write"
+        return 1
     fi
+
+    local tmp_file
+    tmp_file="${HYPERPAPER_CONF}.tmp"
+
+    echo "preload = $wallpaper_path" > "$tmp_file"
+    for monitor in "${monitors[@]}"; do
+        echo "wallpaper = $monitor,$wallpaper_path" >> "$tmp_file"
+    done
+
+    mv "$tmp_file" "$HYPERPAPER_CONF"
+    print_success "Updated hyprpaper config: $HYPERPAPER_CONF"
 }
 
 apply_wallpaper_all_monitors() {
@@ -126,11 +115,9 @@ apply_wallpaper_all_monitors() {
     
     if (( success_count == total_monitors )); then
         print_success "Wallpaper applied to all $total_monitors monitor(s)"
-        generate_colors "$wallpaper_path"
         return 0
     elif (( success_count > 0 )); then
         print_warning "Wallpaper applied to $success_count/$total_monitors monitor(s)"
-        generate_colors "$wallpaper_path"
         return 0
     else
         print_error "Failed to apply wallpaper to any monitor"
@@ -142,9 +129,29 @@ get_current_wallpaper() {
     hyprctl hyprpaper listactive 2>/dev/null | grep -o '/home.*' | head -n1
 }
 
-save_wallpaper() {
+# last-wallpaper persistence removed; hyprpaper.conf is the source of truth
+
+# Regenerate Hyprland colors via matugen and update Starship, then reload Hyprland
+regenerate_theme_colors() {
     local wallpaper_path="$1"
-    echo "$wallpaper_path" > "$LAST_WP_FILE"
+    local starship_script="$HOME/.config/hypr/scripts/generate_starship_colors"
+
+    if command -v matugen >/dev/null 2>&1; then
+        print_info "Generating Material You colors via matugen..."
+        if matugen image "$wallpaper_path" --mode dark --type scheme-tonal-spot &>/dev/null; then
+            print_success "Matugen colors generated"
+        else
+            print_warning "Matugen failed to generate colors"
+        fi
+    else
+        print_warning "matugen not found in PATH"
+    fi
+
+    if [[ -x "$starship_script" ]]; then
+        "$starship_script" &>/dev/null && print_success "Starship colors updated"
+    fi
+
+    hyprctl reload &>/dev/null && print_success "Hyprland configuration reloaded"
 }
 
 # =============================================================================
@@ -170,13 +177,8 @@ cycle_wallpaper() {
     current_wp=$(get_current_wallpaper)
     
     if [[ -z "$current_wp" ]]; then
-        if [[ -f "$LAST_WP_FILE" ]]; then
-            current_wp=$(cat "$LAST_WP_FILE")
-            print_info "Using last wallpaper: $(basename "$current_wp")"
-        else
-            current_wp="${wallpapers[0]}"
-            print_info "Using first wallpaper: $(basename "$current_wp")"
-        fi
+        current_wp="${wallpapers[0]}"
+        print_info "Using first wallpaper: $(basename "$current_wp")"
     fi
     
     # Find next wallpaper
@@ -193,33 +195,12 @@ cycle_wallpaper() {
     
     print_info "Cycling to: $(basename "$next_wp")"
     
-    save_wallpaper "$next_wp"
     apply_wallpaper_all_monitors "$next_wp"
+    write_hyprpaper_config "$next_wp"
+    regenerate_theme_colors "$next_wp"
 }
 
-restore_wallpaper() {
-    print_info "Restoring last wallpaper..."
-    
-    if ! wait_for_hyprpaper; then
-        return 1
-    fi
-    
-    if [[ ! -f "$LAST_WP_FILE" ]]; then
-        print_warning "No last wallpaper file found"
-        return 0
-    fi
-    
-    local last_wp
-    last_wp=$(cat "$LAST_WP_FILE")
-    
-    if [[ ! -f "$last_wp" ]]; then
-        print_warning "Last wallpaper file does not exist: $last_wp"
-        return 0
-    fi
-    
-    print_info "Restoring: $(basename "$last_wp")"
-    apply_wallpaper_all_monitors "$last_wp"
-}
+# restore flow removed; hyprpaper.conf handles persistence
 
 list_wallpapers() {
     print_info "Available wallpapers in $WALLPAPER_DIR:"
@@ -267,37 +248,33 @@ set_specific_wallpaper() {
     fi
     
     print_info "Setting wallpaper: $(basename "$wallpaper_path")"
-    
-    save_wallpaper "$wallpaper_path"
     apply_wallpaper_all_monitors "$wallpaper_path"
+    write_hyprpaper_config "$wallpaper_path"
+    regenerate_theme_colors "$wallpaper_path"
 }
 
 sync_all_monitors() {
     print_info "Syncing wallpaper to all enabled monitors..."
     
-    if [[ ! -f "$LAST_WP_FILE" ]]; then
-        print_warning "No last wallpaper file found"
+    local current_wp
+    current_wp=$(get_current_wallpaper)
+    
+    if [[ -z "$current_wp" ]]; then
+        print_warning "No current wallpaper detected"
         return 0
     fi
     
-    local last_wp
-    last_wp=$(cat "$LAST_WP_FILE")
-    
-    if [[ ! -f "$last_wp" ]]; then
-        print_warning "Last wallpaper file does not exist: $last_wp"
-        return 0
-    fi
-    
-    print_info "Syncing: $(basename "$last_wp")"
-    apply_wallpaper_all_monitors "$last_wp"
+    print_info "Syncing: $(basename "$current_wp")"
+    apply_wallpaper_all_monitors "$current_wp"
+    write_hyprpaper_config "$current_wp"
+    regenerate_theme_colors "$current_wp"
 }
 
 show_usage() {
-    echo "Usage: $0 {cycle|restore|list|current|set <path>|sync}"
+    echo "Usage: $0 {cycle|list|current|set <path>|sync}"
     echo
     echo "Commands:"
     echo "  cycle      - Cycle to the next wallpaper"
-    echo "  restore    - Restore the last wallpaper (for startup)"
     echo "  list       - List available wallpapers"
     echo "  current    - Show current wallpaper"
     echo "  set <path> - Set a specific wallpaper"
@@ -305,7 +282,7 @@ show_usage() {
     echo
     echo "Configuration:"
     echo "  Wallpaper directory: $WALLPAPER_DIR"
-    echo "  Last wallpaper file: $LAST_WP_FILE"
+    echo "  Hyprpaper config: $HYPERPAPER_CONF"
 }
 
 # =============================================================================
@@ -319,7 +296,6 @@ fi
 
 case "$1" in
     cycle)      cycle_wallpaper ;;
-    restore)    restore_wallpaper ;;
     list)       list_wallpapers ;;
     current)    show_current ;;
     set)        set_specific_wallpaper "$2" ;;

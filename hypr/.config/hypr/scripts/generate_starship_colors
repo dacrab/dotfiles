@@ -7,27 +7,27 @@ set -e
 
 # Colors file path
 COLORS_FILE="$HOME/.config/hypr/hyprland/colors.conf"
+# Write to your existing Starship config path to preserve layout
 STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 STARSHIP_TEMPLATE="$HOME/.config/starship/starship.toml.template"
 
-# Create template if it doesn't exist
-if [[ ! -f "$STARSHIP_TEMPLATE" ]]; then
-    cat > "$STARSHIP_TEMPLATE" << 'EOF'
+# Always write template to preserve your arrow layout; colors are injected below
+cat > "$STARSHIP_TEMPLATE" << 'EOF'
 format = """
-[ ](#{bg1})\
+[](#{bg1})\
 $python$username\
-[ ](bg:#{bg2} fg:#{bg1})\
+[](bg:#{bg2} fg:#{bg1})\
 $directory\
-[ ](fg:#{bg2} bg:#{bg3})\
+[](fg:#{bg2} bg:#{bg3})\
 $git_branch$git_status\
-[ ](fg:#{bg3} bg:#{accent})\
+[](fg:#{bg3} bg:#{accent})\
 $time\
-[ ](fg:#{accent})\
+[ ](fg:#{accent})\
 """
 command_timeout = 1200
 add_newline = false
 
-# You can also replace your username with a neat symbol like  to save some space
+# You can also replace your username with a neat symbol like  to save some space
 [username]
 show_always = true
 style_user = "bg:#{bg1}"
@@ -43,18 +43,18 @@ truncation_symbol = "…/"
 # Here is how you can shorten some long paths by text replacement
 # similar to mapped_locations in Oh My Posh:
 [directory.substitutions]
-"Documents" = " "
-"Downloads" = " "
-"Music" = " "
-"Pictures" = " "
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
 # Keep in mind that the order matters. For example:
-# "Important Documents" = "   "
+# "Important Documents" = "  "
 # will not be replaced, because "Documents" was already substituted before.
 # So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important  " = "   "
+# "Important  " = "  "
 
 [git_branch]
-symbol = ""
+symbol = ""
 style = "bg:#{bg3}"
 format = '[ $symbol $branch ]($style)'
 
@@ -72,7 +72,6 @@ time_format = "%R" # Hour:Minute Format
 style = "bg:#{accent}"
 format = '[ $time ]($style)'
 EOF
-fi
 
 # Function to extract color from hyprland colors.conf
 extract_color() {
@@ -96,13 +95,13 @@ extract_color() {
 }
 
 # Extract colors from matugen-generated colors.conf
-# Background colors (darker to lighter progression)
-BG1=$(extract_color "col.inactive_border.*rgba(\([^)]*\))" "43474e")
-BG2=$(extract_color "col.active_border.*rgba(\([^)]*\))" "8d9199") 
-BG3=$(extract_color "col.text.*rgba(\([^)]*\))" "e1e2e8")
+# Map to your theme’s original order: bg1 -> #3B4252, bg2 -> #434C5E, bg3 -> #4C566A, accent -> #33658A
+BG1=$(extract_color "col.inactive_border.*rgba(\([^)]*\))" "3B4252")
+BG2=$(extract_color "col.active_border.*rgba(\([^)]*\))" "434C5E") 
+BG3=$(extract_color "col.text.*rgba(\([^)]*\))" "4C566A")
 
-# Accent color (use the pinned window border color or fallback)
-ACCENT=$(extract_color "bordercolor.*rgba(\([^)]*\))" "a2c9fe")
+# Accent color from pinned bordercolor, fallback to your original accent
+ACCENT=$(extract_color "bordercolor.*rgba(\([^)]*\))" "33658A")
 
 # Colors are already in the correct format with # prefix
 

@@ -1,26 +1,26 @@
 format = """
-[ ](#42474E)\
+[](#40484C)\
 $python$username\
-[ ](bg:#8D9199 fg:#42474E)\
+[](bg:#8A9297 fg:#40484C)\
 $directory\
-[ ](fg:#8D9199 bg:#E2E2E6)\
+[](fg:#8A9297 bg:#DFE3E7)\
 $git_branch$git_status\
-[ ](fg:#E2E2E6 bg:#A4C9FA)\
+[](fg:#DFE3E7 bg:#8BD0F0)\
 $time\
-[ ](fg:#A4C9FA)\
+[ ](fg:#8BD0F0)\
 """
 command_timeout = 1200
 add_newline = false
 
-# You can also replace your username with a neat symbol like  to save some space
+# You can also replace your username with a neat symbol like  to save some space
 [username]
 show_always = true
-style_user = "bg:#42474E"
-style_root = "bg:#42474E"
+style_user = "bg:#40484C"
+style_root = "bg:#40484C"
 format = '[$user ]($style)'
 
 [directory]
-style = "bg:#8D9199"
+style = "bg:#8A9297"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -28,31 +28,31 @@ truncation_symbol = "…/"
 # Here is how you can shorten some long paths by text replacement
 # similar to mapped_locations in Oh My Posh:
 [directory.substitutions]
-"Documents" = " "
-"Downloads" = " "
-"Music" = " "
-"Pictures" = " "
+"Documents" = "󰈙 "
+"Downloads" = " "
+"Music" = " "
+"Pictures" = " "
 # Keep in mind that the order matters. For example:
-# "Important Documents" = "   "
+# "Important Documents" = "  "
 # will not be replaced, because "Documents" was already substituted before.
 # So either put "Important Documents" before "Documents" or use the substituted version:
-# "Important  " = "   "
+# "Important  " = "  "
 
 [git_branch]
-symbol = ""
-style = "bg:#E2E2E6"
+symbol = ""
+style = "bg:#DFE3E7"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-style = "bg:#E2E2E6"
+style = "bg:#DFE3E7"
 format = '[$all_status$ahead_behind ]($style)'
 
 [python]
-style = "bg:#42474E"
+style = "bg:#40484C"
 format = '[(\($virtualenv\) )]($style)'
 
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-style = "bg:#A4C9FA"
+style = "bg:#8BD0F0"
 format = '[ $time ]($style)'

@@ -77,8 +77,17 @@ export LESS_TERMCAP_so=$'\e[1;44;33m'
 export LESS_TERMCAP_ue=$'\e[0m'
 export LESS_TERMCAP_us=$'\e[1;32m'
 
+# Starship configuration
+export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+
 # PATH additions
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
+export PATH="/home/dacrab/.config/herd-lite/bin:$PATH"
+export PATH="$PATH:$HOME/.composer/vendor/bin"
+export PATH="$PATH:/home/dacrab/.spicetify"
+
+# PHP configuration
+export PHP_INI_SCAN_DIR="/home/dacrab/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
 
 #######################################################
 # UTILITY FUNCTIONS
@@ -182,6 +191,7 @@ myip() {
     echo "External IP:"
     curl -s ifconfig.me || echo "Unable to fetch"
 }
+
 # Quick commit
 gcom() {
     git add . && git commit -m "$1"
@@ -190,6 +200,11 @@ gcom() {
 # Lazy git (add, commit, push)
 lazy() {
     git add . && git commit -m "$1" && git push
+}
+
+# Get local IP
+iplocal() { 
+    hostname -I | awk '{print $1}'; 
 }
 
 #######################################################
@@ -203,6 +218,7 @@ alias ..1='cd ..'
 alias ..2='cd ../..'
 alias ..3='cd ../../..'
 alias ~='cd ~'
+
 #######################################################
 # ALIASES - SYSTEM
 #######################################################
@@ -216,6 +232,7 @@ alias nowdate='date +"%d-%m-%Y"'
 alias reload='source ~/.bashrc'
 alias please='sudo $(fc -ln -1)'
 alias pathadd='export PATH="$PWD:$PATH" && echo $PATH'
+
 #######################################################
 # ALIASES - FILE OPERATIONS
 #######################################################
@@ -358,7 +375,6 @@ alias dcl='docker compose logs -f'
 alias ping='ping -c 5'
 alias wget='wget -c'
 alias curl='curl -L'
-iplocal() { hostname -I | awk '{print $1}'; }
 alias ippublic='curl -s https://ifconfig.me'
 
 #######################################################
@@ -367,6 +383,10 @@ alias ippublic='curl -s https://ifconfig.me'
 
 alias serve='python3 -m http.server 8000'
 alias servep='python3 -m http.server 8000 --bind 127.0.0.1'
+
+#######################################################
+# ALIASES - CUSTOM TOOLS
+#######################################################
 
 alias cursor-reset='cd ~/Documents/GitHub/cursor-reset && ./cursor-reset.sh'
 
@@ -396,9 +416,9 @@ if [[ -z "$DISPLAY" ]] && [[ "$(tty)" = "/dev/tty1" ]]; then
     exec startx
 fi
 
-. "$HOME/.local/share/../bin/env"
-export PATH="/home/dacrab/.config/herd-lite/bin:$PATH"
-export PHP_INI_SCAN_DIR="/home/dacrab/.config/herd-lite/bin:$PHP_INI_SCAN_DIR"
-export PATH="$PATH:$HOME/.composer/vendor/bin"
+#######################################################
+# EXTERNAL SOURCES
+#######################################################
 
-export PATH=$PATH:/home/dacrab/.spicetify
+# Source additional environment configuration
+. "$HOME/.local/share/../bin/env"
