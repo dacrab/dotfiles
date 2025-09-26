@@ -6,7 +6,8 @@
 set -e
 
 # Colors file path
-COLORS_FILE="$HOME/.config/hypr/hyprland/colors.conf"
+# Read colors from the active theme overlay
+COLORS_FILE="$HOME/.config/themes/current/theme/hyprland.conf"
 # Write to your existing Starship config path to preserve layout
 STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 STARSHIP_TEMPLATE="$HOME/.config/starship/starship.toml.template"
