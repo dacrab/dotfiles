@@ -131,26 +131,8 @@ get_current_wallpaper() {
 
 # last-wallpaper persistence removed; hyprpaper.conf is the source of truth
 
-# Regenerate Hyprland colors via matugen and update Starship, then reload Hyprland
-regenerate_theme_colors() {
-    local wallpaper_path="$1"
-    local starship_script="$HOME/.config/hypr/scripts/generate_starship_colors"
-
-    if command -v matugen >/dev/null 2>&1; then
-        print_info "Generating Material You colors via matugen..."
-        if matugen image "$wallpaper_path" --mode dark --type scheme-tonal-spot &>/dev/null; then
-            print_success "Matugen colors generated"
-        else
-            print_warning "Matugen failed to generate colors"
-        fi
-    else
-        print_warning "matugen not found in PATH"
-    fi
-
-    if [[ -x "$starship_script" ]]; then
-        "$starship_script" &>/dev/null && print_success "Starship colors updated"
-    fi
-
+# Reload Hyprland to apply config/theme changes
+reload_hyprland() {
     hyprctl reload &>/dev/null && print_success "Hyprland configuration reloaded"
 }
 
@@ -197,7 +179,7 @@ cycle_wallpaper() {
     
     apply_wallpaper_all_monitors "$next_wp"
     write_hyprpaper_config "$next_wp"
-    regenerate_theme_colors "$next_wp"
+    reload_hyprland
 }
 
 # restore flow removed; hyprpaper.conf handles persistence
@@ -250,7 +232,7 @@ set_specific_wallpaper() {
     print_info "Setting wallpaper: $(basename "$wallpaper_path")"
     apply_wallpaper_all_monitors "$wallpaper_path"
     write_hyprpaper_config "$wallpaper_path"
-    regenerate_theme_colors "$wallpaper_path"
+    reload_hyprland
 }
 
 sync_all_monitors() {
@@ -267,7 +249,7 @@ sync_all_monitors() {
     print_info "Syncing: $(basename "$current_wp")"
     apply_wallpaper_all_monitors "$current_wp"
     write_hyprpaper_config "$current_wp"
-    regenerate_theme_colors "$current_wp"
+    reload_hyprland
 }
 
 show_usage() {
