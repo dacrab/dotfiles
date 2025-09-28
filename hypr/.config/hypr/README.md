@@ -19,10 +19,8 @@ hypr/.config/hypr/
 │   ├── devices.conf       # Specific device configurations
 │   ├── keybindings.conf   # All keyboard shortcuts and bindings
 │   ├── window_rules.conf  # Window-specific rules and behaviors
-│   ├── hyprpaper.conf     # Wallpaper configuration
-│   └── last_wallpaper     # Current wallpaper state file
+│   └── hyprpaper.conf     # Wallpaper configuration (optional)
 └── scripts/               # Utility scripts
-    ├── wallpaper          # Wallpaper management (cycle, restore, list, etc.)
     └── display            # Display management (toggle, status, list, etc.)
 ```
 
@@ -130,24 +128,8 @@ hyprctl dispatch exit
 
 ## 🚀 Scripts
 
-### `wallpaper` - Wallpaper Management
-A unified script for all wallpaper operations:
-
-**Commands:**
-- `wallpaper cycle` - Cycle to the next wallpaper (bound to `Super + W`)
-- `wallpaper restore` - Restore last wallpaper on startup
-- `wallpaper list` - List all available wallpapers
-- `wallpaper current` - Show current wallpaper
-- `wallpaper set <path>` - Set a specific wallpaper
-
-**Features:**
-- Colorized output with status indicators
-- Error handling and retry logic
-- Support for multiple image formats (PNG, JPG, WEBP)
-- Maintains wallpaper state across sessions
-- Automatic hyprpaper initialization
-- **Material You theming** - Automatically generates colors from wallpapers
-- **Dynamic color updates** - Hyprland colors change with each wallpaper
+### Scripts
+Only `display` management is included. Wallpaper and theme scripts have been removed.
 
 ### `display` - Display Management
 A unified script for all display operations:
@@ -166,32 +148,8 @@ A unified script for all display operations:
 - Support for multiple displays
 - Backup creation for safety
 
-## 🎨 Material You Theming
-
-This configuration includes **Material You theming** powered by [matugen](https://github.com/InioX/matugen):
-
-### ✨ Features:
-- **Dynamic colors** generated from your current wallpaper
-- **Automatic theme updates** when cycling wallpapers
-- **Material Design 3** color schemes
-- **Seamless integration** with Hyprland
-
-### 🔧 How It Works:
-1. **Wallpaper changes** trigger matugen color generation
-2. **Colors are extracted** from the wallpaper using Material You algorithms
-3. **Hyprland colors.conf** is automatically updated
-4. **Configuration reloads** to apply new colors instantly
-
-### 🎯 Color Sources:
-- **Active borders** - Primary accent color from wallpaper
-- **Inactive borders** - Muted variant for inactive windows
-- **Background** - Dark surface color
-- **Text colors** - High contrast text for readability
-
-### 🛠️ Customization:
-- **Color scheme type**: Edit wallpaper script to change `--type` (default: `scheme-tonal-spot`)
-- **Theme mode**: Change `--mode` between `dark` and `light`
-- **Templates**: Modify `~/.config/matugen/templates/hyprland/colors.conf`
+## 🎨 Theming
+Dynamic theming via scripts has been removed to simplify the setup.
 
 ## 🔧 Customization
 
@@ -212,27 +170,8 @@ This configuration includes **Material You theming** powered by [matugen](https:
 
 ## 🔧 Troubleshooting
 
-### Wallpaper Issues
-
-**Problem**: Wallpapers don't show up after reboot
-**Solution**: 
-- Hyprpaper requires an explicit config file path
-- The autostart configuration includes: `hyprpaper -c ~/.config/hyprpaper/hyprpaper.conf`
-- If issues persist, manually start: `hyprpaper -c ~/.config/hyprpaper/hyprpaper.conf &`
-
-**Problem**: Hyprpaper crashes on startup
-**Solution**:
-- Ensure the config file exists: `~/.config/hyprpaper/hyprpaper.conf`
-- Check that wallpaper paths in the config are valid
-- Verify hyprpaper is installed: `which hyprpaper`
-
 ### Script Issues
-
-**Problem**: Wallpaper script fails to cycle
-**Solution**:
-- Check wallpaper directory exists: `ls ~/Pictures/wallpapers/nord-background/`
-- Verify script permissions: `chmod +x ~/.config/hypr/scripts/wallpaper`
-- Test manually: `./wallpaper cycle`
+- Only `display` script remains. Ensure it is executable: `chmod +x ~/.config/hypr/scripts/display`
 
 **Problem**: Display script doesn't work
 **Solution**:
