@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 
 # =============================================================================
 # WALLPAPER MANAGEMENT SCRIPT
@@ -11,6 +12,7 @@
 #   wallpaper current   - Show current wallpaper
 #   wallpaper set <path> - Set a specific wallpaper
 #   wallpaper sync      - Sync current wallpaper to all monitors
+#   wallpaper random    - Pick a random wallpaper from the directory
 #
 # Author: dacrab
 # =============================================================================
@@ -18,7 +20,6 @@
 # Configuration
 readonly WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord-background"
 readonly HYPERPAPER_CONF="$HOME/.config/hyprpaper/hyprpaper.conf"
-readonly SUPPORTED_FORMATS=("*.png" "*.jpg" "*.jpeg" "*.webp")
 readonly MAX_ATTEMPTS=5
 
 # Colors for output
@@ -38,69 +39,97 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
 
 get_wallpapers() {
-    find "$WALLPAPER_DIR" -type f \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \) | sort
+    find "$WALLPAPER_DIR" -type f \
+        \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \) | sort
 }
 
-get_all_monitors() {
-    hyprctl monitors | grep "Monitor" | cut -d' ' -f2 | tr -d '":' | grep -v "^$"
+get_monitors() {
+    hyprctl monitors | awk '/^Monitor /{gsub(/[":]/, "", $2); print $2}'
 }
 
-# hyprpaper is expected to be started by autostart with -c $HYPERPAPER_CONF
+get_current_wallpaper() {
+    local path
+    # Prefer the first active wallpaper reported by hyprpaper
+    path=$(hyprctl hyprpaper listactive 2>/dev/null | awk -F ' = ' 'NF==2 && $2!="" { print $2; exit }') || true
+    if [[ -z "${path:-}" && -f "$HYPERPAPER_CONF" ]]; then
+        # Fallback: read from hyprpaper config (preload first, then first wallpaper entry)
+        local raw
+        raw=$(awk -F'= ' '/^preload = /{print $2; found=1; exit} /^wallpaper = / && !found {print $2; exit}' "$HYPERPAPER_CONF" || true)
+        if [[ -n "${raw:-}" ]]; then
+            # wallpaper line format is: "MONITOR,PATH"; take PATH
+            path=$(awk -F',' 'NR==1{print $2}' <<< "$raw")
+        fi
+    fi
+    echo "${path:-}"
+}
 
-write_hyprpaper_config() {
+ensure_prereqs() {
+    if ! command -v hyprctl >/dev/null 2>&1; then
+        print_error "hyprctl not found in PATH"
+        exit 1
+    fi
+    if [[ ! -d "$WALLPAPER_DIR" ]]; then
+        print_error "Wallpaper directory missing: $WALLPAPER_DIR"
+        exit 1
+    fi
+    # Warn if hyprpaper is not running; applying via hyprctl will fail
+    if ! pgrep -ax hyprpaper >/dev/null 2>&1; then
+        print_warning "hyprpaper is not running; start it or enable autostart"
+    fi
+}
+
+# =============================================================================
+# CORE FUNCTIONS
+# =============================================================================
+
+write_config() {
     local wallpaper_path="$1"
-    local config_dir
-    config_dir="$(dirname "$HYPERPAPER_CONF")"
-
-    mkdir -p "$config_dir"
-
     local monitors
-    mapfile -t monitors < <(get_all_monitors)
+    mapfile -t monitors < <(get_monitors)
 
     if (( ${#monitors[@]} == 0 )); then
-        print_error "No monitors detected for config write"
+        print_error "No monitors detected"
         return 1
     fi
 
-    local tmp_file
-    tmp_file="${HYPERPAPER_CONF}.tmp"
+    mkdir -p "$(dirname "$HYPERPAPER_CONF")"
 
-    echo "preload = $wallpaper_path" > "$tmp_file"
-    for monitor in "${monitors[@]}"; do
-        echo "wallpaper = $monitor,$wallpaper_path" >> "$tmp_file"
-    done
+    local tmp_file
+    tmp_file="${HYPERPAPER_CONF}.tmp.$$"
+
+    {
+        echo "preload = $wallpaper_path"
+        for monitor in "${monitors[@]}"; do
+            echo "wallpaper = $monitor,$wallpaper_path"
+        done
+    } > "$tmp_file"
 
     mv "$tmp_file" "$HYPERPAPER_CONF"
-    print_success "Updated hyprpaper config: $HYPERPAPER_CONF"
+    print_success "Updated hyprpaper config"
 }
 
-apply_wallpaper_all_monitors() {
+apply_wallpaper() {
     local wallpaper_path="$1"
-    local attempt=0
-    local success_count=0
-    local total_monitors=0
-    
-    # Get all enabled monitors
     local monitors
-    mapfile -t monitors < <(get_all_monitors)
+    mapfile -t monitors < <(get_monitors)
     
     if (( ${#monitors[@]} == 0 )); then
         print_error "No monitors detected"
         return 1
     fi
     
-    total_monitors=${#monitors[@]}
-    print_info "Applying wallpaper to $total_monitors monitor(s): ${monitors[*]}"
+    print_info "Applying wallpaper to ${#monitors[@]} monitor(s)"
     
     # Preload wallpaper
     hyprctl hyprpaper preload "$wallpaper_path" &>/dev/null
     
-    # Apply wallpaper to all monitors
+    # Apply to all monitors
+    local success_count=0
     for monitor in "${monitors[@]}"; do
-        attempt=0
+        local attempt=0
         while (( attempt < MAX_ATTEMPTS )); do
             if hyprctl hyprpaper wallpaper "$monitor,$wallpaper_path" &>/dev/null; then
-                print_success "✅ Applied to $monitor"
+                print_success "Applied to $monitor"
                 ((success_count++))
                 break
             fi
@@ -109,36 +138,67 @@ apply_wallpaper_all_monitors() {
         done
         
         if (( attempt >= MAX_ATTEMPTS )); then
-            print_error "❌ Failed to apply to $monitor after $MAX_ATTEMPTS attempts"
+            print_error "Failed to apply to $monitor"
         fi
     done
     
-    if (( success_count == total_monitors )); then
-        print_success "Wallpaper applied to all $total_monitors monitor(s)"
+    if (( success_count == ${#monitors[@]} )); then
+        print_success "Wallpaper applied to all monitors"
         return 0
     elif (( success_count > 0 )); then
-        print_warning "Wallpaper applied to $success_count/$total_monitors monitor(s)"
+        print_warning "Applied to $success_count/${#monitors[@]} monitors"
         return 0
     else
-        print_error "Failed to apply wallpaper to any monitor"
+        print_error "Failed to apply wallpaper"
         return 1
     fi
 }
 
-get_current_wallpaper() {
-    hyprctl hyprpaper listactive 2>/dev/null | grep -o '/home.*' | head -n1
-}
-
-# last-wallpaper persistence removed; hyprpaper.conf is the source of truth
-
-# Reload Hyprland to apply config/theme changes
-reload_hyprland() {
-    hyprctl reload &>/dev/null && print_success "Hyprland configuration reloaded"
+set_wallpaper() {
+    local wallpaper_path="$1"
+    
+    if [[ ! -f "$wallpaper_path" ]]; then
+        print_error "File does not exist: $wallpaper_path"
+        return 1
+    fi
+    
+    apply_wallpaper "$wallpaper_path" && write_config "$wallpaper_path"
 }
 
 # =============================================================================
-# WALLPAPER FUNCTIONS
+# COMMAND FUNCTIONS
 # =============================================================================
+
+random_wallpaper() {
+    mapfile -t wallpapers < <(get_wallpapers)
+    if (( ${#wallpapers[@]} == 0 )); then
+        print_error "No wallpapers found in $WALLPAPER_DIR"
+        return 1
+    fi
+
+    local current_wp
+    current_wp=$(get_current_wallpaper)
+
+    local pick
+    if command -v shuf >/dev/null 2>&1; then
+        pick=$(printf '%s\n' "${wallpapers[@]}" | shuf -n1)
+    else
+        local idx=$(( RANDOM % ${#wallpapers[@]} ))
+        pick=${wallpapers[$idx]}
+    fi
+
+    if [[ -n "$current_wp" && ${#wallpapers[@]} -gt 1 && "$pick" == "$current_wp" ]]; then
+        for i in "${!wallpapers[@]}"; do
+            if [[ "${wallpapers[$i]}" == "$current_wp" ]]; then
+                pick=${wallpapers[$(( (i + 1) % ${#wallpapers[@]} ))]}
+                break
+            fi
+        done
+    fi
+
+    print_info "Random: $(basename "$pick")"
+    set_wallpaper "$pick"
+}
 
 cycle_wallpaper() {
     print_info "Cycling wallpaper..."
@@ -148,22 +208,13 @@ cycle_wallpaper() {
     
     if (( ${#wallpapers[@]} == 0 )); then
         print_error "No wallpapers found in $WALLPAPER_DIR"
-        print_info "Supported formats: ${SUPPORTED_FORMATS[*]}"
         return 1
     fi
 
-    print_info "Found ${#wallpapers[@]} wallpapers"
-    
-    # Get current wallpaper
     local current_wp
     current_wp=$(get_current_wallpaper)
     
-    if [[ -z "$current_wp" ]]; then
-        current_wp="${wallpapers[0]}"
-        print_info "Using first wallpaper: $(basename "$current_wp")"
-    fi
-    
-    # Find next wallpaper
+    # Find current wallpaper index
     local current_index=-1
     for i in "${!wallpapers[@]}"; do
         if [[ "${wallpapers[i]}" == "$current_wp" ]]; then
@@ -172,27 +223,23 @@ cycle_wallpaper() {
         fi
     done
     
+    # Get next wallpaper
     local next_index=$(( (current_index + 1) % ${#wallpapers[@]} ))
     local next_wp="${wallpapers[$next_index]}"
     
-    print_info "Cycling to: $(basename "$next_wp")"
-    
-    apply_wallpaper_all_monitors "$next_wp"
-    write_hyprpaper_config "$next_wp"
-    reload_hyprland
+    print_info "Setting: $(basename "$next_wp")"
+    set_wallpaper "$next_wp"
 }
-
-# restore flow removed; hyprpaper.conf handles persistence
 
 list_wallpapers() {
     print_info "Available wallpapers in $WALLPAPER_DIR:"
     echo
+    
     local wallpapers
     mapfile -t wallpapers < <(get_wallpapers)
     
     if (( ${#wallpapers[@]} == 0 )); then
         print_warning "No wallpapers found"
-        print_info "Supported formats: ${SUPPORTED_FORMATS[*]}"
         return 1
     fi
     
@@ -224,43 +271,35 @@ set_specific_wallpaper() {
         return 1
     fi
     
-    if [[ ! -f "$wallpaper_path" ]]; then
-        print_error "Wallpaper file does not exist: $wallpaper_path"
-        return 1
-    fi
-    
     print_info "Setting wallpaper: $(basename "$wallpaper_path")"
-    apply_wallpaper_all_monitors "$wallpaper_path"
-    write_hyprpaper_config "$wallpaper_path"
-    reload_hyprland
+    set_wallpaper "$wallpaper_path"
 }
 
 sync_all_monitors() {
-    print_info "Syncing wallpaper to all enabled monitors..."
+    print_info "Syncing wallpaper to all monitors..."
     
     local current_wp
     current_wp=$(get_current_wallpaper)
     
     if [[ -z "$current_wp" ]]; then
         print_warning "No current wallpaper detected"
-        return 0
+        return 1
     fi
     
     print_info "Syncing: $(basename "$current_wp")"
-    apply_wallpaper_all_monitors "$current_wp"
-    write_hyprpaper_config "$current_wp"
-    reload_hyprland
+    set_wallpaper "$current_wp"
 }
 
 show_usage() {
-    echo "Usage: $0 {cycle|list|current|set <path>|sync}"
+    echo "Usage: $0 {cycle|list|current|set <path>|sync|random}"
     echo
     echo "Commands:"
     echo "  cycle      - Cycle to the next wallpaper"
     echo "  list       - List available wallpapers"
     echo "  current    - Show current wallpaper"
     echo "  set <path> - Set a specific wallpaper"
-    echo "  sync       - Sync current wallpaper to all enabled monitors"
+    echo "  sync       - Sync current wallpaper to all monitors"
+    echo "  random     - Set a random wallpaper from the directory"
     echo
     echo "Configuration:"
     echo "  Wallpaper directory: $WALLPAPER_DIR"
@@ -271,18 +310,21 @@ show_usage() {
 # MAIN SCRIPT
 # =============================================================================
 
+ensure_prereqs
+
 if (( $# == 0 )); then
     show_usage
     exit 1
 fi
 
 case "$1" in
-    cycle)      cycle_wallpaper ;;
-    list)       list_wallpapers ;;
-    current)    show_current ;;
-    set)        set_specific_wallpaper "$2" ;;
-    sync)       sync_all_monitors ;;
-    *)          print_error "Unknown command: $1"
-                echo "Use '$0' to see available commands"
-                exit 1 ;;
+    cycle)   cycle_wallpaper ;;
+    list)    list_wallpapers ;;
+    current) show_current ;;
+    set)     set_specific_wallpaper "${2:-}" ;;
+    sync)    sync_all_monitors ;;
+    random)  random_wallpaper ;;
+    *)       print_error "Unknown command: $1"
+             show_usage
+             exit 1 ;;
 esac
