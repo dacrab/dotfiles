@@ -1,0 +1,20 @@
+* {
+    text-color: #d8dee9;
+}
+
+window {
+    background-color: #2e3440;
+    border-color: #4c566a;
+}
+
+inputbar {
+    background-color: #3b4252;
+    text-color: #d8dee9;
+}
+
+element selected.normal {
+    background-color: #81a1c1;
+    text-color: #2e3440;
+}
+
+

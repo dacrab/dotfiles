@@ -68,6 +68,13 @@ dotfiles/
 │   └── .config/
 │       └── rofi/
 │           └── config.rasi        # Rofi theme and configuration
+├── themes/
+│   ├── tokyo-night/               # Sample theme (Hypr + Rofi overrides)
+│   └── nord/                      # Sample theme
+├── bin/
+│   ├── dotfiles-theme-set         # Switch to a named theme
+│   ├── dotfiles-theme-next        # Cycle to next theme
+│   └── dotfiles-theme-setup       # Initialize theme links
 ├── mybash-stow/
 │   ├── .bashrc                    # Custom bash configuration
 │   └── .config/
@@ -139,6 +146,26 @@ Each configuration is designed to be easily customizable:
 1. **Hyprland**: Edit `hypr/.config/hypr/hyprland.conf`
 2. **Hyprpanel**: Modify `hyprpanel/.config/hyprpanel/config.json`
 3. **Rofi**: Update `rofi/.config/rofi/config.rasi`
+
+### Theming (Omarchy-style)
+
+1. Initialize links:
+   ```bash
+   ~/dotfiles/bin/dotfiles-theme-setup
+   ```
+2. Switch theme by name:
+   ```bash
+   ~/dotfiles/bin/dotfiles-theme-set tokyo-night
+   ```
+3. Cycle themes:
+   ```bash
+   ~/dotfiles/bin/dotfiles-theme-next
+   ```
+
+What it does:
+- Maintains `~/.config/dotfiles/current/theme -> ~/.config/dotfiles/themes/<name>`
+- Links Hypr colors to `~/.config/hypr/hyprland/colors.conf` and reloads Hypr
+- Rofi dynamically imports `~/.config/dotfiles/current/theme/rofi/override.rasi`
 
 After making changes, reinstall the package:
 ```bash

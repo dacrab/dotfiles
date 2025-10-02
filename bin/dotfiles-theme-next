@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+THEMES_DIR="$HOME/.config/dotfiles/themes"
+CURRENT_LINK="$HOME/.config/dotfiles/current/theme"
+
+mapfile -t THEMES < <(find "$THEMES_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
+TOTAL=${#THEMES[@]}
+if (( TOTAL == 0 )); then
+  echo "No themes found in $THEMES_DIR"
+  exit 1
+fi
+
+if [[ -L "$CURRENT_LINK" ]]; then
+  CURRENT_PATH="$(realpath "$CURRENT_LINK")"
+else
+  CURRENT_PATH="$(realpath "${THEMES[0]}")"
+fi
+
+INDEX=0
+for i in "${!THEMES[@]}"; do
+  THEMES[$i]="$(realpath "${THEMES[$i]}")"
+  if [[ "${THEMES[$i]}" == "$CURRENT_PATH" ]]; then
+    INDEX=$i
+    break
+  fi
+done
+
+NEXT_INDEX=$(((INDEX + 1) % TOTAL))
+NEW_THEME="${THEMES[$NEXT_INDEX]}"
+NEW_NAME="$(basename "$NEW_THEME")"
+
+dotfiles-theme-set "$NEW_NAME"
+command -v notify-send >/dev/null 2>&1 && notify-send "Theme changed" "$NEW_NAME" -t 2000 || true
+
+
