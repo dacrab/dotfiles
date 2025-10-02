@@ -1,0 +1,9 @@
+# Minimal Wofi configuration
+# Keep behavior simple and native; most sizing is done via CSS
+
+width=20%
+show=drun
+allow_images=true
+image_size=32
+prompt=
+
