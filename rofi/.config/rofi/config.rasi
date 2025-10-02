@@ -1,3 +1,6 @@
+/* Theme override from active dotfiles theme */
+@import "~/.config/dotfiles/current/theme/rofi/override.rasi"
+
 /* Configuration */
 configuration {
     modi: "drun";
