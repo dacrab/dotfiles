@@ -166,6 +166,20 @@ What it does:
 - Maintains `~/.config/dotfiles/current/theme -> ~/.config/dotfiles/themes/<name>`
 - Links Hypr colors to `~/.config/hypr/hyprland/colors.conf` and reloads Hypr
 - Rofi dynamically imports `~/.config/dotfiles/current/theme/rofi/override.rasi`
+- Optionally links per-app theme files if present in a theme directory:
+  - `waybar.css` via `~/.config/waybar/style.css` import
+  - `kitty.conf` via `include ~/.config/dotfiles/current/theme/kitty.conf`
+  - `ghostty.conf` via `config-file = ?"~/.config/dotfiles/current/theme/ghostty.conf"`
+  - `mako.ini`, `eza.yml`, `btop.theme`
+  - `icons.theme` (GNOME icon theme name), `light.mode` (toggle light/dark)
+  - `backgrounds/` for wallpaper selection and cycling
+
+GTK integration:
+- GTK3/4 theme and color-scheme are set with `gsettings` to Adwaita/Adwaita-dark depending on presence of `light.mode` in the selected theme.
+- GTK2 fallback is written to `~/.gtkrc-2.0` with Adwaita to give legacy apps a consistent look.
+
+Background cycling:
+- Use `~/dotfiles/bin/dotfiles-theme-bg-next` to cycle to the next background found in the current theme’s `backgrounds/` directory. The current background is symlinked to `~/.config/background`.
 
 After making changes, reinstall the package:
 ```bash

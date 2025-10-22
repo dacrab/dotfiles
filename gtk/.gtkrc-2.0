@@ -1,0 +1,7 @@
+# Managed by dotfiles (stow). Legacy GTK2 fallback.
+# GTK2 doesn't support adw-gtk3; use Adwaita-dark for closest match.
+gtk-theme-name="Adwaita-dark"
+gtk-icon-theme-name="MoreWaita"
+gtk-font-name="JetBrainsMono Nerd Font 10"
+gtk-cursor-theme-name="BreezeX-Dark"
+gtk-cursor-theme-size=24

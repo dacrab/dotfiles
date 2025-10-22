@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if pgrep -u "$USER" -x ashell >/dev/null 2>&1; then
+  pkill -u "$USER" -x ashell
+else
+  if [ -f "$HOME/.config/ashell/config.toml" ]; then
+    nohup ashell --config-path "$HOME/.config/ashell/config.toml" >/dev/null 2>&1 &
+  else
+    nohup ashell >/dev/null 2>&1 &
+  fi
+fi

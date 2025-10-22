@@ -2,16 +2,16 @@
   "bar.customModules.storage.paths": [
     "/"
   ],
-  "theme.font.size": "0.9rem",
-  "bar.autoHide": "never",
+  "theme.font.size": "0.8rem",
+  "bar.autoHide": "fullscreen",
   "bar.launcher.autoDetectIcon": true,
   "theme.bar.buttons.dashboard.enableBorder": false,
   "bar.workspaces.monitorSpecific": false,
-  "theme.font.name": "JetBrains Mono",
-  "theme.font.label": "JetBrains Mono",
+  "theme.font.name": "MesloLGLDZ Nerd Font Propo",
+  "theme.font.label": "MesloLGLDZ Nerd Font Propo",
   "theme.bar.menus.monochrome": false,
   "theme.bar.transparent": false,
-  "bar.workspaces.show_numbered": true,
+  "bar.workspaces.show_numbered": false,
   "bar.workspaces.workspaceMask": false,
   "bar.layouts": {
     "0": {
@@ -22,12 +22,12 @@
     "1": {
       "left": [
         "dashboard",
-        "workspaces",
-        "windowtitle"
+        "workspaces"
       ],
       "middle": [
         "media",
-        "clock"
+        "clock",
+        "notifications"
       ],
       "right": [
         "kbinput",
@@ -36,7 +36,6 @@
         "bluetooth",
         "battery",
         "systray",
-        "notifications",
         "power"
       ]
     }
@@ -65,7 +64,7 @@
   "theme.bar.buttons.battery.enableBorder": false,
   "bar.notifications.show_total": true,
   "theme.bar.buttons.style": "default",
-  "theme.bar.opacity": 60,
+  "theme.bar.opacity": 100,
   "theme.matugen_settings.variation": "standard_3",
   "notifications.monitor": 1,
   "theme.bar.buttons.modules.kbLayout.enableBorder": false,
@@ -76,7 +75,7 @@
   "notifications.ignore": [
     "spotify"
   ],
-  "notifications.position": "top",
+  "notifications.position": "top right",
   "theme.osd.enable": true,
   "theme.font.weight": 700,
   "theme.osd.location": "bottom",
@@ -87,19 +86,19 @@
   "bar.media.truncation": false,
   "bar.media.show_label": true,
   "theme.bar.buttons.enableBorders": false,
-  "theme.bar.scaling": 80,
+  "theme.bar.scaling": 100,
   "theme.bar.buttons.background_opacity": 0,
-  "wallpaper.enable": false,
+  "wallpaper.enable": true,
   "theme.bar.menus.menu.dashboard.profile.size": "8.5em",
   "theme.bar.menus.menu.dashboard.confirmation_scaling": 100,
   "theme.notification.scaling": 100,
-  "theme.bar.menus.menu.volume.scaling": 90,
-  "theme.bar.menus.menu.clock.scaling": 90,
+  "theme.bar.menus.menu.volume.scaling": 100,
+  "theme.bar.menus.menu.clock.scaling": 100,
   "theme.bar.outer_spacing": "1em",
   "theme.bar.buttons.spacing": "0rem",
   "theme.bar.buttons.padding_x": "0.5rem",
   "theme.bar.buttons.clock.spacing": "0.5em",
-  "theme.bar.border.width": "0.1em",
+  "theme.bar.border.width": "0.0em",
   "theme.bar.buttons.y_margins": "0rem",
   "menus.dashboard.shortcuts.left.shortcut3.tooltip": "",
   "menus.dashboard.shortcuts.left.shortcut1.icon": "",
@@ -116,15 +115,37 @@
   "menus.dashboard.shortcuts.right.shortcut3.command": "hyprshot -m region --clipboard-only",
   "bar.media.format": "{artist:-} {title}",
   "notifications.autoDismiss": true,
-  "theme.bar.menus.menu.power.scaling": 90,
+  "theme.bar.menus.menu.power.scaling": 100,
   "menus.transition": "crossfade",
   "scalingPriority": "hyprland",
-  "theme.bar.menus.menu.dashboard.scaling": 80,
-  "theme.bar.menus.menu.media.scaling": 90,
-  "theme.bar.menus.menu.network.scaling": 90,
-  "theme.bar.menus.menu.bluetooth.scaling": 90,
-  "theme.bar.menus.menu.battery.scaling": 90,
+  "theme.bar.menus.menu.dashboard.scaling": 90,
+  "theme.bar.menus.menu.media.scaling": 100,
+  "theme.bar.menus.menu.network.scaling": 100,
+  "theme.bar.menus.menu.bluetooth.scaling": 100,
+  "theme.bar.menus.menu.battery.scaling": 100,
   "menus.dashboard.powermenu.avatar.name": "system",
   "theme.bar.menus.menu.dashboard.profile.radius": "0.4em",
-  "bar.clock.showIcon": false
+  "bar.clock.showIcon": false,
+  "bar.workspaces.numbered_active_indicator": "highlight",
+  "bar.windowtitle.icon": true,
+  "bar.network.label": false,
+  "theme.bar.buttons.workspaces.pill.height": "1em",
+  "theme.bar.buttons.workspaces.pill.active_width": "4em",
+  "bar.workspaces.show_icons": true,
+  "menus.transitionTime": 400,
+  "theme.bar.location": "top",
+  "theme.bar.buttons.workspaces.fontSize": "0.8em",
+  "bar.workspaces.spacing": 0.8,
+  "bar.workspaces.scroll_speed": 1,
+  "theme.bar.buttons.workspaces.numbered_active_highlight_border": "0.1em",
+  "bar.volume.label": false,
+  "bar.customModules.kbLayout.icon": "",
+  "theme.notification.enableShadow": true,
+  "theme.bar.menus.menu.notifications.height": "50em",
+  "theme.bar.border.location": "none",
+  "theme.osd.duration": 2100,
+  "notifications.timeout": 6000,
+  "tear": true,
+  "bar.windowtitle.custom_title": false,
+  "theme.bar.buttons.bluetooth.spacing": "1em"
 }
