@@ -1,28 +1,28 @@
-/* Minimal and compact Wofi styling */
+/* Minimal and compact Wofi styling (Nord) */
 
 window {
-  background-color: rgba(24, 24, 27, 0.95);
-  border: 1px solid rgba(94, 234, 212, 0.35);
-  border-radius: 8px;
+  background-color: rgba(46, 52, 64, 0.96); /* #2e3440 */
+  border: 1px solid rgba(76, 86, 106, 0.45); /* #4c566a */
+  border-radius: 6px;
 }
 
 #outer-box {
-  padding: 6px;
+  padding: 4px;
 }
 
 #input {
   margin: 2px 6px 8px 6px;
-  padding: 4px 6px;
+  padding: 3px 6px;
   border: none;
-  border-bottom: 1px solid rgba(94, 234, 212, 0.25);
+  border-bottom: 1px solid rgba(129, 161, 193, 0.25); /* #81a1c1 */
   border-radius: 0;
   background-color: transparent;
-  color: #e5e7eb;
+  color: #d8dee9; /* text */
   box-shadow: none;
 }
 
 #input:focus {
-  border-bottom-color: rgba(94, 234, 212, 0.5);
+  border-bottom-color: rgba(129, 161, 193, 0.5);
 }
 
 #inner-box {
@@ -30,18 +30,18 @@ window {
 }
 
 #entry {
-  padding: 6px 8px;
-  color: #e5e7eb;
-  border-radius: 8px;
+  padding: 5px 8px;
+  color: #d8dee9;
+  border-radius: 6px;
 }
 
 #entry:selected {
-  background-color: rgba(94, 234, 212, 0.15);
-  color: #e5e7eb;
-  border-radius: 8px;
+  background-color: rgba(129, 161, 193, 0.20); /* accent */
+  color: #2e3440; /* contrast */
+  border-radius: 6px;
 }
 
 #text {
-  color: #e5e7eb;
+  color: #d8dee9;
 }
 

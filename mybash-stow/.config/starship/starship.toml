@@ -1,13 +1,13 @@
 format = """
-[](#2B3339)\
-$python$username\
-[](bg:#323C41 fg:#2B3339)\
-$directory\
-[](fg:#323C41 bg:#3A454A)\
-$git_branch$git_status\
-[](fg:#3A454A bg:#83C092)\
-$time\
-[ ](fg:#83C092)\
+[](#2E3440)\
+ $python$username\
+[](bg:#3B4252 fg:#2E3440)\
+ $directory\
+[](fg:#3B4252 bg:#434C5E)\
+ $git_branch$git_status\
+[](fg:#434C5E bg:#88C0D0)\
+ $time\
+[ ](fg:#88C0D0)\
 """
 command_timeout = 1200
 add_newline = false
@@ -15,15 +15,15 @@ add_newline = false
 # You can also replace your username with a neat symbol like  to save some space
 [username]
 show_always = true
-# User: Everforest Dark Hard BG (#2B3339), Foreground (#D3C6AA)
-style_user = "bg:#2B3339 fg:#D3C6AA"
-# Root: Everforest Orange (#E69875), Dark Hard FG (#2B3339)
-style_root = "bg:#E69875 fg:#2B3339"
+# User: Nord Dark BG (#2E3440), Snow (#D8DEE9)
+style_user = "bg:#2E3440 fg:#D8DEE9"
+# Root: Nord Orange (#D08770), Dark BG (#2E3440)
+style_root = "bg:#D08770 fg:#2E3440"
 format = '[ $user ]($style)'
 
 [directory]
-# Directory: Everforest Dark Medium BG (#323C41), Foreground (#D3C6AA)
-style = "bg:#323C41 fg:#D3C6AA"
+# Directory: Nord Medium BG (#3B4252), Snow (#D8DEE9)
+style = "bg:#3B4252 fg:#D8DEE9"
 format = "[ $path ]($style)"
 truncation_length = 3
 truncation_symbol = "…/"
@@ -41,47 +41,43 @@ truncation_symbol = "…/"
 # So either put "Important Documents" before "Documents" or use the substituted version:
 # "Important  " = "  "
 
- 
 
- 
 
- 
 
- 
 
 [git_branch]
 symbol = ""
-# Git Branch: Everforest Dark Soft BG (#3A454A), Yellow (#DBBC7F)
-style = "bg:#3A454A fg:#DBBC7F"
+# Git Branch: Nord Light BG (#434C5E), Yellow (#EBCB8B)
+style = "bg:#434C5E fg:#EBCB8B"
 format = '[ $symbol $branch ]($style)'
 
 [git_status]
-# Git Status: Everforest Dark Soft BG (#3A454A), Green (#A7C080)
-style = "bg:#3A454A fg:#A7C080"
+# Git Status: Nord Light BG (#434C5E), Green (#A3BE8C)
+style = "bg:#434C5E fg:#A3BE8C"
 format = '[$all_status$ahead_behind ]($style)'
 
- 
 
- 
 
- 
 
- 
 
- 
 
- 
+
 
 [python]
-# Python: Everforest Dark Hard BG (#2B3339), Blue Accent (#7FBBB3)
-style = "bg:#2B3339 fg:#7FBBB3"
+# Python: Nord Dark BG (#2E3440), Frost (#8FBCBB)
+style = "bg:#2E3440 fg:#8FBCBB"
 format = '[(\($virtualenv\) )]($style)'
 
- 
+
+
+
+
+
+
 
 [time]
 disabled = false
 time_format = "%R" # Hour:Minute Format
-# Time: Everforest Aqua BG (#83C092), Dark Hard FG (#2B3339)
-style = "bg:#83C092 fg:#2B3339"
+# Time: Nord Cyan BG (#88C0D0), Dark BG (#2E3440)
+style = "bg:#88C0D0 fg:#2E3440"
 format = '[ $time ]($style)'

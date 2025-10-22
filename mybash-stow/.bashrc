@@ -422,3 +422,5 @@ fi
 
 # Source additional environment configuration
 . "$HOME/.local/share/../bin/env"
+export PATH="$HOME/.cargo/bin:$PATH"
+. "$HOME/.cargo/env"
