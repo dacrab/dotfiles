@@ -1,0 +1,46 @@
+log_level = "warn"
+outputs = "All"
+position = "Top"
+
+[modules]
+left = [ "Workspaces" ]
+center = [ "Clock" ]
+right = [ [ "Tray", "KeyboardLayout", "KeyboardSubmap", "Privacy", "Settings" ] ]
+
+[appearance]
+style = "Solid"
+opacity = 1.0
+scale_factor = 1.0
+primary_color = "#88C0D0"          # Frost
+success_color = "#A3BE8C"          # Aurora Green
+text_color = "#ECEFF4"             # Snow Storm
+workspace_colors = [ "#88C0D0", "#81A1C1", "#5E81AC" ]
+special_workspace_colors = [ "#EBCB8B", "#B48EAD" ]
+
+[appearance.danger_color]
+base = "#BF616A"    # Aurora Red
+weak = "#D08770"    # Aurora Orange (as weak)
+
+[appearance.background_color]
+base = "#2E3440"    # Polar Night 0
+weak = "#3B4252"    # Polar Night 1
+strong = "#434C5E"  # Polar Night 2
+
+[appearance.secondary_color]
+base = "#3B4252"    # Slightly lighter background accent
+background_color = "#000000"
+text_color = "#FFFFFF"
+
+[window_title]
+truncate_title_after_length = 100
+
+[settings]
+# Quick settings commands (optional helpers)
+lock_cmd = "playerctl --all-players pause; hyprlock &"
+audio_sinks_more_cmd = "pavucontrol -t 3"
+audio_sources_more_cmd = "pavucontrol -t 4"
+wifi_more_cmd = "nm-connection-editor"
+vpn_more_cmd = "nm-connection-editor"
+bluetooth_more_cmd = "blueman-manager"
+remove_airplane_btn = false
+remove_idle_btn = false
