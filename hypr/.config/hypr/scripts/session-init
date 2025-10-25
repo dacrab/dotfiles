@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+start_keyring() {
+  if command -v gnome-keyring-daemon >/dev/null 2>&1; then
+    eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null || true)"
+    [ -n "${SSH_AUTH_SOCK:-}" ] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}" >/dev/null 2>&1 || true
+  fi
+}
+
+start_polkit() {
+  if command -v lxqt-policykit-agent >/dev/null 2>&1; then
+    pgrep -x lxqt-policykit-agent >/dev/null 2>&1 || lxqt-policykit-agent &
+  elif command -v polkit-gnome-authentication-agent-1 >/dev/null 2>&1; then
+    pgrep -x polkit-gnome-authentication-agent-1 >/dev/null 2>&1 || polkit-gnome-authentication-agent-1 &
+  fi
+}
+
+propagate_env() {
+  command -v dbus-update-activation-environment >/dev/null 2>&1 && \
+    dbus-update-activation-environment --systemd --all >/dev/null 2>&1 || true
+}
+
+start_keyring
+start_polkit
+propagate_env
+
+exit 0

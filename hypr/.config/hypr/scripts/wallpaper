@@ -1,330 +1,42 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# =============================================================================
-# WALLPAPER MANAGEMENT SCRIPT
-# =============================================================================
-# A unified script for managing wallpapers in Hyprland
-# 
-# Usage:
-#   wallpaper cycle     - Cycle to the next wallpaper
-#   wallpaper list      - List available wallpapers
-#   wallpaper current   - Show current wallpaper
-#   wallpaper set <path> - Set a specific wallpaper
-#   wallpaper sync      - Sync current wallpaper to all monitors
-#   wallpaper random    - Pick a random wallpaper from the directory
-#
-# Author: dacrab
-# =============================================================================
+DIR="$HOME/Pictures/wallpapers/nord-background"
+CONF="$HOME/.config/hyprpaper/hyprpaper.conf"
 
-# Configuration
-readonly WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord-background"
-readonly HYPERPAPER_CONF="$HOME/.config/hyprpaper/hyprpaper.conf"
-readonly MAX_ATTEMPTS=5
+monitors() { hyprctl monitors | awk '/^Monitor /{gsub(/[":]/, "", $2); print $2}'; }
 
-# Colors for output
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
-
-# =============================================================================
-# UTILITY FUNCTIONS
-# =============================================================================
-
-print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
-
-get_wallpapers() {
-    find "$WALLPAPER_DIR" -type f \
-        \( -iname "*.png" -o -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.webp" \) | sort
+apply_all() {
+  local wp="$1"
+  hyprctl hyprpaper preload "$wp" >/dev/null 2>&1 || true
+  for m in $(monitors); do
+    hyprctl hyprpaper wallpaper "$m,$wp" >/dev/null 2>&1 || true
+  done
+  mkdir -p "$(dirname "$CONF")"
+  {
+    printf 'preload = %s\n' "$wp"
+    for m in $(monitors); do printf 'wallpaper = %s,%s\n' "$m" "$wp"; done
+    printf 'splash = false\n'
+  } >"$CONF"
 }
 
-get_monitors() {
-    hyprctl monitors | awk '/^Monitor /{gsub(/[":]/, "", $2); print $2}'
+cmd_random() {
+  mapfile -t pics < <(find "$DIR" -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \))
+  [ ${#pics[@]} -gt 0 ] || exit 1
+  local pick=${pics[RANDOM % ${#pics[@]}]}
+  apply_all "$pick"
 }
 
-get_current_wallpaper() {
-    local path
-    # Prefer the first active wallpaper reported by hyprpaper
-    path=$(hyprctl hyprpaper listactive 2>/dev/null | awk -F ' = ' 'NF==2 && $2!="" { print $2; exit }') || true
-    if [[ -z "${path:-}" && -f "$HYPERPAPER_CONF" ]]; then
-        # Fallback: read from hyprpaper config (preload first, then first wallpaper entry)
-        local raw
-        raw=$(awk -F'= ' '/^preload = /{print $2; found=1; exit} /^wallpaper = / && !found {print $2; exit}' "$HYPERPAPER_CONF" || true)
-        if [[ -n "${raw:-}" ]]; then
-            # wallpaper line format is: "MONITOR,PATH"; take PATH
-            path=$(awk -F',' 'NR==1{print $2}' <<< "$raw")
-        fi
-    fi
-    echo "${path:-}"
+cmd_sync() {
+  local wp
+  wp=$(awk -F'= ' '/^preload/{print $2; exit}' "$CONF" 2>/dev/null || true)
+  [ -n "${wp:-}" ] || exit 0
+  apply_all "$wp"
 }
 
-ensure_prereqs() {
-    if ! command -v hyprctl >/dev/null 2>&1; then
-        print_error "hyprctl not found in PATH"
-        exit 1
-    fi
-    if [[ ! -d "$WALLPAPER_DIR" ]]; then
-        print_error "Wallpaper directory missing: $WALLPAPER_DIR"
-        exit 1
-    fi
-    # Warn if hyprpaper is not running; applying via hyprctl will fail
-    if ! pgrep -ax hyprpaper >/dev/null 2>&1; then
-        print_warning "hyprpaper is not running; start it or enable autostart"
-    fi
-}
-
-# =============================================================================
-# CORE FUNCTIONS
-# =============================================================================
-
-write_config() {
-    local wallpaper_path="$1"
-    local monitors
-    mapfile -t monitors < <(get_monitors)
-
-    if (( ${#monitors[@]} == 0 )); then
-        print_error "No monitors detected"
-        return 1
-    fi
-
-    mkdir -p "$(dirname "$HYPERPAPER_CONF")"
-
-    local tmp_file
-    tmp_file="${HYPERPAPER_CONF}.tmp.$$"
-
-    {
-        echo "preload = $wallpaper_path"
-        for monitor in "${monitors[@]}"; do
-            echo "wallpaper = $monitor,$wallpaper_path"
-        done
-    } > "$tmp_file"
-
-    mv "$tmp_file" "$HYPERPAPER_CONF"
-    print_success "Updated hyprpaper config"
-}
-
-apply_wallpaper() {
-    local wallpaper_path="$1"
-    local monitors
-    mapfile -t monitors < <(get_monitors)
-    
-    if (( ${#monitors[@]} == 0 )); then
-        print_error "No monitors detected"
-        return 1
-    fi
-    
-    print_info "Applying wallpaper to ${#monitors[@]} monitor(s)"
-    
-    # Preload wallpaper
-    hyprctl hyprpaper preload "$wallpaper_path" &>/dev/null
-    
-    # Apply to all monitors
-    local success_count=0
-    for monitor in "${monitors[@]}"; do
-        local attempt=0
-        while (( attempt < MAX_ATTEMPTS )); do
-            if hyprctl hyprpaper wallpaper "$monitor,$wallpaper_path" &>/dev/null; then
-                print_success "Applied to $monitor"
-                ((success_count++))
-                break
-            fi
-            ((attempt++))
-            sleep 0.2
-        done
-        
-        if (( attempt >= MAX_ATTEMPTS )); then
-            print_error "Failed to apply to $monitor"
-        fi
-    done
-    
-    if (( success_count == ${#monitors[@]} )); then
-        print_success "Wallpaper applied to all monitors"
-        return 0
-    elif (( success_count > 0 )); then
-        print_warning "Applied to $success_count/${#monitors[@]} monitors"
-        return 0
-    else
-        print_error "Failed to apply wallpaper"
-        return 1
-    fi
-}
-
-set_wallpaper() {
-    local wallpaper_path="$1"
-    
-    if [[ ! -f "$wallpaper_path" ]]; then
-        print_error "File does not exist: $wallpaper_path"
-        return 1
-    fi
-    
-    apply_wallpaper "$wallpaper_path" && write_config "$wallpaper_path"
-}
-
-# =============================================================================
-# COMMAND FUNCTIONS
-# =============================================================================
-
-random_wallpaper() {
-    mapfile -t wallpapers < <(get_wallpapers)
-    if (( ${#wallpapers[@]} == 0 )); then
-        print_error "No wallpapers found in $WALLPAPER_DIR"
-        return 1
-    fi
-
-    local current_wp
-    current_wp=$(get_current_wallpaper)
-
-    local pick
-    if command -v shuf >/dev/null 2>&1; then
-        pick=$(printf '%s\n' "${wallpapers[@]}" | shuf -n1)
-    else
-        local idx=$(( RANDOM % ${#wallpapers[@]} ))
-        pick=${wallpapers[$idx]}
-    fi
-
-    if [[ -n "$current_wp" && ${#wallpapers[@]} -gt 1 && "$pick" == "$current_wp" ]]; then
-        for i in "${!wallpapers[@]}"; do
-            if [[ "${wallpapers[$i]}" == "$current_wp" ]]; then
-                pick=${wallpapers[$(( (i + 1) % ${#wallpapers[@]} ))]}
-                break
-            fi
-        done
-    fi
-
-    print_info "Random: $(basename "$pick")"
-    set_wallpaper "$pick"
-}
-
-cycle_wallpaper() {
-    print_info "Cycling wallpaper..."
-    
-    local wallpapers
-    mapfile -t wallpapers < <(get_wallpapers)
-    
-    if (( ${#wallpapers[@]} == 0 )); then
-        print_error "No wallpapers found in $WALLPAPER_DIR"
-        return 1
-    fi
-
-    local current_wp
-    current_wp=$(get_current_wallpaper)
-    
-    # Find current wallpaper index
-    local current_index=-1
-    for i in "${!wallpapers[@]}"; do
-        if [[ "${wallpapers[i]}" == "$current_wp" ]]; then
-            current_index=$i
-            break
-        fi
-    done
-    
-    # Get next wallpaper
-    local next_index=$(( (current_index + 1) % ${#wallpapers[@]} ))
-    local next_wp="${wallpapers[$next_index]}"
-    
-    print_info "Setting: $(basename "$next_wp")"
-    set_wallpaper "$next_wp"
-}
-
-list_wallpapers() {
-    print_info "Available wallpapers in $WALLPAPER_DIR:"
-    echo
-    
-    local wallpapers
-    mapfile -t wallpapers < <(get_wallpapers)
-    
-    if (( ${#wallpapers[@]} == 0 )); then
-        print_warning "No wallpapers found"
-        return 1
-    fi
-    
-    for i in "${!wallpapers[@]}"; do
-        echo "  $((i+1)). $(basename "${wallpapers[i]}")"
-    done
-    
-    echo
-    print_info "Total: ${#wallpapers[@]} wallpapers"
-}
-
-show_current() {
-    local current_wp
-    current_wp=$(get_current_wallpaper)
-    
-    if [[ -n "$current_wp" ]]; then
-        print_info "Current wallpaper: $(basename "$current_wp")"
-        echo "  Path: $current_wp"
-    else
-        print_warning "No wallpaper currently set"
-    fi
-}
-
-set_specific_wallpaper() {
-    local wallpaper_path="$1"
-    
-    if [[ -z "$wallpaper_path" ]]; then
-        print_error "No wallpaper path provided"
-        return 1
-    fi
-    
-    print_info "Setting wallpaper: $(basename "$wallpaper_path")"
-    set_wallpaper "$wallpaper_path"
-}
-
-sync_all_monitors() {
-    print_info "Syncing wallpaper to all monitors..."
-    
-    local current_wp
-    current_wp=$(get_current_wallpaper)
-    
-    if [[ -z "$current_wp" ]]; then
-        print_warning "No current wallpaper detected"
-        return 1
-    fi
-    
-    print_info "Syncing: $(basename "$current_wp")"
-    set_wallpaper "$current_wp"
-}
-
-show_usage() {
-    echo "Usage: $0 {cycle|list|current|set <path>|sync|random}"
-    echo
-    echo "Commands:"
-    echo "  cycle      - Cycle to the next wallpaper"
-    echo "  list       - List available wallpapers"
-    echo "  current    - Show current wallpaper"
-    echo "  set <path> - Set a specific wallpaper"
-    echo "  sync       - Sync current wallpaper to all monitors"
-    echo "  random     - Set a random wallpaper from the directory"
-    echo
-    echo "Configuration:"
-    echo "  Wallpaper directory: $WALLPAPER_DIR"
-    echo "  Hyprpaper config: $HYPERPAPER_CONF"
-}
-
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-ensure_prereqs
-
-if (( $# == 0 )); then
-    show_usage
-    exit 1
-fi
-
-case "$1" in
-    cycle)   cycle_wallpaper ;;
-    list)    list_wallpapers ;;
-    current) show_current ;;
-    set)     set_specific_wallpaper "${2:-}" ;;
-    sync)    sync_all_monitors ;;
-    random)  random_wallpaper ;;
-    *)       print_error "Unknown command: $1"
-             show_usage
-             exit 1 ;;
+case "${1:-}" in
+  random) cmd_random ;;
+  sync)   cmd_sync ;;
+  set)    apply_all "${2:?path}" ;;
+  *)      echo "usage: $0 {random|sync|set <file>}"; exit 1 ;;
 esac

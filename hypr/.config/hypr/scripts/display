@@ -1,198 +1,38 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# =============================================================================
-# DISPLAY MANAGEMENT SCRIPT
-# =============================================================================
-# A unified script for managing displays in Hyprland
-# 
-# Usage:
-#   display toggle     - Toggle eDP-1 display on/off
-#   display status     - Show current display status
-#   display list       - List all available displays
-#   display enable <name>  - Enable a specific display
-#   display disable <name> - Disable a specific display
-#
-# Author: dacrab
-# =============================================================================
+have() { command -v "$1" >/dev/null 2>&1; }
 
-# Configuration
-readonly STATE_FILE="$HOME/.cache/hypr_display_state"
-readonly CONFIG_FILE="$HOME/.config/hypr/hyprland.conf"
-readonly MONITORS_CONFIG="$HOME/.config/hypr/configs/monitors.conf"
-
-# Colors for output
-readonly RED='\033[0;31m'
-readonly GREEN='\033[0;32m'
-readonly YELLOW='\033[1;33m'
-readonly BLUE='\033[0;34m'
-readonly NC='\033[0m'
-# =============================================================================
-# UTILITY FUNCTIONS
-# =============================================================================
-
-print_info() { echo -e "${BLUE}[INFO]${NC} $1"; }
-print_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
-print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
-print_error() { echo -e "${RED}[ERROR]${NC} $1" >&2; }
-ensure_cache_dir() {
-    mkdir -p "$(dirname "$STATE_FILE")"
+is_enabled() {
+  hyprctl monitors | grep -q "Monitor $1"
 }
 
-is_display_enabled() {
-    local display_name="$1"
-    hyprctl monitors | grep -q "Monitor $display_name"
+toggle() {
+  local name="eDP-1"
+  if is_enabled "$name"; then
+    hyprctl keyword monitor "$name,disable"
+  else
+    hyprctl keyword monitor "$name,1920x1080@60,1920x0,1"
+  fi
+  have "$HOME/.config/hypr/scripts/wallpaper" && "$HOME/.config/hypr/scripts/wallpaper" sync >/dev/null 2>&1 || true
 }
 
-get_all_monitors() {
-    hyprctl monitors | grep "Monitor" | sed 's/^Monitor //' | sed 's/:$//'
-}
-update_monitors_config() {
-    local display_name="$1"
-    local monitor_line="$2"
-    
-    [ -f "$MONITORS_CONFIG" ] || return 0
-    cp "$MONITORS_CONFIG" "${MONITORS_CONFIG}.backup" 2>/dev/null || true
-    
-    if grep -q "^monitor = $display_name," "$MONITORS_CONFIG"; then
-        sed -i "s/^monitor = $display_name,.*/monitor = $display_name,$monitor_line/" "$MONITORS_CONFIG"
-        print_info "Updated $MONITORS_CONFIG"
-    else
-        print_warning "Monitor $display_name not found in $MONITORS_CONFIG"
-    fi
+enable() {
+  local name="$1"
+  local res="${2:-1920x1080@60}"
+  local pos="${3:-0x0}"
+  hyprctl keyword monitor "$name,$res,$pos,1"
+  have "$HOME/.config/hypr/scripts/wallpaper" && "$HOME/.config/hypr/scripts/wallpaper" sync >/dev/null 2>&1 || true
 }
 
-update_state_file() {
-    local display_name="$1"
-    local state="$2"
-    
-    [ "$display_name" = "eDP-1" ] && echo "$state" > "$STATE_FILE"
-}
-# =============================================================================
-# DISPLAY FUNCTIONS
-# =============================================================================
-
-toggle_edp() {
-    local display_name="eDP-1"
-    
-    if is_display_enabled "$display_name"; then
-        disable_display "$display_name"
-    else
-        enable_display "$display_name"
-fi
+disable() {
+  local name="$1"
+  hyprctl keyword monitor "$name,disable"
 }
 
-show_status() {
-    print_info "Current display status:"
-    echo
-    
-    local monitors
-    monitors=$(get_all_monitors)
-    
-    if [ -z "$monitors" ]; then
-        print_warning "No displays detected"
-        return 1
-    fi
-    
-    while IFS= read -r monitor; do
-        local status_icon="❌"
-        is_display_enabled "$monitor" && status_icon="✅"
-        echo "  $status_icon $monitor"
-    done <<< "$monitors"
-    
-    if [ -f "$STATE_FILE" ]; then
-        local cached_state
-        cached_state=$(cat "$STATE_FILE")
-        echo "  📁 Cached eDP-1 state: $cached_state"
-    fi
-}
-
-list_displays() {
-        show_status
-}
-
-enable_display() {
-    local display_name="$1"
-    
-    [ -z "$display_name" ] && { print_error "No display name provided"; return 1; }
-    
-    if is_display_enabled "$display_name"; then
-        print_warning "$display_name is already enabled"
-        return 0
-    fi
-    
-    print_info "Enabling $display_name..."
-    
-    local resolution="1920x1080@60"
-    local position="0x0"
-    
-    [ "$display_name" = "eDP-1" ] && position="1920x0"
-    
-    hyprctl keyword monitor "$display_name,$resolution,$position,1"
-    update_monitors_config "$display_name" "$resolution,$position,1"
-    update_state_file "$display_name" "enabled"
-    print_success "✅ $display_name enabled"
-    
-    # Sync wallpaper to the newly enabled monitor
-    print_info "Syncing wallpaper to new monitor..."
-    local wallpaper_script="$HOME/.config/hypr/scripts/wallpaper"
-    if [[ -x "$wallpaper_script" ]]; then
-        if "$wallpaper_script" sync &>/dev/null; then
-            print_success "Wallpaper synced"
-        else
-            print_warning "Failed to sync wallpaper"
-        fi
-    fi
-}
-
-disable_display() {
-    local display_name="$1"
-    
-    [ -z "$display_name" ] && { print_error "No display name provided"; return 1; }
-    
-    if ! is_display_enabled "$display_name"; then
-        print_warning "$display_name is already disabled"
-        return 0
-    fi
-    
-    print_info "Disabling $display_name..."
-    
-    hyprctl keyword monitor "$display_name,disable"
-    update_monitors_config "$display_name" "disable"
-    update_state_file "$display_name" "disabled"
-    print_success "❌ $display_name disabled"
-}
-
-show_usage() {
-    echo "Usage: $0 {toggle|status|list|enable <name>|disable <name>}"
-    echo
-    echo "Commands:"
-    echo "  toggle           - Toggle eDP-1 display on/off"
-    echo "  status           - Show current display status"
-    echo "  list             - List all available displays"
-    echo "  enable <name>    - Enable a specific display"
-    echo "  disable <name>   - Disable a specific display"
-    echo
-    echo "Configuration:"
-    echo "  State file: $STATE_FILE"
-    echo "  Config file: $CONFIG_FILE"
-    echo "  Monitors config: $MONITORS_CONFIG"
-}
-
-# =============================================================================
-# MAIN SCRIPT
-# =============================================================================
-
-ensure_cache_dir
-
-[ $# -eq 0 ] && { show_usage; exit 1; }
-
-case "$1" in
-    "toggle")   toggle_edp ;;
-    "status")   show_status ;;
-    "list")     list_displays ;;
-    "enable")   enable_display "$2" ;;
-    "disable")  disable_display "$2" ;;
-    *)          print_error "Unknown command: $1"
-        echo "Use '$0' to see available commands"
-                exit 1 ;;
+case "${1:-}" in
+  toggle)  toggle ;;
+  enable)  enable "${2:?name}" "${3:-}" "${4:-}" ;;
+  disable) disable "${2:?name}" ;;
+  *)       echo "usage: $0 {toggle|enable <name> [res] [pos]|disable <name>}"; exit 1 ;;
 esac
