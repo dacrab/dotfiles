@@ -13,6 +13,7 @@ Thumbs.db
 *.swo
 .vscode/
 .idea/
+.sass-cache
 
 # Temporary files
 *.tmp
