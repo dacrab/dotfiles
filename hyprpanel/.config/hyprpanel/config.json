@@ -2,13 +2,13 @@
   "bar.customModules.storage.paths": [
     "/"
   ],
-  "theme.font.size": "0.8rem",
+  "theme.font.size": "0.9rem",
   "bar.autoHide": "fullscreen",
   "bar.launcher.autoDetectIcon": true,
   "theme.bar.buttons.dashboard.enableBorder": false,
   "bar.workspaces.monitorSpecific": false,
-  "theme.font.name": "MesloLGLDZ Nerd Font Propo",
-  "theme.font.label": "MesloLGLDZ Nerd Font Propo",
+  "theme.font.name": "Inter",
+  "theme.font.label": "Inter",
   "theme.bar.menus.monochrome": false,
   "theme.bar.transparent": false,
   "bar.workspaces.show_numbered": false,
@@ -30,12 +30,12 @@
         "notifications"
       ],
       "right": [
+        "systray",
         "kbinput",
         "volume",
         "network",
         "bluetooth",
         "battery",
-        "systray",
         "power"
       ]
     }
@@ -77,7 +77,7 @@
   ],
   "notifications.position": "top right",
   "theme.osd.enable": true,
-  "theme.font.weight": 700,
+  "theme.font.weight": 600,
   "theme.osd.location": "bottom",
   "theme.osd.orientation": "horizontal",
   "theme.osd.margins": "7px 7px 10px 7px",
