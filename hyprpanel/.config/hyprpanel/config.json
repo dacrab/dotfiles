@@ -40,7 +40,7 @@
       ]
     }
   },
-  "wallpaper.image": "/home/dacrab/.config/background",
+  "wallpaper.image": "$HOME/.config/background",
   "theme.bar.menus.background": "#3b4252",
   "theme.matugen": true,
   "theme.matugen_settings.mode": "dark",
