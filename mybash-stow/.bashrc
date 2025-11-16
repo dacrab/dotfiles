@@ -230,15 +230,15 @@ DISTRO=$(get_distro)
 case "$DISTRO" in
   debian)
     alias install='sudo apt install'
-    alias update='sudo apt update && sudo apt full-upgrade'
+    alias update='sudo apt update && sudo apt full-upgrade && flatpak update'
     alias search='apt search'
-    alias remove='sudo apt remove'
+    alias remove='sudo apt remove && sudo apt autoremove'
     ;;
   redhat)
     alias install='sudo dnf install'
-    alias update='sudo dnf upgrade --refresh'
+    alias update='sudo dnf upgrade --refresh && flatpak update'
     alias search='dnf search'
-    alias remove='sudo dnf remove'
+    alias remove='sudo dnf remove && sudo dnf autoremove'
     ;;
   arch)
     alias install='sudo pacman -S'
