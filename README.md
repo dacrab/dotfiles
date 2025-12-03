@@ -8,10 +8,13 @@ Stow‑managed configs for my Linux environment: Hyprland, panels/launchers, she
 - hyprpanel — Panel for Hyprland
 - ashell — Alternative shell/panel setup (optional)
 - fuzzel, rofi, wofi — Launchers and themes
-- gtk — GTK configuration
-- mybash-stow — Bash config (.bashrc) and Starship prompt
+- gtk — GTK configuration (GTK2/GTK3 themes, cursor, fonts)
+- mybash-stow — Bash config (.bashrc / .bash_profile) and Starship prompt
+- git-stow — Global git configuration (~/.gitconfig)
+- fzf-stow — fzf shell integration (~/.fzf.bash)
 - scripts-stow — Helper scripts (e.g., random-wall.sh)
 - ssh-stow — Safe SSH files (config and public keys only)
+- ghostty, waybar, waypaper, tiling-assistant, spicetify, xsettingsd, themes — per-app configs under ~/.config
 
 ## Requirements
 
@@ -27,7 +30,8 @@ git clone https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Common setup
-stow hypr hyprpanel fuzzel gtk rofi wofi mybash-stow scripts-stow
+stow hypr hyprpanel fuzzel gtk rofi wofi mybash-stow git-stow fzf-stow scripts-stow \
+     ghostty waybar waypaper tiling-assistant spicetify xsettingsd themes
 
 # Optional: use ashell instead of hyprpanel
 stow ashell
@@ -76,7 +80,9 @@ Note: Uses `gsettings` (GNOME). For other desktops/compositors, replace the appl
 ```bash
 cd ~/dotfiles
 git pull
-stow -R hypr hyprpanel ashell fuzzel gtk rofi wofi mybash-stow scripts-stow ssh-stow
+stow -R hypr hyprpanel ashell fuzzel gtk rofi wofi mybash-stow git-stow fzf-stow \
+        scripts-stow ssh-stow ghostty waybar waypaper tiling-assistant spicetify \
+        xsettingsd themes
 ```
 
 ## License

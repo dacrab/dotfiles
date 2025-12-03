@@ -54,6 +54,10 @@ export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
 # PATH
 export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$HOME/.composer/vendor/bin:$HOME/.config/herd-lite/bin:$HOME/.spicetify:$PATH"
 
+# bun
+export BUN_INSTALL="${BUN_INSTALL:-$HOME/.bun}"
+export PATH="$BUN_INSTALL/bin:$PATH"
+
 # PHP
 export PHP_INI_SCAN_DIR="$HOME/.config/herd-lite/bin:${PHP_INI_SCAN_DIR:-}"
 
@@ -287,6 +291,7 @@ alias servep='python3 -m http.server 8000 --bind 127.0.0.1'
 
 # Custom
 alias cursor-reset='cd ~/Documents/GitHub/cursor-reset && ./cursor-reset.sh'
+alias gemini='npx https://github.com/google-gemini/gemini-cli'
 
 #################### KEYBINDINGS ####################
 bind '"\C-f":"zi\n"' 2>/dev/null
