@@ -14,7 +14,7 @@ background = #2e3440
 background-opacity = 0.9
 
 # Font and cursor settings
-font-family = Jetbrains Nerd Font
+font-family = GeistMono Nerd Font
 font-size = 10
 cursor-style = block
 
