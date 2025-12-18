@@ -101,9 +101,9 @@
   "theme.bar.border.width": "0.0em",
   "theme.bar.buttons.y_margins": "0rem",
   "menus.dashboard.shortcuts.left.shortcut3.tooltip": "",
-  "menus.dashboard.shortcuts.left.shortcut1.icon": "",
-  "menus.dashboard.shortcuts.left.shortcut1.command": "",
-  "menus.dashboard.shortcuts.left.shortcut1.tooltip": "",
+  "menus.dashboard.shortcuts.left.shortcut1.icon": "󰔎",
+  "menus.dashboard.shortcuts.left.shortcut1.command": "/home/dacrab/.local/bin/toggle-theme",
+  "menus.dashboard.shortcuts.left.shortcut1.tooltip": "Toggle light/dark theme",
   "menus.dashboard.shortcuts.left.shortcut2.icon": "",
   "menus.dashboard.shortcuts.left.shortcut2.command": "",
   "menus.dashboard.shortcuts.left.shortcut2.tooltip": "",
@@ -147,5 +147,7 @@
   "notifications.timeout": 6000,
   "tear": true,
   "bar.windowtitle.custom_title": false,
-  "theme.bar.buttons.bluetooth.spacing": "1em"
+  "theme.bar.buttons.bluetooth.spacing": "1em",
+  "bar.volume.scrollDown": "hyprpanel vol -2",
+  "bar.volume.scrollUp": "hyprpanel vol +2"
 }
