@@ -93,17 +93,10 @@ else
         LAST_USED=""
     fi
 
-    # Max retries to find a new one (simple loop is faster than array filtering for large lists)
+    # Max retries to find a new one
     for _ in {1..5}; do
-        # Modern shuf is standard on Linux
-        SELECTED=$(printf '%s\0' "${CANDIDATES[@]}" | shuf -z -n 1)
-        # Handle null byte if present (though shuf -z outputs with null, command sub might strip trailing)
-        # Actually shuf -z output needs to be read carefully.
-        # Simpler: Pick an index.
-        
         idx=$(( RANDOM % count ))
         SELECTED="${CANDIDATES[$idx]}"
-        
         [[ "$SELECTED" != "$LAST_USED" ]] && break
     done
 fi
