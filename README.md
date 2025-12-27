@@ -1,27 +1,46 @@
-# dacrab’s Dotfiles
+# dacrab's Dotfiles
 
-Stow‑managed configs for my Linux environment: Hyprland, panels/launchers, shell, SSH, and helper scripts. Packages are symlinked into $HOME using GNU Stow.
+Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers, terminals, shell, SSH, and helper scripts. Packages are symlinked into $HOME using GNU Stow.
 
 ## Contents
 
-- hypr — Hyprland config (hyprland.conf, keybindings, hyprpaper integration)
-- hyprpanel — Panel for Hyprland
-- ashell — Alternative shell/panel setup (optional)
-- fuzzel, rofi, wofi — Launchers and themes
-- gtk — GTK configuration (GTK2/GTK3 themes, cursor, fonts)
-- mybash-stow — Bash config (.bashrc / .bash_profile) and Starship prompt
-- git-stow — Global git configuration (~/.gitconfig)
-- fzf-stow — fzf shell integration (~/.fzf.bash)
+### Window Managers & Desktop
+- hypr-stow — Hyprland config (hyprland.conf, keybindings, hyprpaper)
+- niri-stow — Niri compositor config
+- hyprpanel-stow — Panel for Hyprland
+- ashell-stow — Alternative shell/panel setup
+- waybar-stow — Waybar config
+
+### Terminals
+- ghostty-stow — Ghostty terminal (primary)
+- kitty-stow — Kitty terminal (backup config)
+
+### Launchers
+- wofi-stow — Wofi launcher
+
+### Shell & CLI
+- mybash — Bash config (.bashrc / .bash_profile) and Starship prompt
+- git-stow — Global git configuration
+- fzf-stow — fzf shell integration
+- fastfetch-stow — Fastfetch system info config
 - scripts-stow — Helper scripts (e.g., random-wall.sh)
 - ssh-stow — Safe SSH files (config and public keys only)
-- ghostty, waybar, waypaper, tiling-assistant, spicetify, xsettingsd, themes — per-app configs under ~/.config
+
+### Apps & Theming
+- gtk-stow — GTK configuration (GTK2/GTK3/GTK4 themes, cursor, fonts)
+- browser-flags-stow — Chrome/Code Wayland flags
+- spicetify-stow — Spicetify config
+- tiling-assistant-stow — GNOME tiling assistant
+
+### Archived
+Old configs in `archived/`: fuzzel, rofi, themes, waypaper, xsettingsd
 
 ## Requirements
 
 - GNU Stow
-- For Hyprland packages: Hyprland (and hyprpaper if configured)
-- For random-wall.sh: gsettings (GNOME) or adapt the “apply wallpaper” step
-- Starship (for mybash-stow) and bash
+- Hyprland or Niri (for respective WM configs)
+- Starship (for mybash) and bash
+- For random-wall.sh: gsettings (GNOME) or adapt for your compositor
 
 ## Install
 
@@ -29,14 +48,18 @@ Stow‑managed configs for my Linux environment: Hyprland, panels/launchers, she
 git clone https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
-# Common setup
-stow hypr hyprpanel fuzzel gtk rofi wofi mybash-stow git-stow fzf-stow scripts-stow \
-     ghostty waybar waypaper tiling-assistant spicetify xsettingsd themes
+# Core setup
+stow hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
+     ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
+     browser-flags-stow fastfetch-stow wofi-stow
 
-# Optional: use ashell instead of hyprpanel
-stow ashell
+# Optional: Niri instead of Hyprland
+stow niri-stow ashell-stow
 
-# SSH (only safe files are tracked: config, *.pub)
+# Optional: Kitty terminal (backup)
+stow kitty-stow
+
+# SSH (only safe files tracked)
 stow ssh-stow
 ```
 
@@ -49,40 +72,27 @@ Tips:
 
 ### random-wall.sh
 
-Sets a random wallpaper from a directory, avoiding immediate repeats and using XDG/$HOME paths.
+Sets a random wallpaper from a directory, avoiding immediate repeats.
 
-- Location: `scripts-stow/random-wall.sh` (symlinked to `$HOME/random-wall.sh` when stowed)
-- One‑off directory:
-  ```bash
-  WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord" random-wall.sh
-  ```
-- Permanent directory:
-  ```bash
-  echo 'export WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord"' >> ~/.bashrc
-  source ~/.bashrc
-  ```
-- Defaults: detects Pictures via `xdg-user-dir`, falls back to `$HOME/Pictures`; uses `$PICTURES_DIR/wallpapers` if `WALLPAPER_DIR` is unset; remembers last selection in `${XDG_STATE_HOME:-$HOME/.local/state}/random-wall/last_wallpaper`.
+- Location: `scripts-stow/.local/bin/` (symlinked when stowed)
+- Custom directory: `WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord" random-wall.sh`
+- Defaults to `$HOME/Pictures/wallpapers`
 
-Note: Uses `gsettings` (GNOME). For other desktops/compositors, replace the apply step.
+Note: Uses `gsettings` (GNOME). For Hyprland/Niri, adapt the apply step.
 
 ## SSH Notes
 
-- Repo tracks only `ssh-stow/.ssh/config` and `ssh-stow/.ssh/*.pub`.
-- Private keys, known_hosts, etc. are ignored via `.gitignore` and must never be committed.
-
-## Troubleshooting
-
-- Stow conflicts: back up the conflicting files (e.g., `~/.ssh/config`) and re‑run stow. Consider `stow --adopt` only if you understand its effects.
-- Config not taking effect: ensure the package is stowed and required programs are installed.
+- Repo tracks only `ssh-stow/.ssh/config` and `ssh-stow/.ssh/*.pub`
+- Private keys and known_hosts are gitignored
 
 ## Updating
 
 ```bash
 cd ~/dotfiles
 git pull
-stow -R hypr hyprpanel ashell fuzzel gtk rofi wofi mybash-stow git-stow fzf-stow \
-        scripts-stow ssh-stow ghostty waybar waypaper tiling-assistant spicetify \
-        xsettingsd themes
+stow -R hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
+        ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
+        browser-flags-stow fastfetch-stow wofi-stow ssh-stow
 ```
 
 ## License
