@@ -45,7 +45,7 @@ Old configs in `archived/`: fuzzel, rofi, themes, waypaper, xsettingsd
 ## Install
 
 ```bash
-git clone https://github.com/dacrab/dotfiles.git ~/dotfiles
+git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Core setup
