@@ -70,6 +70,32 @@ Tips:
 
 ## Scripts
 
+### cleanup_storage.sh (alias: `sweep`)
+
+System cleanup utility that removes caches, temp files, and optionally project artifacts.
+
+```bash
+sweep              # Standard cleanup (caches, logs, trash, etc.)
+sweep -p           # + clean old project artifacts (node_modules, target, dist, etc.)
+sweep -i           # + clean installer files in Downloads (iso, deb, rpm, AppImage, etc.)
+sweep -p -i        # Both project artifacts and installers
+sweep -d           # Dry run - preview what would be deleted
+sweep -y           # Auto-confirm all prompts
+```
+
+What it cleans:
+- Package manager caches (dnf, apt, pacman, yay, paru)
+- Journal logs, trash, thumbnails
+- Dev tool caches (npm, pnpm, pip, cargo, go, gradle)
+- Editor caches (VS Code, Cursor, JetBrains)
+- Container pruning (docker, podman)
+- Flatpak/Snap orphans
+- Old AppImage backups
+
+With `-p` (purge): Scans `~/dev`, `~/Projects`, `~/Documents/GitHub`, etc. for old (>7 days) build artifacts like `node_modules`, `target`, `.venv`, `.next`, `dist`.
+
+With `-i` (installers): Finds large installer files (>10MB) in Downloads/Desktop.
+
 ### random-wall.sh
 
 Sets a random wallpaper from a directory, avoiding immediate repeats.
