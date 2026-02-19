@@ -17,13 +17,14 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 
 ### Launchers
 - wofi-stow — Wofi launcher
+- fuzzel-stow — Fuzzel launcher
 
 ### Shell & CLI
 - mybash — Bash config (.bashrc / .bash_profile) and Starship prompt
 - git-stow — Global git configuration
 - fzf-stow — fzf shell integration
 - fastfetch-stow — Fastfetch system info config
-- scripts-stow — Helper scripts (e.g., random-wall.sh)
+- scripts-stow — Helper scripts (random-wall.sh, cleanup_storage.sh)
 - ssh-stow — Safe SSH files (config and public keys only)
 
 ### Apps & Theming
@@ -31,9 +32,10 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 - browser-flags-stow — Chrome/Code Wayland flags
 - spicetify-stow — Spicetify config
 - tiling-assistant-stow — GNOME tiling assistant
+- zed-stow — Zed editor settings
 
 ### Archived
-Old configs in `archived/`: fuzzel, rofi, themes, waypaper, xsettingsd
+Old configs in `archived/`: rofi, themes, waypaper, xsettingsd
 
 ## Requirements
 
@@ -51,7 +53,7 @@ cd ~/dotfiles
 # Core setup
 stow hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
      ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
-     browser-flags-stow fastfetch-stow wofi-stow
+     browser-flags-stow fastfetch-stow wofi-stow fuzzel-stow zed-stow
 
 # Optional: Niri instead of Hyprland
 stow niri-stow ashell-stow
@@ -104,7 +106,7 @@ Sets a random wallpaper from a directory, avoiding immediate repeats.
 - Custom directory: `WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord" random-wall.sh`
 - Defaults to `$HOME/Pictures/wallpapers`
 
-Note: Uses `gsettings` (GNOME). For Hyprland/Niri, adapt the apply step.
+Note: Supports GNOME (gsettings), Hyprland (hyprpaper), and Niri (swaybg) automatically.
 
 ## SSH Notes
 
@@ -118,7 +120,7 @@ cd ~/dotfiles
 git pull
 stow -R hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
         ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
-        browser-flags-stow fastfetch-stow wofi-stow ssh-stow
+        browser-flags-stow fastfetch-stow wofi-stow fuzzel-stow zed-stow ssh-stow
 ```
 
 ## License
