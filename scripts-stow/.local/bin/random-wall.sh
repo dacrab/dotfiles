@@ -49,6 +49,13 @@ set_wallpaper() {
 
     echo "Setting wallpaper: $img"
 
+    # niri
+    if [[ "$desktop" == *"niri"* ]] || pgrep -x niri >/dev/null 2>&1; then
+        pkill swaybg 2>/dev/null || true
+        swaybg -i "$img" -m fill &
+        return 0
+    fi
+
     # GNOME / Unity / Pantheon
     if [[ "$desktop" == *"GNOME"* ]] || command -v gsettings >/dev/null 2>&1; then
         # Set for both light and dark modes
