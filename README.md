@@ -88,8 +88,9 @@ sweep -y           # Auto-confirm all prompts
 What it cleans:
 - Package manager caches (dnf, apt, pacman, yay, paru)
 - Journal logs, trash, thumbnails
-- Dev tool caches (npm, pnpm, pip, cargo, go, gradle)
-- Editor caches (VS Code, Cursor, JetBrains)
+- Dev tool caches (npm, pnpm, bun, pip, uv, go, dotnet, cargo, gradle)
+- Virtualenv orphans (~/.virtualenvs and stray venv dirs)
+- Editor caches (VS Code, Cursor, JetBrains, Antigravity, Kiro)
 - Container pruning (docker, podman)
 - Flatpak/Snap orphans
 - Old AppImage backups
@@ -98,15 +99,20 @@ With `-p` (purge): Scans `~/dev`, `~/Projects`, `~/Documents/GitHub`, etc. for o
 
 With `-i` (installers): Finds large installer files (>10MB) in Downloads/Desktop.
 
-### random-wall.sh
+### random-wall.sh (alias: `wall`)
 
-Sets a random wallpaper from a directory, avoiding immediate repeats.
+Sets a random wallpaper from a chosen theme folder, avoiding immediate repeats.
 
-- Location: `scripts-stow/.local/bin/` (symlinked when stowed)
-- Custom directory: `WALLPAPER_DIR="$HOME/Pictures/wallpapers/nord" random-wall.sh`
-- Defaults to `$HOME/Pictures/wallpapers`
+```bash
+wall          # Interactive folder picker — choose from subfolders in ~/Pictures/wallpapers
+wall nord     # Pick random wallpaper directly from the nord folder
+```
 
-Note: Supports GNOME (gsettings), Hyprland (hyprpaper), and Niri (swaybg) automatically.
+- Wallpaper base: `~/Pictures/wallpapers/` (subfolders are your themes)
+- Default folder (for keybind): set via `DEFAULT_FOLDER` at top of script (currently `nord`)
+- Keybind (`Super+Shift+W`): instantly sets a random wall from whichever folder you last picked in the menu — no terminal, no prompt
+- Saves last chosen folder to `~/.local/state/random-wall/active_folder`
+- Supports GNOME (gsettings) and Niri (swaybg)
 
 ## SSH Notes
 
