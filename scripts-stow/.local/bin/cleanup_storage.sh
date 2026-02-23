@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cleanup_storage.sh v5.3.0 - System cleanup utility
+# cleanup_storage.sh v5.4.0 - System cleanup utility
 set -uo pipefail
 
 DRY=false AUTO=false PURGE=false INST=false
@@ -46,13 +46,19 @@ clean_containers() { section "🐳 Containers"; has docker && docker ps &>/dev/n
 
 clean_dev() {
     section "🛠️ Dev Tools"
-    has npm && { run "NPM cache" npm cache clean --force; rmp "$HOME/.npm/_cacache" "NPM cache"; }
-    has pnpm && run "PNPM prune" pnpm store prune; has yarn && run "Yarn cache" yarn cache clean; has bun && cdir "$HOME/.bun/install/cache" "Bun"
-    has pip3 && { run "Pip cache" pip3 cache purge; cdir "$HOME/.cache/pip" "Pip"; }; has uv && { run "UV cache" uv cache clean; cdir "$HOME/.cache/uv" "UV"; }
-    has go && { run "Go modcache" go clean -modcache; cdir "$HOME/.cache/go-build" "Go build"; }; has dotnet && run "NuGet" dotnet nuget locals all --clear
+    has npm && run "NPM cache" npm cache clean --force
+    has pnpm && run "PNPM prune" pnpm store prune; has yarn && run "Yarn cache" yarn cache clean
+    has bun && cdir "$HOME/.bun/install/cache" "Bun cache"
+    has pip3 && run "Pip cache" pip3 cache purge; has uv && run "UV cache" uv cache clean
+    has pipx && run "Pipx cache" pipx runpip --spec "" -- cache purge 2>/dev/null ||:
+    has go && { run "Go modcache" go clean -modcache; run "Go cache" go clean -cache; }; has dotnet && run "NuGet" dotnet nuget locals all --clear
     hdir "$HOME/.cargo" && { cdir "$HOME/.cargo/registry/cache" "Cargo cache"; cdir "$HOME/.cargo/git/db" "Cargo git"; }
     cdir "$HOME/.gradle/caches" "Gradle caches"; cdir "$HOME/.gradle/daemon" "Gradle daemon"
-    for c in node-gyp ms-playwright deno biome goimports gopls; do cdir "$HOME/.cache/$c" "$c"; done
+    for c in node-gyp ms-playwright ms-playwright-go deno biome goimports gopls; do cdir "$HOME/.cache/$c" "$c"; done
+    # Orphaned virtualenvs
+    hdir "$HOME/.virtualenvs" && for v in "$HOME/.virtualenvs"/*/; do
+        [[ -f "$v/pyvenv.cfg" ]] || rmp "$v" "Orphan venv: $(basename "$v")"
+    done
 }
 
 clean_editors() {
@@ -72,7 +78,7 @@ clean_flatpak() {
 clean_snap() {
     has snap || return; section "📦 Snap"; $DRY || snap list --all 2>/dev/null|awk '/disabled/{print $1,$3}'|while read -r s r; do sudo snap remove "$s" --revision="$r" &>/dev/null && ok "Snap: $s (rev $r)"; done
     [[ -d "$HOME/snap" ]] || return; local i; i=$(snap list 2>/dev/null|awk 'NR>1{print $1}'||:)
-    for d in "$HOME/snap"/*/; do [[ -d "$d" ]] && { local n; n=$(basename "$d"); [[ "$n" != ".cache" ]] && echo "$i"|grep -qx "$n" || rmp "$d" "Orphan: $n"; }; done
+    for d in "$HOME/snap"/*/; do [[ -d "$d" ]] || continue; local n; n=$(basename "$d"); [[ "$n" == ".cache" ]] && continue; echo "$i"|grep -qx "$n" || rmp "$d" "Orphan: $n"; done
 }
 
 clean_appimage() { section "📦 AppImages"; for d in "$HOME/AppImages" "$HOME/Applications" "$HOME/.local/bin"; do [[ -d "$d" ]] && while IFS= read -r -d '' f; do rmp "$f" "Old: $(basename "$f")"; done < <(find "$d" -maxdepth 1 \( -iname "*.appimage.zs-old" -o -iname "*.appimage.bak" \) -print0 2>/dev/null); done; }
@@ -136,9 +142,9 @@ EOF
 
 while [[ $# -gt 0 ]]; do case $1 in -d|--dry-run)DRY=true;;-y|--yes)AUTO=true;;-p|--purge)PURGE=true;;-i|--installers)INST=true;;-h|--help)usage;exit 0;;*)echo "Unknown: $1";usage;exit 1;;esac;shift;done
 
-echo -e "${B}🚀 Cleanup v5.3.0${R}"; BEF=$(disk); echo "Disk: $BEF"; $DRY && echo -e "${Y}[DRY RUN]${R}"
-if ! $AUTO && ! $DRY; then echo -e "${Y}⚠️  This will delete caches and temp files.${R}"; read -rp "Proceed? [y/N] " -n1 r; echo; [[ ! "$r" =~ ^[Yy]$ ]] && exit 0
-    (has dnf||has apt-get||has pacman||has zypper) && sudo -v && { while :; do sudo -v; sleep 50; done & SUDO_PID=$!; }; fi
+echo -e "${B}🚀 Cleanup v5.4.0${R}"; BEF=$(disk); echo "Disk: $BEF"; $DRY && echo -e "${Y}[DRY RUN]${R}"
+! $DRY && (has dnf||has apt-get||has pacman||has zypper) && sudo -v && { while :; do sudo -v; sleep 50; done & SUDO_PID=$!; }
+if ! $AUTO && ! $DRY; then echo -e "${Y}⚠️  This will delete caches and temp files.${R}"; read -rp "Proceed? [y/N] " -n1 r; echo; [[ ! "$r" =~ ^[Yy]$ ]] && exit 0; fi
 
 clean_system; clean_containers; clean_dev; clean_editors; clean_apps; clean_flatpak; clean_snap; clean_appimage
 $PURGE && purge_artifacts; $INST && clean_installers
