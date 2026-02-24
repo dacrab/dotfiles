@@ -18,7 +18,7 @@ get_dir() {
         echo "Error: '$arg' not found." >&2; exit 1
     fi
 
-    if [[ -t 1 ]]; then
+    if [[ -t 0 ]]; then
         local -a folders=()
         while IFS= read -r -d '' d; do
             folders+=("$(basename "$d")")
