@@ -1,0 +1,11 @@
+[Unit]
+Description=Set a random wallpaper on login
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/random-wall.sh
+
+[Install]
+WantedBy=graphical-session.target
