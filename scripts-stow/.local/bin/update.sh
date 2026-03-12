@@ -161,14 +161,6 @@ update_pnpm() {
   run "pnpm self-update" pnpm self-update
 }
 
-update_npm() {
-  if ! has npm; then
-    skip "npm"
-    return
-  fi
-  section "npm (global packages)"
-  run "npm update -g" npm update -g
-}
 
 update_uv() {
   if ! has uv; then
@@ -213,15 +205,20 @@ update_go_tools() {
 
   section "Go tools"
 
-  local bin name modpath
+  local bin name modpath cmdpath
   while IFS= read -r bin; do
     name=$(basename "$bin")
+
+    # Resolve the module path and the exact command path from build info
     modpath=$(go version -m "$bin" 2>/dev/null | awk '/^\s+mod/{ print $2; exit }')
-    if [[ -z "$modpath" ]]; then
-      warn "$name — cannot resolve module path, skipping"
+    cmdpath=$(go version -m "$bin" 2>/dev/null | awk '/^\s+path/{ print $2; exit }')
+
+    if [[ -z "$modpath" || -z "$cmdpath" ]]; then
+      warn "$name — cannot resolve module/command path, skipping"
       continue
     fi
-    run "$name" go install "${modpath}@latest"
+
+    run "$name" go install "${cmdpath}@latest"
   done < <(find "$gobin" -maxdepth 1 -type f -executable 2>/dev/null)
 }
 
@@ -253,50 +250,7 @@ update_fzf() {
   run "fzf reinstall" "$HOME/.fzf/install" --bin
 }
 
-update_spicetify() {
-  if ! has spicetify; then
-    skip "spicetify"
-    return
-  fi
-  section "Spicetify"
-  run "spicetify update" spicetify update
-}
 
-update_starship() {
-  if ! has starship; then
-    skip "starship"
-    return
-  fi
-
-  local loc
-  loc=$(command -v starship)
-
-  if [[ "$loc" == /usr/* ]]; then
-    skip "starship (system-managed, handled by system updater)"
-    return
-  fi
-
-  section "Starship"
-  run "starship update" sh -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
-}
-
-update_zoxide() {
-  if ! has zoxide; then
-    skip "zoxide"
-    return
-  fi
-
-  local loc
-  loc=$(command -v zoxide)
-
-  if [[ "$loc" == /usr/* ]]; then
-    skip "zoxide (system-managed)"
-    return
-  fi
-
-  section "Zoxide"
-  run "zoxide update" sh -c 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh'
-}
 
 update_docker() {
   if ! has docker; then
@@ -365,16 +319,12 @@ update_system
 update_flatpak
 update_bun
 update_pnpm
-update_npm
 update_uv
 update_pipx
 update_rust
 update_go_tools
 update_gh_extensions
 update_fzf
-update_spicetify
-update_starship
-update_zoxide
 update_docker
 
 echo -e "\n${M}═══════════════════════════════════════${R}"
