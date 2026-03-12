@@ -2,7 +2,8 @@
 # update.sh - System & toolchain updater
 set -uo pipefail
 
-# ── State ─────────────────────────────────────────────────────────────────────
+# ── Flags ─────────────────────────────────────────────────────────────────────
+QUIET=false   # -q: suppress command output (spinner only)
 SUDO_PID=""
 SPIN_PID=""
 
@@ -32,17 +33,18 @@ trap cleanup_trap EXIT INT TERM
 ok()      { echo -e "  ${G}✔${R}  $1"; }
 skip()    { echo -e "  ${DM}–  $1 (not found)${R}"; }
 warn()    { echo -e "  ${Y}⚠${R}  $1"; }
-section() { echo -e "\n${C}==>${R} ${L}$1${R}"; }
+info()    { echo -e "  ${B}ℹ${R}  $1"; }
+section() { echo -e "\n${C}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${R}\n${L}  $1${R}"; }
 
 # ── Utility ───────────────────────────────────────────────────────────────────
 has() { command -v "$1" &>/dev/null; }
 
-# ── Spinner ───────────────────────────────────────────────────────────────────
+# ── Spinner (used only in quiet mode) ─────────────────────────────────────────
 spin() {
   local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' i=0
   tput civis 2>/dev/null || :
   while :; do
-    printf "\r${DM}[%s]${R} %s" "${frames:i++%10:1}" "$1"
+    printf "\r${DM}[%s]${R} %s..." "${frames:i++%10:1}" "$1"
     sleep .08
   done &
   SPIN_PID=$!
@@ -64,14 +66,40 @@ unspin() {
 }
 
 # ── Run wrapper ───────────────────────────────────────────────────────────────
+# In normal mode: prints a header, streams live output indented, then status.
+# In quiet mode (-q): uses a spinner and suppresses output.
 run() {
   local label="$1"; shift
-  spin "$label"
-  if "$@" &>/dev/null; then
-    unspin ok "$label"
-  else
-    unspin fail "$label"
+
+  if $QUIET; then
+    spin "$label"
+    if "$@" &>/dev/null; then
+      unspin ok "$label"
+    else
+      unspin fail "$label"
+    fi
+    return
   fi
+
+  # Live mode: stream output with indentation
+  echo -e "\n  ${DM}▶ ${label}${R}"
+  echo -e "  ${DM}$(printf '%.0s─' {1..45})${R}"
+
+  # Use a temp file to capture exit code across the pipeline subshell
+  local tmp_exit
+  tmp_exit=$(mktemp)
+  { "$@" 2>&1; echo $? > "$tmp_exit"; } | sed 's/^/    /'
+  local exit_code
+  exit_code=$(<"$tmp_exit")
+  rm -f "$tmp_exit"
+
+  echo -e "  ${DM}$(printf '%.0s─' {1..45})${R}"
+  if [[ "$exit_code" -eq 0 ]]; then
+    ok "$label"
+  else
+    warn "Failed: $label (exit $exit_code)"
+  fi
+  return "$exit_code"
 }
 
 # ── Distro detection ──────────────────────────────────────────────────────────
@@ -98,10 +126,10 @@ update_system() {
   local distro
   distro=$(get_distro)
   case "$distro" in
-    redhat) run "DNF upgrade"     sudo dnf upgrade --refresh -y ;;
-    debian) run "APT upgrade"     bash -c 'sudo apt update -q && sudo apt full-upgrade -y' ;;
-    arch)   run "Pacman upgrade"  sudo pacman -Syu --noconfirm ;;
-    suse)   run "Zypper upgrade"  sudo zypper dup -y ;;
+    redhat) run "DNF upgrade"    sudo dnf upgrade --refresh -y ;;
+    debian) run "APT upgrade"    bash -c 'sudo apt update && sudo apt full-upgrade -y' ;;
+    arch)   run "Pacman upgrade" sudo pacman -Syu --noconfirm ;;
+    suse)   run "Zypper upgrade" sudo zypper dup -y ;;
     *)      warn "Unknown distro — skipping system packages" ;;
   esac
 }
@@ -297,13 +325,37 @@ update_docker() {
   done <<< "$images"
 }
 
-# ── Main ──────────────────────────────────────────────────────────────────────
-echo -e "${B}🚀 update.sh${R} — System & toolchain updater"
-echo -e "${DM}$(date '+%Y-%m-%d %H:%M:%S')${R}\n"
+# ── Usage ─────────────────────────────────────────────────────────────────────
+usage() {
+  cat <<EOF
+Usage: $(basename "$0") [OPTIONS]
 
-# Keep sudo alive in the background if a system package manager is present
+  -q, --quiet   Suppress command output (spinner only)
+  -h, --help    Show this help message
+EOF
+}
+
+# ── Argument parsing ──────────────────────────────────────────────────────────
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -q|--quiet) QUIET=true ;;
+    -h|--help)  usage; exit 0 ;;
+    *) echo "Unknown option: $1"; usage; exit 1 ;;
+  esac
+  shift
+done
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+echo -e "${B}🚀  update.sh${R} — System & toolchain updater"
+echo -e "${DM}    $(date '+%Y-%m-%d %H:%M:%S')${R}"
+$QUIET && info "Quiet mode — output suppressed"
+
+# Prompt for sudo upfront so it's not buried in output
 if has dnf || has apt || has pacman || has zypper; then
-  if sudo -v 2>/dev/null; then
+  echo -e "\n${Y}  sudo required for system packages:${R}"
+  sudo -v || { warn "sudo authentication failed, system packages will be skipped"; }
+  # Keep sudo alive in the background
+  if sudo -n true 2>/dev/null; then
     while :; do sudo -v; sleep 50; done &
     SUDO_PID=$!
   fi
