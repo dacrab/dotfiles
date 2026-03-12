@@ -1,0 +1,329 @@
+#!/usr/bin/env bash
+# update.sh - System & toolchain updater
+set -uo pipefail
+
+# ── State ─────────────────────────────────────────────────────────────────────
+SUDO_PID=""
+SPIN_PID=""
+
+# ── Colours (disabled if not a terminal) ──────────────────────────────────────
+if [[ -t 1 && "${TERM:-dumb}" != "dumb" ]]; then
+  G='\033[32m'   # green
+  Y='\033[33m'   # yellow
+  B='\033[34m'   # blue
+  C='\033[36m'   # cyan
+  M='\033[35m'   # magenta
+  DM='\033[2m'   # dim
+  R='\033[0m'    # reset
+  L='\033[1m'    # bold
+else
+  G='' Y='' B='' C='' M='' DM='' R='' L=''
+fi
+
+# ── Cleanup trap ──────────────────────────────────────────────────────────────
+cleanup_trap() {
+  [[ -n "$SPIN_PID" ]] && kill "$SPIN_PID" 2>/dev/null
+  [[ -n "$SUDO_PID" ]] && kill "$SUDO_PID" 2>/dev/null
+  tput cnorm 2>/dev/null || :
+}
+trap cleanup_trap EXIT INT TERM
+
+# ── Output helpers ────────────────────────────────────────────────────────────
+ok()      { echo -e "  ${G}✔${R}  $1"; }
+skip()    { echo -e "  ${DM}–  $1 (not found)${R}"; }
+warn()    { echo -e "  ${Y}⚠${R}  $1"; }
+section() { echo -e "\n${C}==>${R} ${L}$1${R}"; }
+
+# ── Utility ───────────────────────────────────────────────────────────────────
+has() { command -v "$1" &>/dev/null; }
+
+# ── Spinner ───────────────────────────────────────────────────────────────────
+spin() {
+  local frames='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏' i=0
+  tput civis 2>/dev/null || :
+  while :; do
+    printf "\r${DM}[%s]${R} %s" "${frames:i++%10:1}" "$1"
+    sleep .08
+  done &
+  SPIN_PID=$!
+}
+
+unspin() {
+  if [[ -n "$SPIN_PID" ]]; then
+    kill "$SPIN_PID" 2>/dev/null
+    wait "$SPIN_PID" 2>/dev/null || :
+    SPIN_PID=""
+  fi
+  printf "\r\033[K"
+  tput cnorm 2>/dev/null || :
+  if [[ "$1" == ok ]]; then
+    ok "$2"
+  else
+    warn "Failed: $2"
+  fi
+}
+
+# ── Run wrapper ───────────────────────────────────────────────────────────────
+run() {
+  local label="$1"; shift
+  spin "$label"
+  if "$@" &>/dev/null; then
+    unspin ok "$label"
+  else
+    unspin fail "$label"
+  fi
+}
+
+# ── Distro detection ──────────────────────────────────────────────────────────
+get_distro() {
+  if [[ ! -f /etc/os-release ]]; then
+    echo "unknown"
+    return
+  fi
+  # shellcheck disable=SC1091
+  source /etc/os-release
+  case "$ID" in
+    fedora|rhel|centos|rocky|almalinux) echo "redhat" ;;
+    ubuntu|debian|mint)                 echo "debian" ;;
+    arch|manjaro|endeavouros)           echo "arch"   ;;
+    opensuse*|sles)                     echo "suse"   ;;
+    *)                                  echo "unknown" ;;
+  esac
+}
+
+# ── Updaters ──────────────────────────────────────────────────────────────────
+
+update_system() {
+  section "System packages"
+  local distro
+  distro=$(get_distro)
+  case "$distro" in
+    redhat) run "DNF upgrade"     sudo dnf upgrade --refresh -y ;;
+    debian) run "APT upgrade"     bash -c 'sudo apt update -q && sudo apt full-upgrade -y' ;;
+    arch)   run "Pacman upgrade"  sudo pacman -Syu --noconfirm ;;
+    suse)   run "Zypper upgrade"  sudo zypper dup -y ;;
+    *)      warn "Unknown distro — skipping system packages" ;;
+  esac
+}
+
+update_flatpak() {
+  if ! has flatpak; then
+    skip "flatpak"
+    return
+  fi
+  section "Flatpak"
+  run "Flatpak update" flatpak update -y
+}
+
+update_bun() {
+  if ! has bun; then
+    skip "bun"
+    return
+  fi
+  section "Bun"
+  run "bun upgrade" bun upgrade
+}
+
+update_pnpm() {
+  if ! has pnpm; then
+    skip "pnpm"
+    return
+  fi
+  section "pnpm"
+  run "pnpm self-update" pnpm self-update
+}
+
+update_npm() {
+  if ! has npm; then
+    skip "npm"
+    return
+  fi
+  section "npm (global packages)"
+  run "npm update -g" npm update -g
+}
+
+update_uv() {
+  if ! has uv; then
+    skip "uv"
+    return
+  fi
+  section "uv"
+  run "uv self update" uv self update
+}
+
+update_pipx() {
+  if ! has pipx; then
+    skip "pipx"
+    return
+  fi
+  section "pipx"
+  run "pipx upgrade-all" pipx upgrade-all
+}
+
+update_rust() {
+  if ! has rustup; then
+    skip "rustup"
+    return
+  fi
+  section "Rust (rustup)"
+  run "rustup update" rustup update
+}
+
+update_go_tools() {
+  if ! has go; then
+    skip "go tools"
+    return
+  fi
+
+  local gobin
+  gobin="$(go env GOPATH)/bin"
+
+  if [[ ! -d "$gobin" ]]; then
+    skip "go tools (no GOPATH/bin)"
+    return
+  fi
+
+  section "Go tools"
+
+  local bin name modpath
+  while IFS= read -r bin; do
+    name=$(basename "$bin")
+    modpath=$(go version -m "$bin" 2>/dev/null | awk '/^\s+mod/{ print $2; exit }')
+    if [[ -z "$modpath" ]]; then
+      warn "$name — cannot resolve module path, skipping"
+      continue
+    fi
+    run "$name" go install "${modpath}@latest"
+  done < <(find "$gobin" -maxdepth 1 -type f -executable 2>/dev/null)
+}
+
+update_gh_extensions() {
+  if ! has gh; then
+    skip "gh extensions"
+    return
+  fi
+
+  local count
+  count=$(gh extension list 2>/dev/null | wc -l)
+
+  if ((count == 0)); then
+    skip "gh extensions (none installed)"
+    return
+  fi
+
+  section "GitHub CLI extensions"
+  run "gh extension upgrade --all" gh extension upgrade --all
+}
+
+update_fzf() {
+  if [[ ! -d "$HOME/.fzf" || ! -f "$HOME/.fzf/install" ]]; then
+    skip "fzf (no ~/.fzf repo)"
+    return
+  fi
+  section "fzf"
+  run "fzf git pull"  git -C "$HOME/.fzf" pull --rebase
+  run "fzf reinstall" "$HOME/.fzf/install" --bin
+}
+
+update_spicetify() {
+  if ! has spicetify; then
+    skip "spicetify"
+    return
+  fi
+  section "Spicetify"
+  run "spicetify update" spicetify update
+}
+
+update_starship() {
+  if ! has starship; then
+    skip "starship"
+    return
+  fi
+
+  local loc
+  loc=$(command -v starship)
+
+  if [[ "$loc" == /usr/* ]]; then
+    skip "starship (system-managed, handled by system updater)"
+    return
+  fi
+
+  section "Starship"
+  run "starship update" sh -c 'curl -sS https://starship.rs/install.sh | sh -s -- --yes'
+}
+
+update_zoxide() {
+  if ! has zoxide; then
+    skip "zoxide"
+    return
+  fi
+
+  local loc
+  loc=$(command -v zoxide)
+
+  if [[ "$loc" == /usr/* ]]; then
+    skip "zoxide (system-managed)"
+    return
+  fi
+
+  section "Zoxide"
+  run "zoxide update" sh -c 'curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | sh'
+}
+
+update_docker() {
+  if ! has docker; then
+    skip "docker"
+    return
+  fi
+
+  if ! docker ps &>/dev/null; then
+    skip "docker (daemon not running)"
+    return
+  fi
+
+  local images
+  images=$(docker ps --format '{{.Image}}' 2>/dev/null)
+
+  if [[ -z "$images" ]]; then
+    skip "docker (no running containers)"
+    return
+  fi
+
+  section "Docker (running container images)"
+
+  local img
+  while IFS= read -r img; do
+    run "docker pull $img" docker pull "$img"
+  done <<< "$images"
+}
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+echo -e "${B}🚀 update.sh${R} — System & toolchain updater"
+echo -e "${DM}$(date '+%Y-%m-%d %H:%M:%S')${R}\n"
+
+# Keep sudo alive in the background if a system package manager is present
+if has dnf || has apt || has pacman || has zypper; then
+  if sudo -v 2>/dev/null; then
+    while :; do sudo -v; sleep 50; done &
+    SUDO_PID=$!
+  fi
+fi
+
+update_system
+update_flatpak
+update_bun
+update_pnpm
+update_npm
+update_uv
+update_pipx
+update_rust
+update_go_tools
+update_gh_extensions
+update_fzf
+update_spicetify
+update_starship
+update_zoxide
+update_docker
+
+echo -e "\n${M}═══════════════════════════════════════${R}"
+ok "All done!"

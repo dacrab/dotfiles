@@ -1,70 +1,120 @@
 #!/usr/bin/env bash
 # random-wall.sh — pick a random wallpaper
 # Usage: no args = interactive picker (saves choice); arg = folder name or path
-DEFAULT_FOLDER="nord"
-
 set -euo pipefail
 
+# ── Config ────────────────────────────────────────────────────────────────────
+DEFAULT_FOLDER="nord"
 BASE="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/random-wall"
+
 mkdir -p "$STATE"
 
+# ── Resolve wallpaper directory ───────────────────────────────────────────────
 get_dir() {
-    local arg="${1:-}"
+  local arg="${1:-}"
 
-    if [[ -n "$arg" ]]; then
-        [[ -d "$arg" ]] && { echo "$arg"; return; }
-        [[ -d "$BASE/$arg" ]] && { echo "$BASE/$arg"; return; }
-        echo "Error: '$arg' not found." >&2; exit 1
+  # If an argument was given, resolve it as a path or subfolder name
+  if [[ -n "$arg" ]]; then
+    if [[ -d "$arg" ]]; then
+      echo "$arg"
+      return
+    elif [[ -d "$BASE/$arg" ]]; then
+      echo "$BASE/$arg"
+      return
+    else
+      echo "Error: '$arg' not found as a path or subfolder of $BASE" >&2
+      exit 1
     fi
+  fi
 
-    if [[ -t 0 ]]; then
-        local -a folders=()
-        while IFS= read -r -d '' d; do
-            folders+=("$(basename "$d")")
-        done < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d -not -name '.git' -print0 | sort -z)
+  # Interactive mode: show folder menu when stdin is a terminal
+  if [[ -t 0 ]]; then
+    local -a folders=()
+    while IFS= read -r -d '' dir; do
+      folders+=("$(basename "$dir")")
+    done < <(find "$BASE" -mindepth 1 -maxdepth 1 -type d -not -name '.git' -print0 | sort -z)
 
-        local i=1
-        for f in "${folders[@]}"; do printf "  %d) %s\n" "$i" "$f" >&2; ((i++)); done
-        printf "  0) All\n\n" >&2
+    local i=1
+    for folder in "${folders[@]}"; do
+      printf "  %d) %s\n" "$i" "$folder" >&2
+      ((i++))
+    done
+    printf "  0) All\n\n" >&2
 
-        local choice
-        while true; do
-            read -rp "Choose [0-${#folders[@]}]: " choice
-            [[ "$choice" == "0" ]] && { printf '%s' "$BASE" > "$STATE/active_folder"; echo "$BASE"; return; }
-            [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#folders[@]} )) && {
-                printf '%s' "$BASE/${folders[$((choice-1))]}" > "$STATE/active_folder"
-                echo "$BASE/${folders[$((choice-1))]}"; return
-            }
-            echo "Invalid." >&2
-        done
-    fi
+    local choice
+    while true; do
+      read -rp "Choose [0-${#folders[@]}]: " choice
 
-    [[ -f "$STATE/active_folder" ]] && echo "$(<"$STATE/active_folder")" || echo "$BASE/$DEFAULT_FOLDER"
+      if [[ "$choice" == "0" ]]; then
+        printf '%s' "$BASE" > "$STATE/active_folder"
+        echo "$BASE"
+        return
+      fi
+
+      if [[ "$choice" =~ ^[0-9]+$ ]] && ((choice >= 1 && choice <= ${#folders[@]})); then
+        local selected="$BASE/${folders[$((choice - 1))]}"
+        printf '%s' "$selected" > "$STATE/active_folder"
+        echo "$selected"
+        return
+      fi
+
+      echo "Invalid choice, try again." >&2
+    done
+  fi
+
+  # Non-interactive: restore last chosen folder or fall back to default
+  if [[ -f "$STATE/active_folder" ]]; then
+    echo "$(<"$STATE/active_folder")"
+  else
+    echo "$BASE/$DEFAULT_FOLDER"
+  fi
 }
 
+# ── Apply wallpaper ───────────────────────────────────────────────────────────
 set_wall() {
-    if pgrep -x niri >/dev/null 2>&1 || [[ "${XDG_CURRENT_DESKTOP:-}" == *niri* ]]; then
-        pkill swaybg 2>/dev/null || true; swaybg -i "$1" -m fill & disown; return
-    fi
-    gsettings set org.gnome.desktop.background picture-uri      "file://$1"
-    gsettings set org.gnome.desktop.background picture-uri-dark "file://$1"
+  local wallpaper="$1"
+
+  if pgrep -x niri >/dev/null 2>&1 || [[ "${XDG_CURRENT_DESKTOP:-}" == *niri* ]]; then
+    pkill swaybg 2>/dev/null || true
+    swaybg -i "$wallpaper" -m fill &
+    disown
+    return
+  fi
+
+  gsettings set org.gnome.desktop.background picture-uri      "file://$wallpaper"
+  gsettings set org.gnome.desktop.background picture-uri-dark "file://$wallpaper"
 }
 
+# ── Main ──────────────────────────────────────────────────────────────────────
 DIR=$(get_dir "${1:-}")
 
-mapfile -d '' ALL < <(find "$DIR" -type f \
-    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.bmp' \) \
-    -print0 | sort -z)
+# Collect all supported image files
+mapfile -d '' ALL < <(
+  find "$DIR" -type f \
+    \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' \
+       -o -iname '*.webp' -o -iname '*.bmp' \) \
+    -print0 | sort -z
+)
 
-[[ ${#ALL[@]} -eq 0 ]] && { echo "No images in: $DIR" >&2; exit 1; }
+if [[ ${#ALL[@]} -eq 0 ]]; then
+  echo "No images found in: $DIR" >&2
+  exit 1
+fi
 
-LAST=""; [[ -f "$STATE/last" ]] && LAST=$(<"$STATE/last")
+# Avoid repeating the last wallpaper if possible
+LAST=""
+[[ -f "$STATE/last" ]] && LAST=$(<"$STATE/last")
 
 POOL=()
-for img in "${ALL[@]}"; do [[ "$img" != "$LAST" ]] && POOL+=("$img"); done
+for img in "${ALL[@]}"; do
+  [[ "$img" != "$LAST" ]] && POOL+=("$img")
+done
+
+# If all images were filtered (only one image exists), allow repeat
 [[ ${#POOL[@]} -eq 0 ]] && POOL=("${ALL[@]}")
 
 PICK="${POOL[$(( RANDOM % ${#POOL[@]} ))]}"
+
 set_wall "$PICK"
 printf '%s' "$PICK" > "$STATE/last"
