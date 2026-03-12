@@ -240,16 +240,6 @@ update_gh_extensions() {
   run "gh extension upgrade --all" gh extension upgrade --all
 }
 
-update_fzf() {
-  if [[ ! -d "$HOME/.fzf" || ! -f "$HOME/.fzf/install" ]]; then
-    skip "fzf (no ~/.fzf repo)"
-    return
-  fi
-  section "fzf"
-  run "fzf git pull"  git -C "$HOME/.fzf" pull --rebase
-  run "fzf reinstall" "$HOME/.fzf/install" --bin
-}
-
 
 
 update_docker() {
@@ -324,7 +314,6 @@ update_pipx
 update_rust
 update_go_tools
 update_gh_extensions
-update_fzf
 update_docker
 
 echo -e "\n${M}═══════════════════════════════════════${R}"
