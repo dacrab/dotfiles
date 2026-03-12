@@ -205,19 +205,34 @@ update_go_tools() {
 
   section "Go tools"
 
-  local bin name modpath cmdpath
+  local bin name modpath cmdpath curver latestver
   while IFS= read -r bin; do
     name=$(basename "$bin")
 
-    # Resolve the module path and the exact command path from build info
+    # Resolve module path, command path and current version from build info
     modpath=$(go version -m "$bin" 2>/dev/null | awk '/^\s+mod/{ print $2; exit }')
     cmdpath=$(go version -m "$bin" 2>/dev/null | awk '/^\s+path/{ print $2; exit }')
+    curver=$(go version -m  "$bin" 2>/dev/null | awk '/^\s+mod/{ print $3; exit }')
 
-    if [[ -z "$modpath" || -z "$cmdpath" ]]; then
-      warn "$name — cannot resolve module/command path, skipping"
+    if [[ -z "$modpath" || -z "$cmdpath" || -z "$curver" ]]; then
+      warn "$name — cannot resolve module info, skipping"
       continue
     fi
 
+    # Query the module proxy for the latest version (no download)
+    latestver=$(GOFLAGS='' go list -m -json "${modpath}@latest" 2>/dev/null | awk -F'"' '/"Version"/{ print $4; exit }')
+
+    if [[ -z "$latestver" ]]; then
+      warn "$name — cannot fetch latest version, skipping"
+      continue
+    fi
+
+    if [[ "$curver" == "$latestver" ]]; then
+      ok "$name ${DM}${curver} — already up to date${R}"
+      continue
+    fi
+
+    info "$name ${DM}${curver} → ${latestver}${R}"
     run "$name" go install "${cmdpath}@latest"
   done < <(find "$gobin" -maxdepth 1 -type f -executable 2>/dev/null)
 }
