@@ -82,8 +82,13 @@ set_wall() {
     return
   fi
 
+  local current_option
+  current_option=$(gsettings get org.gnome.desktop.background picture-options)
+  
   gsettings set org.gnome.desktop.background picture-uri      "file://$wallpaper"
   gsettings set org.gnome.desktop.background picture-uri-dark "file://$wallpaper"
+  gsettings set org.gnome.desktop.background picture-options "scaled"
+  gsettings set org.gnome.desktop.background picture-options "$current_option"
 }
 
 # ── Main ──────────────────────────────────────────────────────────────────────

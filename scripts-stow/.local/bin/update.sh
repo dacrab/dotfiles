@@ -91,10 +91,10 @@ update_system() {
 }
 
 update_tool() {
-  local name=$1 cmd=$2
+  local name=$1; shift
   has "$name" || { skip "$name"; return; }
   sec "$name"
-  run "$cmd" "$cmd"
+  run "$*" "$@"
 }
 
 update_go_tools() {
@@ -183,12 +183,12 @@ if has dnf || has apt || has pacman || has zypper; then
 fi
 
 update_system
-update_tool flatpak "flatpak update -y"
-update_tool bun "bun upgrade"
-update_tool pnpm "pnpm self-update"
-update_tool uv "uv self update"
-update_tool pipx "pipx upgrade-all"
-update_tool rustup "rustup update"
+update_tool flatpak flatpak update -y
+update_tool bun bun upgrade
+update_tool pnpm pnpm self-update
+update_tool uv uv self update
+update_tool pipx pipx upgrade-all
+update_tool rustup rustup update
 update_go_tools
 update_gh_ext
 update_docker

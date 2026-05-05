@@ -5,18 +5,12 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 ## Contents
 
 ### Window Managers & Desktop
-- hypr-stow — Hyprland config (hyprland.conf, keybindings, hyprpaper)
 - niri-stow — Niri compositor config
-- hyprpanel-stow — Panel for Hyprland
-- ashell-stow — Alternative shell/panel setup
-- waybar-stow — Waybar config
 
 ### Terminals
-- ghostty-stow — Ghostty terminal (primary)
-- kitty-stow — Kitty terminal (backup config)
+- ghostty-stow — Ghostty terminal
 
 ### Launchers
-- wofi-stow — Wofi launcher
 - fuzzel-stow — Fuzzel launcher
 
 ### Shell & CLI
@@ -24,23 +18,22 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 - git-stow — Global git configuration
 - fzf-stow — fzf shell integration
 - fastfetch-stow — Fastfetch system info config
-- scripts-stow — Helper scripts (random-wall.sh, cleanup_storage.sh)
+- scripts-stow — Helper scripts (random-wall.sh, cleanup_storage.sh, update.sh)
 - ssh-stow — Safe SSH files (config and public keys only)
 
 ### Apps & Theming
 - gtk-stow — GTK configuration (GTK2/GTK3/GTK4 themes, cursor, fonts)
 - browser-flags-stow — Chrome/Code Wayland flags
 - spicetify-stow — Spicetify config
-- tiling-assistant-stow — GNOME tiling assistant
 - zed-stow — Zed editor settings
 
 ### Archived
-Old configs in `archived/`: rofi, themes, waypaper, xsettingsd
+Old configs in `archived/`
 
 ## Requirements
 
 - GNU Stow
-- Hyprland or Niri (for respective WM configs)
+- Niri (for WM config)
 - Starship (for mybash) and bash
 - For random-wall.sh: gsettings (GNOME) or adapt for your compositor
 
@@ -51,18 +44,9 @@ git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Core setup
-stow hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
-     ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
-     browser-flags-stow fastfetch-stow wofi-stow fuzzel-stow zed-stow
-
-# Optional: Niri instead of Hyprland
-stow niri-stow ashell-stow
-
-# Optional: Kitty terminal (backup)
-stow kitty-stow
-
-# SSH (only safe files tracked)
-stow ssh-stow
+stow niri-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
+     ghostty-stow spicetify-stow browser-flags-stow \
+     fastfetch-stow fuzzel-stow zed-stow ssh-stow
 ```
 
 Tips:
@@ -124,9 +108,9 @@ wall nord     # Pick random wallpaper directly from the nord folder
 ```bash
 cd ~/dotfiles
 git pull
-stow -R hypr-stow hyprpanel-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
-        ghostty-stow waybar-stow spicetify-stow tiling-assistant-stow \
-        browser-flags-stow fastfetch-stow wofi-stow fuzzel-stow zed-stow ssh-stow
+stow -R niri-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
+        ghostty-stow spicetify-stow browser-flags-stow \
+        fastfetch-stow fuzzel-stow zed-stow ssh-stow
 ```
 
 ## License
