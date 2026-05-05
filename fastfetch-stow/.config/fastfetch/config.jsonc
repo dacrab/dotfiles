@@ -3,8 +3,8 @@
   "logo": {
     "type": "builtin",
     "padding": {
-      "top": 1,
-    },
+      "top": 1
+    }
   },
   "display": {
     "separator": " 󰑃  ",

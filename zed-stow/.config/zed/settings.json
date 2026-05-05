@@ -7,6 +7,32 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "project_panel": {
+    "dock": "left"
+  },
+  "outline_panel": {
+    "dock": "left"
+  },
+  "collaboration_panel": {
+    "dock": "left"
+  },
+  "agent": {
+    "dock": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "git_panel": {
+    "dock": "left"
+  },
+  "ssh_connections": [
+    {
+      "host": "mc-vps",
+      "args": [],
+      "projects": []
+    }
+  ],
+  "icon_theme": "Material Icon Theme",
+  "ui_font_family": "GeistMono Nerd Font Mono",
   "terminal": {
     "font_size": 12.0
   },
@@ -22,7 +48,7 @@
   },
   "cursor_blink": true,
   "autosave": "on_focus_change",
-  "buffer_font_family": "JetBrainsMono Nerd Font Propo",
+  "buffer_font_family": "GeistMono Nerd Font Propo",
   "soft_wrap": "editor_width",
   "edit_predictions": {
     "disabled_globs": [
@@ -44,7 +70,7 @@
       "**/.meta"
     ]
   },
-  "ui_font_size": 16,
+  "ui_font_size": 14.0,
   "buffer_font_size": 12.0,
   "theme": {
     "mode": "system",
