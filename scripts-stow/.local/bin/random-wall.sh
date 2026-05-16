@@ -77,20 +77,14 @@ set_wall() {
 
   # Hyprland + hyprpaper
   if pgrep -x Hyprland >/dev/null 2>&1 || [[ "${XDG_CURRENT_DESKTOP:-}" == *Hyprland* ]]; then
-    hyprctl hyprpaper preload "$wallpaper" >/dev/null 2>&1 || true
     local m
     while IFS= read -r m; do
-      hyprctl hyprpaper wallpaper "$m,$wallpaper" >/dev/null 2>&1 || true
+      hyprctl hyprpaper wallpaper "$m,$wallpaper,cover" 2>/dev/null || true
     done < <(hyprctl monitors | awk '/^Monitor /{gsub(/[":]/,"", $2); print $2}')
-    hyprctl hyprpaper unload all >/dev/null 2>&1 || true
-    hyprctl hyprpaper preload "$wallpaper" >/dev/null 2>&1 || true
     # Persist for next boot
     local conf="$HOME/.config/hyprpaper/hyprpaper.conf"
     mkdir -p "$(dirname "$conf")"
-    printf 'preload = %s\nsplash = false\n' "$wallpaper" > "$conf"
-    while IFS= read -r m; do
-      printf 'wallpaper = %s,%s\n' "$m" "$wallpaper" >> "$conf"
-    done < <(hyprctl monitors | awk '/^Monitor /{gsub(/[":]/,"", $2); print $2}')
+    printf 'splash = false\n\nwallpaper {\n    path = %s\n    fit_mode = cover\n}\n' "$wallpaper" > "$conf"
     return
   fi
 
