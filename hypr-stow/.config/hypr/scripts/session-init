@@ -16,11 +16,19 @@ setup_keyring() {
 }
 
 start_polkit() {
-  if command -v hyprpolkitagent >/dev/null 2>&1; then
-    pgrep -x hyprpolkitagent >/dev/null 2>&1 || hyprpolkitagent &
-  elif command -v /usr/libexec/polkit-gnome-authentication-agent-1 >/dev/null 2>&1; then
-    pgrep -f polkit-gnome-authentication-agent-1 >/dev/null 2>&1 || /usr/libexec/polkit-gnome-authentication-agent-1 &
-  fi
+  local agents=(
+    hyprpolkitagent
+    /usr/libexec/polkit-gnome-authentication-agent-1
+    /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
+    /usr/lib/polkit-kde-authentication-agent-1
+    lxqt-policykit-agent
+  )
+  for agent in "${agents[@]}"; do
+    if command -v "$agent" >/dev/null 2>&1 || [[ -x "$agent" ]]; then
+      pgrep -f "$(basename "$agent")" >/dev/null 2>&1 || "$agent" &
+      return
+    fi
+  done
 }
 
 propagate_env() {
