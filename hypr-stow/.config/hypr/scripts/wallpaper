@@ -2,7 +2,7 @@
 set -euo pipefail
 
 DIR="$HOME/Pictures/wallpapers/nord-background"
-CONF="$HOME/.config/hyprpaper/hyprpaper.conf"
+CONF="$HOME/.config/hypr/hyprpaper.conf"
 
 monitors() { hyprctl monitors | awk '/^Monitor /{gsub(/[":]/, "", $2); print $2}'; }
 
@@ -12,12 +12,7 @@ apply_all() {
   for m in $(monitors); do
     hyprctl hyprpaper wallpaper "$m,$wp" >/dev/null 2>&1 || true
   done
-  mkdir -p "$(dirname "$CONF")"
-  {
-    printf 'preload = %s\n' "$wp"
-    for m in $(monitors); do printf 'wallpaper = %s,%s\n' "$m" "$wp"; done
-    printf 'splash = false\n'
-  } >"$CONF"
+  printf 'splash = false\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$wp" > "$CONF"
 }
 
 cmd_random() {
@@ -29,7 +24,7 @@ cmd_random() {
 
 cmd_sync() {
   local wp
-  wp=$(awk -F'= ' '/^preload/{print $2; exit}' "$CONF" 2>/dev/null || true)
+  wp=$(awk '/^\s*path\s*=/{gsub(/^[[:space:]]*path[[:space:]]*=[[:space:]]*/, ""); print; exit}' "$CONF" 2>/dev/null || true)
   [ -n "${wp:-}" ] || exit 0
   apply_all "$wp"
 }

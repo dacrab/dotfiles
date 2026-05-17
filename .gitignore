@@ -38,13 +38,15 @@ TODO.md
 
 # Wallpaper state files
 last_wallpaper
-hypr/.config/hypr/configs/last_wallpaper
+hypr-stow/.config/hypr/configs/last_wallpaper
+hypr-stow/.config/hypr/hyprpaper.conf
 
 # Matugen-generated files
-hypr/.config/hypr/hyprland/colors.conf
+hypr-stow/.config/hypr/hyprland/colors.conf
 
 # Spicetify: ignore vendored Marketplace app code (keeps local installs untracked)
-spicetify/.config/spicetify/CustomApps/marketplace/
+spicetify-stow/.config/spicetify/CustomApps/marketplace/
+spicetify-stow/.config/spicetify/Themes/marketplace/
 
 # SSH (sensitive)
 # Keep only non-sensitive SSH files (e.g., config, *.pub) in repo
