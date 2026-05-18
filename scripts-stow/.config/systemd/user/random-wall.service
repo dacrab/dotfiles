@@ -5,6 +5,7 @@ PartOf=graphical-session.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/usr/bin/sleep 2
 ExecStart=%h/.local/bin/random-wall.sh
 
 [Install]
