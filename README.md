@@ -5,13 +5,15 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 ## Contents
 
 ### Window Managers & Desktop
+- hypr-stow — Hyprland compositor (modular config, hyprpaper, hyprlock, scripts)
 - niri-stow — Niri compositor config
+- waybar-stow — Waybar panel
+- wofi-stow — Wofi launcher
+- nwg-bar-stow — nwg-bar power menu
+- fuzzel-stow — Fuzzel launcher
 
 ### Terminals
 - ghostty-stow — Ghostty terminal
-
-### Launchers
-- fuzzel-stow — Fuzzel launcher
 
 ### Shell & CLI
 - mybash — Bash config (.bashrc / .bash_profile) and Starship prompt
@@ -27,15 +29,12 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 - spicetify-stow — Spicetify config
 - zed-stow — Zed editor settings
 
-### Archived
-Old configs in `archived/`
-
 ## Requirements
 
 - GNU Stow
-- Niri (for WM config)
+- Hyprland or Niri (for WM configs)
 - Starship (for mybash) and bash
-- For random-wall.sh: gsettings (GNOME) or adapt for your compositor
+- For random-wall.sh: Hyprland (hyprpaper), Niri (swaybg), or GNOME (gsettings)
 
 ## Install
 
@@ -44,9 +43,15 @@ git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Core setup
-stow niri-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
-     ghostty-stow spicetify-stow browser-flags-stow \
-     fastfetch-stow fuzzel-stow zed-stow ssh-stow
+stow mybash git-stow fzf-stow scripts-stow ssh-stow \
+     ghostty-stow fastfetch-stow browser-flags-stow \
+     gtk-stow spicetify-stow zed-stow
+
+# Hyprland desktop
+stow hypr-stow waybar-stow wofi-stow nwg-bar-stow
+
+# Niri desktop
+stow niri-stow fuzzel-stow
 ```
 
 Tips:
@@ -96,7 +101,24 @@ wall nord     # Pick random wallpaper directly from the nord folder
 - Default folder (for keybind): set via `DEFAULT_FOLDER` at top of script (currently `nord`)
 - Keybind (`Super+Shift+W`): instantly sets a random wall from whichever folder you last picked in the menu — no terminal, no prompt
 - Saves last chosen folder to `~/.local/state/random-wall/active_folder`
-- Supports GNOME (gsettings) and Niri (swaybg)
+- Supports Hyprland (hyprpaper), Niri (swaybg), and GNOME (gsettings)
+
+### update.sh (alias: `update`)
+
+System-wide updater that handles packages, runtimes, and tools.
+
+```bash
+update         # Full update with output
+update -q      # Quiet mode (spinners only)
+```
+
+What it updates:
+- System packages (dnf/apt/pacman/zypper)
+- Flatpak, Bun, pnpm, uv, pipx, rustup
+- Go tools (auto-detects outdated binaries)
+- GitHub CLI extensions
+- Docker images (running containers)
+- Git repos in ~/Documents/GitHub
 
 ## SSH Notes
 
@@ -108,9 +130,11 @@ wall nord     # Pick random wallpaper directly from the nord folder
 ```bash
 cd ~/dotfiles
 git pull
-stow -R niri-stow gtk-stow mybash git-stow fzf-stow scripts-stow \
-        ghostty-stow spicetify-stow browser-flags-stow \
-        fastfetch-stow fuzzel-stow zed-stow ssh-stow
+stow -R mybash git-stow fzf-stow scripts-stow ssh-stow \
+        ghostty-stow fastfetch-stow browser-flags-stow \
+        gtk-stow spicetify-stow zed-stow \
+        hypr-stow waybar-stow wofi-stow nwg-bar-stow \
+        niri-stow fuzzel-stow
 ```
 
 ## License
