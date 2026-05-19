@@ -12,9 +12,8 @@ toggle() {
   if is_enabled "$name"; then
     hyprctl keyword monitor "$name,disable"
   else
-    hyprctl keyword monitor "$name,1920x1080@60,1920x0,1"
+    hyprctl keyword monitor "$name,preferred,auto-right,1"
   fi
-  have "$HOME/.config/hypr/scripts/wallpaper" && "$HOME/.config/hypr/scripts/wallpaper" sync >/dev/null 2>&1 || true
 }
 
 enable() {
