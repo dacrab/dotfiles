@@ -126,7 +126,7 @@ update_supabase() {
   has supabase || { skip "supabase"; return; }
   sec "Supabase CLI"
   local latest current
-  latest=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | grep -m1 '"tag_name"' | grep -oP 'v\K[\d.]+')
+  latest=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest 2>/dev/null | grep -m1 '"tag_name"' | grep -oP 'v\K[\d.]+')
   current=$(supabase --version 2>/dev/null | grep -oP '[\d.]+')
   [[ "$current" == "$latest" ]] && ok "supabase ${DM}${current}${R}" && return
   info "supabase ${DM}${current} → ${latest}${R}"
