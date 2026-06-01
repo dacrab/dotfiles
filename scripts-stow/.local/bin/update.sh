@@ -122,6 +122,17 @@ update_go_tools() {
   done < <(find "$gobin" -maxdepth 1 -type f -executable 2>/dev/null)
 }
 
+update_supabase() {
+  has supabase || { skip "supabase"; return; }
+  sec "Supabase CLI"
+  case "$(get_distro)" in
+    redhat) run "dnf upgrade supabase" sudo dnf upgrade supabase -y ;;
+    debian) run "apt upgrade supabase" bash -c 'sudo apt update && sudo apt install --only-upgrade supabase -y' ;;
+    arch)   run "pacman upgrade supabase" sudo pacman -S --noconfirm supabase ;;
+    *)      warn "supabase: unsupported distro" ;;
+  esac
+}
+
 update_gh_ext() {
   has gh || { skip "gh extensions"; return; }
   (($(gh extension list 2>/dev/null | wc -l) == 0)) && skip "gh extensions" && return
@@ -183,6 +194,7 @@ if has dnf || has apt || has pacman || has zypper; then
 fi
 
 update_system
+update_supabase
 update_tool flatpak flatpak update -y
 update_tool bun bun upgrade
 update_tool pnpm pnpm self-update
