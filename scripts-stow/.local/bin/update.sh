@@ -57,7 +57,7 @@ run() {
     fi
   else
     echo -e "\n  ${DM}▶ ${label}${R}"
-    "$@" 2>&1 | grep -v '^Info:' | sed 's/^/    /'
+    "$@" 2>&1 | sed 's/^/    /'
     if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
       ok "$label"
     else
