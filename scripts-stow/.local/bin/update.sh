@@ -125,11 +125,17 @@ update_go_tools() {
 update_supabase() {
   has supabase || { skip "supabase"; return; }
   sec "Supabase CLI"
+  local latest current
+  latest=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | grep '"tag_name"' | cut -d'"' -f4 | tr -d 'v')
+  current=$(supabase --version 2>/dev/null | grep -oP '[\d.]+')
+  [[ "$current" == "$latest" ]] && ok "supabase ${DM}${current}${R}" && return
+  info "supabase ${DM}${current} → ${latest}${R}"
   case "$(get_distro)" in
-    redhat) run "dnf upgrade supabase" sudo dnf upgrade supabase -y ;;
-    debian) run "apt upgrade supabase" bash -c 'sudo apt update && sudo apt install --only-upgrade supabase -y' ;;
-    arch)   run "pacman upgrade supabase" sudo pacman -S --noconfirm supabase ;;
-    *)      warn "supabase: unsupported distro" ;;
+    redhat) run "install supabase rpm" sudo rpm -U "https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.rpm" ;;
+    debian) run "install supabase deb" bash -c "curl -fsSL https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.deb -o /tmp/supabase.deb && sudo dpkg -i /tmp/supabase.deb" ;;
+    *)
+      run "install supabase binary" bash -c "curl -fsSL https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase"
+      ;;
   esac
 }
 
