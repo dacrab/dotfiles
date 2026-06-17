@@ -83,7 +83,7 @@ update_system() {
   sec "System packages"
   case "$(get_distro)" in
     redhat) run "DNF upgrade" sudo dnf upgrade --refresh -y ;;
-    debian) run "APT upgrade" bash -c 'sudo apt update && sudo apt full-upgrade -y' ;;
+    debian) run "APT update" sudo apt update && run "APT upgrade" sudo apt full-upgrade -y ;;
     arch) run "Pacman upgrade" sudo pacman -Syu --noconfirm ;;
     suse) run "Zypper upgrade" sudo zypper dup -y ;;
     *) warn "Unknown distro" ;;
@@ -113,7 +113,7 @@ update_go_tools() {
     
     [[ -z "$modpath" || -z "$cmdpath" || -z "$curver" ]] && warn "$name" && continue
     
-    latestver=$(GOFLAGS='' go list -m -json "${modpath}@latest" 2>/dev/null | awk -F'"' '/"Version"/{ print $4; exit }')
+    latestver=$(GOFLAGS='' go list -m -json "${modpath}@latest" 2>/dev/null | jq -r '.Version // empty' 2>/dev/null)
     [[ -z "$latestver" ]] && warn "$name" && continue
     [[ "$curver" == "$latestver" ]] && ok "$name ${DM}${curver}${R}" && continue
     
@@ -126,15 +126,23 @@ update_supabase() {
   has supabase || { skip "supabase"; return; }
   sec "Supabase CLI"
   local latest current
-  latest=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest 2>/dev/null | grep -m1 '"tag_name"' | grep -oP '"v\K[^"]+' | head -1)
-  current=$(supabase --version 2>/dev/null | grep -oP '[\d.]+')
+  latest=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest 2>/dev/null | jq -r '.tag_name // empty' 2>/dev/null | sed 's/^v//')
+  [[ -z "$latest" ]] && warn "supabase" && return
+  current=$(supabase --version 2>/dev/null | grep -oE '[\d.]+')
   [[ "$current" == "$latest" ]] && ok "supabase ${DM}${current}${R}" && return
   info "supabase ${DM}${current} → ${latest}${R}"
+  local url="https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64"
   case "$(get_distro)" in
-    redhat) run "install supabase rpm" sudo rpm -U "https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.rpm" ;;
-    debian) run "install supabase deb" bash -c "curl -fsSL https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.deb -o /tmp/supabase.deb && sudo dpkg -i /tmp/supabase.deb" ;;
+    redhat)
+      run "download supabase rpm" curl -fsSL "${url}.rpm" -o /tmp/supabase.rpm
+      run "install supabase rpm" sudo rpm -U /tmp/supabase.rpm
+      ;;
+    debian)
+      run "download supabase deb" curl -fsSL "${url}.deb" -o /tmp/supabase.deb
+      run "install supabase deb" sudo dpkg -i /tmp/supabase.deb
+      ;;
     *)
-      run "install supabase binary" bash -c "curl -fsSL https://github.com/supabase/cli/releases/download/v${latest}/supabase_${latest}_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin supabase"
+      run "install supabase binary" sh -c "curl -fsSL '${url}.tar.gz' | sudo tar -xz -C /usr/local/bin supabase"
       ;;
   esac
 }

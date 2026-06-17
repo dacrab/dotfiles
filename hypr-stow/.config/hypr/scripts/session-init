@@ -37,8 +37,14 @@ propagate_env() {
     GNOME_KEYRING_CONTROL SSH_AUTH_SOCK 2>/dev/null || true
 }
 
+start_portals() {
+  systemctl --user start xdg-desktop-portal-hyprland 2>/dev/null || true
+  systemctl --user start xdg-desktop-portal 2>/dev/null || true
+}
+
 setup_keyring
 start_polkit
 propagate_env
+start_portals
 
 exit 0

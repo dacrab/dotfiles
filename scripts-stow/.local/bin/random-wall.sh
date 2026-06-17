@@ -80,7 +80,7 @@ set_wall() {
     local m
     while IFS= read -r m; do
       hyprctl hyprpaper wallpaper "$m,$wallpaper,cover" 2>/dev/null || true
-    done < <(hyprctl monitors | awk '/^Monitor /{gsub(/[":]/,"", $2); print $2}')
+    done < <(hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"", $2); print $2}')
     # Persist for next boot
     local conf="$HOME/.config/hypr/hyprpaper.conf"
     printf 'splash = false\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$wallpaper" > "$conf"
