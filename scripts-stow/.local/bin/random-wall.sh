@@ -39,9 +39,31 @@ for img in "${ALL[@]}"; do [[ "$img" != "$LAST" ]] && POOL+=("$img"); done
 
 PICK="${POOL[$((RANDOM % ${#POOL[@]}))]}"
 
-hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"",$2); print $2}' | while read -r m; do
-  hyprctl hyprpaper wallpaper "$m,$PICK,cover" 2>/dev/null || true
-done
+set_wall() {
+  local wallpaper="$1"
 
-printf 'splash = false\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$PICK" > "$HOME/.config/hypr/hyprpaper.conf"
+  if pgrep -x Hyprland &>/dev/null || [[ "${XDG_CURRENT_DESKTOP:-}" == *Hyprland* ]]; then
+    hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"",$2); print $2}' | while read -r m; do
+      hyprctl hyprpaper wallpaper "$m,$wallpaper,cover" 2>/dev/null || true
+    done
+    printf 'splash = false\n\nwallpaper {\n    monitor =\n    path = %s\n    fit_mode = cover\n}\n' "$wallpaper" > "$HOME/.config/hypr/hyprpaper.conf"
+    return
+  fi
+
+  if pgrep -x niri &>/dev/null || [[ "${XDG_CURRENT_DESKTOP:-}" == *niri* ]]; then
+    pkill swaybg 2>/dev/null || true
+    swaybg -i "$wallpaper" -m fill &
+    disown
+    return
+  fi
+
+  local option
+  option=$(gsettings get org.gnome.desktop.background picture-options)
+  gsettings set org.gnome.desktop.background picture-uri "file://$wallpaper"
+  gsettings set org.gnome.desktop.background picture-uri-dark "file://$wallpaper"
+  gsettings set org.gnome.desktop.background picture-options "scaled"
+  gsettings set org.gnome.desktop.background picture-options "$option"
+}
+
+set_wall "$PICK"
 printf '%s' "$PICK" > "$STATE/last"
