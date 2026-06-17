@@ -90,9 +90,11 @@ clean_system() {
     run "APT autoremove" sudo apt-get autoremove --purge -y
   elif has pacman; then
     run "Pacman clean" sudo pacman -Sc --noconfirm
-    local orphans
-    orphans=$(pacman -Qdtq 2>/dev/null || :)
-    [[ -n "$orphans" ]] && run "Pacman orphans" sudo pacman -Rns --noconfirm "$orphans"
+    local -a orphans=()
+    while IFS= read -r pkg; do
+      orphans+=("$pkg")
+    done < <(pacman -Qdtq 2>/dev/null || :)
+    [[ ${#orphans[@]} -gt 0 ]] && run "Pacman orphans" sudo pacman -Rns --noconfirm "${orphans[@]}"
   fi
   
   has zypper && run "Zypper clean" sudo zypper clean --all
@@ -135,8 +137,11 @@ clean_dev() {
   
   has dotnet && run "NuGet cache" dotnet nuget locals all --clear
   if has cargo; then
-    if ! run "Cargo cache" cargo cache --autoclean 2>/dev/null; then
+    if cargo cache --help &>/dev/null; then
+      run "Cargo cache" cargo cache --autoclean
+    else
       clean "$HOME/.cargo/registry/cache" "Cargo registry"
+      clean "$HOME/.cargo/git/db" "Cargo git db"
     fi
   fi
   
@@ -155,7 +160,7 @@ clean_dev() {
 clean_editors() {
   sec "Editors"
   
-  for editor in Code Cursor Windsurf VSCodium Antigravity Kiro; do
+  for editor in Code Cursor Windsurf VSCodium; do
     [[ -d "$HOME/.config/$editor" ]] || continue
     for cache in CachedData Cache GPUCache "Code Cache"; do
       clean "$HOME/.config/$editor/$cache" "$editor $cache"
@@ -179,7 +184,9 @@ clean_apps() {
     clean "$HOME/.cache/$cache" "$cache"
   done
   
-  clean "$HOME/.local/state" "Local state (logs/history)"
+  for state_dir in "warnings" "less" "vimundo" "nvim/undo" "nvim/swap" "nvim/shada" "bash" "zsh"; do
+    clean "$HOME/.local/state/$state_dir" "state: $state_dir"
+  done
 }
 
 clean_browsers() {
@@ -245,7 +252,6 @@ clean_appimage() {
 
 scan_and_clean() {
   local title="$1" prompt="$2" min_size=$3; shift 3
-  local -a patterns=("$@")
   
   sec "$title"
   
@@ -254,8 +260,8 @@ scan_and_clean() {
   
   spin "Scanning..."
   
-  for pattern in "${patterns[@]}"; do
-    while IFS= read -r item; do
+  if [[ $# -gt 0 ]]; then
+    while IFS= read -r -d '' item; do
       [[ -e "$item" ]] || continue
       local size
       size=$(szk "$item")
@@ -263,8 +269,18 @@ scan_and_clean() {
       paths+=("$item")
       sizes+=("$size")
       ((total += size))
-    done < <(eval "$pattern" 2>/dev/null)
-  done
+    done < <(find "$@" -print0 2>/dev/null)
+  else
+    while IFS= read -r -d '' item; do
+      [[ -e "$item" ]] || continue
+      local size
+      size=$(szk "$item")
+      ((size < min_size)) && continue
+      paths+=("$item")
+      sizes+=("$size")
+      ((total += size))
+    done
+  fi
   
   unspin ok "Scan complete"
   
@@ -296,33 +312,56 @@ scan_and_clean() {
 }
 
 purge_artifacts() {
-  local -a types=(node_modules target build dist .venv venv __pycache__ .next .nuxt .output .gradle .turbo .parcel-cache .angular .svelte-kit coverage obj .zig-cache)
   local -a bases=("$HOME/dev" "$HOME/Projects" "$HOME/GitHub" "$HOME/Code" "$HOME/www" "$HOME/Documents/GitHub" "$HOME/Documents/Projects")
   
-  local -a patterns=()
+  local -a dirs=()
   for base in "${bases[@]}"; do
-    [[ -d "$base" ]] || continue
-    for type in "${types[@]}"; do
-      patterns+=("find '$base' -mindepth 2 -maxdepth 4 -type d -name '$type' -mtime +7")
-    done
+    [[ -d "$base" ]] && dirs+=("$base")
+  done
+  [[ ${#dirs[@]} -eq 0 ]] && return
+  
+  local -a types=(node_modules target build dist .venv venv __pycache__ .next .nuxt .output .gradle .turbo .parcel-cache .angular .svelte-kit coverage obj .zig-cache)
+  
+  local -a find_expr=()
+  local first=true
+  for type in "${types[@]}"; do
+    if $first; then
+      find_expr+=(-name "$type")
+      first=false
+    else
+      find_expr+=(-o -name "$type")
+    fi
   done
   
-  scan_and_clean "Project artifacts" "Clean" 1024 "${patterns[@]}"
+  scan_and_clean "Project artifacts" "Clean" 1024 \
+    "${dirs[@]}" -mindepth 2 -maxdepth 4 -type d \
+    '(' "${find_expr[@]}" ')' -mtime +7
 }
 
 clean_installers() {
-  local -a exts=(iso deb rpm AppImage tar.gz tar.xz tar.bz2 zip dmg pkg exe msi)
   local -a dirs=("$HOME/Downloads" "$HOME/Desktop")
-  
-  local -a patterns=()
+  local -a existing=()
   for dir in "${dirs[@]}"; do
-    [[ -d "$dir" ]] || continue
-    for ext in "${exts[@]}"; do
-      patterns+=("find '$dir' -maxdepth 2 -type f -iname '*.$ext'")
-    done
+    [[ -d "$dir" ]] && existing+=("$dir")
+  done
+  [[ ${#existing[@]} -eq 0 ]] && return
+  
+  local -a exts=(iso deb rpm AppImage tar.gz tar.xz tar.bz2 zip dmg pkg exe msi)
+  
+  local -a find_expr=()
+  local first=true
+  for ext in "${exts[@]}"; do
+    if $first; then
+      find_expr=(-iname "*.$ext")
+      first=false
+    else
+      find_expr+=(-o -iname "*.$ext")
+    fi
   done
   
-  scan_and_clean "Installer files" "Remove" 10240 "${patterns[@]}"
+  scan_and_clean "Installer files" "Remove" 10240 \
+    "${existing[@]}" -maxdepth 2 -type f \
+    '(' "${find_expr[@]}" ')'
 }
 
 while [[ $# -gt 0 ]]; do

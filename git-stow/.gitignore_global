@@ -1,0 +1,81 @@
+# ===========================
+# Global .gitignore
+# ===========================
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursorrules.bak
+
+# Backup & temp files
+*.bak
+*.backup
+*.tmp
+*.temp
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment / Secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_rsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Dependencies
+node_modules/
+vendor/
+venv/
+env/
+__pycache__/
+*.pyc
+
+# Build outputs
+dist/
+build/
+.next/
+.nuxt/
+.output/
+.svelte-kit/
+
+# Cache
+.cache/
+.sass-cache/
+*.sass-cache
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Package manager locks (optional - remove if you want to track these)
+# package-lock.json
+# yarn.lock
+# bun.lock
+
+# Misc
+*.sqlite
+*.db
+dump.sql

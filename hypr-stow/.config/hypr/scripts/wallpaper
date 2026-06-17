@@ -4,7 +4,7 @@ set -euo pipefail
 DIR="$HOME/Pictures/wallpapers/nord-background"
 CONF="$HOME/.config/hypr/hyprpaper.conf"
 
-monitors() { hyprctl monitors | awk '/^Monitor /{gsub(/[":]/, "", $2); print $2}'; }
+monitors() { hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"", $2); print $2}'; }
 
 apply_all() {
   local wp="$1"
