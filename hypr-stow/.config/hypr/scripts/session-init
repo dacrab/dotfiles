@@ -1,50 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Keyring: PAM (via GDM) already starts and unlocks gnome-keyring-daemon.
-# We just need to ensure the environment is propagated to the session.
-setup_keyring() {
-  # If gnome-keyring-daemon is already running (started by PAM), use it
-  if pgrep -x gnome-keyring-daemon >/dev/null 2>&1; then
-    export GNOME_KEYRING_CONTROL="/run/user/$(id -u)/keyring"
-    export SSH_AUTH_SOCK="/run/user/$(id -u)/keyring/ssh"
-  elif command -v gnome-keyring-daemon >/dev/null 2>&1; then
-    eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null || true)"
-  fi
-  # Export to Hyprland so child processes inherit it
-  [ -n "${SSH_AUTH_SOCK:-}" ] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}" >/dev/null 2>&1 || true
-}
+if pgrep -x gnome-keyring-daemon &>/dev/null; then
+  export GNOME_KEYRING_CONTROL="/run/user/$(id -u)/keyring"
+  export SSH_AUTH_SOCK="/run/user/$(id -u)/keyring/ssh"
+elif command -v gnome-keyring-daemon &>/dev/null; then
+  eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null || true)"
+fi
+[ -n "${SSH_AUTH_SOCK:-}" ] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}" &>/dev/null || true
 
-start_polkit() {
-  local agents=(
-    hyprpolkitagent
-    /usr/libexec/polkit-gnome-authentication-agent-1
-    /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1
-    /usr/lib/polkit-kde-authentication-agent-1
-    lxqt-policykit-agent
-  )
-  for agent in "${agents[@]}"; do
-    if command -v "$agent" >/dev/null 2>&1 || [[ -x "$agent" ]]; then
-      pgrep -f "$(basename "$agent")" >/dev/null 2>&1 || "$agent" &
-      return
-    fi
-  done
-}
+for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/polkit-kde-authentication-agent-1 lxqt-policykit-agent; do
+  command -v "$agent" &>/dev/null || [[ -x "$agent" ]] || continue
+  pgrep -f "$(basename "$agent")" &>/dev/null || "$agent" &
+  break
+done
 
-propagate_env() {
-  dbus-update-activation-environment --systemd \
-    DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP \
-    GNOME_KEYRING_CONTROL SSH_AUTH_SOCK 2>/dev/null || true
-}
-
-start_portals() {
-  systemctl --user start xdg-desktop-portal-hyprland 2>/dev/null || true
-  systemctl --user start xdg-desktop-portal 2>/dev/null || true
-}
-
-setup_keyring
-start_polkit
-propagate_env
-start_portals
-
-exit 0
+dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GNOME_KEYRING_CONTROL SSH_AUTH_SOCK &>/dev/null || true
+systemctl --user start xdg-desktop-portal-hyprland xdg-desktop-portal &>/dev/null || true
