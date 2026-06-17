@@ -16,7 +16,7 @@ sudo -v
 
 has dnf && { sudo dnf clean all -q; sudo dnf autoremove -y -q; }
 has journalctl && sudo journalctl --vacuum-time=3d
-has trash-empty && (yes | trash-empty 7 2>/dev/null) || clean "$HOME/.local/share/Trash" Trash
+has trash-empty && trash-empty 7 2>/dev/null || clean "$HOME/.local/share/Trash" Trash
 clean "$HOME/.cache/thumbnails" Thumbnails
 
 has docker && docker ps &>/dev/null && docker system prune -f

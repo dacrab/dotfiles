@@ -28,14 +28,7 @@ has rustup && rustup update
 if has supabase; then
   v=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//')
   cur=$(supabase --version | grep -oE '[\d.]+')
-  [[ -n "$v" && "$cur" != "$v" ]] && {
-    u="https://github.com/supabase/cli/releases/download/v${v}/supabase_${v}_linux_amd64"
-    case "$(distro)" in
-      redhat) curl -fsSL "${u}.rpm" -o /tmp/supabase.rpm && sudo rpm -U /tmp/supabase.rpm ;;
-      debian) curl -fsSL "${u}.deb" -o /tmp/supabase.deb && sudo dpkg -i /tmp/supabase.deb ;;
-      *) curl -fsSL "${u}.tar.gz" | sudo tar -xz -C /usr/local/bin supabase ;;
-    esac
-  }
+  [[ -n "$v" && "$cur" != "$v" ]] && curl -fsSL "https://github.com/supabase/cli/releases/download/v${v}/supabase_${v}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin supabase
 fi
 
 has gh && gh extension upgrade --all
