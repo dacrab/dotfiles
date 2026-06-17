@@ -16,7 +16,7 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 - ghostty-stow — Ghostty terminal
 
 ### Shell & CLI
-- mybash — Bash config (.bashrc / .bash_profile) and Starship prompt
+- mybash — Bash config submodule (.bashrc / .bash_profile) and Starship prompt
 - git-stow — Global git configuration
 - fzf-stow — fzf shell integration
 - fastfetch-stow — Fastfetch system info config
@@ -75,11 +75,11 @@ sweep -y           # Auto-confirm all prompts
 ```
 
 What it cleans:
-- Package manager caches (dnf, apt, pacman, yay, paru)
+- Package manager caches (dnf, apt, pacman, zypper)
 - Journal logs, trash, thumbnails
 - Dev tool caches (npm, pnpm, bun, pip, uv, go, dotnet, cargo, gradle)
 - Virtualenv orphans (~/.virtualenvs and stray venv dirs)
-- Editor caches (VS Code, Cursor, JetBrains, Antigravity, Kiro)
+- Editor caches (VS Code, Cursor, Windsurf, VSCodium, JetBrains)
 - Container pruning (docker, podman)
 - Flatpak/Snap orphans
 - Old AppImage backups
@@ -115,6 +115,7 @@ update -q      # Quiet mode (spinners only)
 What it updates:
 - System packages (dnf/apt/pacman/zypper)
 - Flatpak, Bun, pnpm, uv, pipx, rustup
+- Supabase CLI
 - Go tools (auto-detects outdated binaries)
 - GitHub CLI extensions
 - Docker images (running containers)
