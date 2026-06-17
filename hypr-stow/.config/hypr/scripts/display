@@ -4,7 +4,7 @@ set -euo pipefail
 have() { command -v "$1" >/dev/null 2>&1; }
 
 get_builtin() {
-  hyprctl monitors 2>/dev/null | awk '/^Monitor/{if ($2 ~ /^eDP-/) print $2}' | head -1 || true
+  hyprctl monitors all 2>/dev/null | awk '/^Monitor/{if ($2 ~ /^eDP-/) print $2}' | head -1 || true
 }
 
 is_enabled() {
