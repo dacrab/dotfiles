@@ -8,7 +8,8 @@ Stow‑managed configs for my Linux environment: Hyprland/Niri, panels/launchers
 - hypr-stow — Hyprland compositor (modular config, hyprpaper, hyprlock, scripts)
 - niri-stow — Niri compositor config
 - waybar-stow — Waybar panel
-- wofi-stow — Wofi launcher
+- wofi-stow — Wofi launcher (fallback; vicinae is the default)
+- vicinae-stow — Vicinae launcher (settings.json only; install via Terra: `sudo dnf install vicinae`)
 - nwg-bar-stow — nwg-bar power menu
 - fuzzel-stow — Fuzzel launcher
 
@@ -48,7 +49,7 @@ stow mybash git-stow fzf-stow scripts-stow ssh-stow \
      gtk-stow spicetify-stow zed-stow
 
 # Hyprland desktop
-stow hypr-stow waybar-stow wofi-stow nwg-bar-stow
+stow hypr-stow waybar-stow vicinae-stow wofi-stow nwg-bar-stow
 
 # Niri desktop
 stow niri-stow fuzzel-stow
@@ -134,7 +135,7 @@ git pull
 stow -R mybash git-stow fzf-stow scripts-stow ssh-stow \
         ghostty-stow fastfetch-stow browser-flags-stow \
         gtk-stow spicetify-stow zed-stow \
-        hypr-stow waybar-stow wofi-stow nwg-bar-stow \
+        hypr-stow waybar-stow vicinae-stow wofi-stow nwg-bar-stow \
         niri-stow fuzzel-stow
 ```
 
