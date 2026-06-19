@@ -2,8 +2,8 @@
 set -euo pipefail
 
 if pgrep -x gnome-keyring-daemon &>/dev/null; then
-  export GNOME_KEYRING_CONTROL="/run/user/$(id -u)/keyring"
-  export SSH_AUTH_SOCK="/run/user/$(id -u)/keyring/ssh"
+  export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring"
+  export SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
 elif command -v gnome-keyring-daemon &>/dev/null; then
   eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null || true)"
 fi
@@ -11,7 +11,7 @@ fi
 
 for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/polkit-kde-authentication-agent-1 lxqt-policykit-agent; do
   command -v "$agent" &>/dev/null || [[ -x "$agent" ]] || continue
-  pgrep -f "$(basename "$agent")" &>/dev/null || "$agent" &
+  pgrep -f "${agent##*/}" &>/dev/null || "$agent" &
   break
 done
 
