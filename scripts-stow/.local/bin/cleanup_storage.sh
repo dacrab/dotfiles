@@ -2,24 +2,30 @@
 set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
+q() { "$@" &>/dev/null; }
 
 clean() {
-  local p=$1 l=${2:-$1}
-  [[ -e "$p" ]] || return
-  local s=$(du -sk "$p" 2>/dev/null | cut -f1)
-  ((s < 100)) && return
-  rm -rf "$p" 2>/dev/null && echo "  ✓ $l ($((s/1024))M)"
+  local path=$1 label=${2:-$1}
+  [[ -e "$path" ]] || return
+  local kb=$(du -sk "$path" 2>/dev/null | cut -f1)
+  ((kb < 100)) && return
+  local size
+  if ((kb >= 1048576)); then size="$((kb / 1048576))G"
+  elif ((kb >= 1024)); then size="$((kb / 1024))M"
+  else size="${kb}K"
+  fi
+  rm -rf "$path" 2>/dev/null && echo "  ✓ $label ($size)"
 }
 
 echo "=== cleanup ==="
 sudo -v
 
-has dnf && { sudo dnf clean all -q; sudo dnf autoremove -y -q; }
-has journalctl && sudo journalctl --vacuum-time=3d
+has dnf && q sudo dnf clean all -q && q sudo dnf autoremove -y -q
+has journalctl && sudo journalctl --vacuum-time=3d | tail -1
 has trash-empty && trash-empty 7 2>/dev/null || clean "$HOME/.local/share/Trash" Trash
 clean "$HOME/.cache/thumbnails" Thumbnails
 
-has docker && docker ps &>/dev/null && docker system prune -f
+has docker && docker info &>/dev/null && docker system prune -f
 has podman && podman system prune -f
 
 has npm && npm cache clean --force

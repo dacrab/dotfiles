@@ -28,11 +28,7 @@ has uv && q uv self update
 has pipx && pipx upgrade-all | grep -v "^  "
 has rustup && rustup update 2>/dev/null | grep -v "^info:" || true
 
-if has supabase; then
-  v=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-  cur=$(supabase --version | grep -oE '[\d.]+')
-  [[ -n "$v" && "$cur" != "$v" ]] && curl -fsSL "https://github.com/supabase/cli/releases/download/v${v}/supabase_${v}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin supabase
-fi
+has supabase && q supabase update || true
 
 echo "  go tools ..."
 has go && for p in golang.org/x/tools/gopls@latest honnef.co/go/tools/cmd/staticcheck@latest golang.org/x/vuln/cmd/govulncheck@latest; do
@@ -43,7 +39,7 @@ echo "  gh extensions ..."
 has gh && q gh extension upgrade --all
 
 echo "  docker images ..."
-has docker && docker ps &>/dev/null && docker ps --format '{{.Image}}' | sort -u | while read -r img; do q docker pull "$img"; done
+has docker && docker info &>/dev/null && docker ps --format '{{.Image}}' | sort -u | while read -r img; do q docker pull "$img"; done
 
 echo "  git repos ..."
 has git && [[ -d "$HOME/Documents/GitHub" ]] && find "$HOME/Documents/GitHub" -maxdepth 2 -name ".git" | while read -r g; do
