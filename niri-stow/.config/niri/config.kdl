@@ -1,3 +1,4 @@
+// Input
 input {
     keyboard {
         xkb {
@@ -11,12 +12,14 @@ input {
     }
 }
 
+// Output
 output "eDP-1" {
     mode "1920x1080@120.030"
     scale 2
     position x=1280 y=0
 }
 
+// Layout
 layout {
     gaps 16
     center-focused-column "never"
@@ -46,11 +49,13 @@ layout {
     }
 }
 
+// Startup
 spawn-at-startup "waybar"
 spawn-sh-at-startup "${HOME}/.local/bin/random-wall.sh"
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
+// Window rules
 window-rule {
     match app-id=r#"^org\.wezfurlong\.wezterm$"#
     default-column-width {}
@@ -61,6 +66,7 @@ window-rule {
     open-floating true
 }
 
+// Key bindings
 binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Super+Return { spawn "ghostty"; }

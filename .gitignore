@@ -30,7 +30,6 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
-*~
 
 # Personal notes
 NOTES.md
