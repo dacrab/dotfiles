@@ -16,4 +16,8 @@ for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /u
 done
 
 dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GNOME_KEYRING_CONTROL SSH_AUTH_SOCK &>/dev/null || true
-systemctl --user start xdg-desktop-portal-hyprland xdg-desktop-portal &>/dev/null || true
+systemctl --user start xdg-desktop-portal-hyprland &>/dev/null || true
+if ! systemctl --user start xdg-desktop-portal &>/dev/null; then
+  /usr/libexec/xdg-desktop-portal &>/dev/null &
+  /usr/libexec/xdg-desktop-portal-gtk &>/dev/null &
+fi
