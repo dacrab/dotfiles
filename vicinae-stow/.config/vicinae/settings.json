@@ -15,5 +15,10 @@
          "name": "nord",
          "icon_theme": "Papirus-Dark"
       }
-   }
+   },
+   "favorites": [
+      "applications:app.zen_browser.zen",
+      "applications:com.spotify.Client",
+      "applications:helium"
+   ]
 }
