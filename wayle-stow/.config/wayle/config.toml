@@ -1,0 +1,32 @@
+[styling.palette]
+bg = "#0c0c0c"
+surface = "#0c0c0c"
+fg = "#cccccc"
+fg-muted = "#555555"
+primary = "#aaaaaa"
+
+[bar]
+location = "top"
+inset-edge = 6
+inset-ends = 6
+button-icon-size = 0.8
+button-label-size = 0.8
+module-gap = 0
+
+[[bar.layout]]
+monitor = "HDMI-A-1"
+left = ["hyprland-workspaces", "window-title"]
+center = ["clock"]
+right = ["volume", "network", "bluetooth", "battery", "power"]
+
+[modules.clock]
+format = "%H:%M"
+
+[modules.volume]
+on-click = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
+
+[modules.network]
+on-click = "nm-connection-editor"
+
+[modules.power]
+on-click = "nwg-bar"
