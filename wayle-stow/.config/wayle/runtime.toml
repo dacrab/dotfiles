@@ -1,0 +1,52 @@
+[general]
+font-sans = "GeistMono Nerd Font"
+
+[bar]
+inset-edge = 0.0
+inset-ends = 0.0
+bg = "bg-base"
+button-variant = "basic"
+button-bg-opacity = 0
+button-icon-size = 0.699999988079071
+button-label-size = 0.8500000238418579
+button-label-weight = "normal"
+button-gap = 0.25
+
+[[bar.layout]]
+monitor = "HDMI-A-1"
+show = true
+left = [
+    "hyprland-workspaces",
+    "window-title",
+]
+center = ["clock"]
+right = [
+    "keyboard-input",
+    "volume",
+    "network",
+    "bluetooth",
+    "battery",
+    "power",
+]
+
+[styling]
+theme-provider = "wallust"
+theming-monitor = "HDMI-A-1"
+
+[modules.battery]
+label-show = false
+
+[modules.clock]
+icon-show = false
+
+[modules.hyprland-workspaces]
+display-mode = "icon"
+
+[modules.network]
+label-show = false
+
+[osd]
+margin = 50.0
+
+[wallpaper]
+engine-enabled = false
