@@ -2,18 +2,17 @@
 set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
-q() { "$@" &>/dev/null; }
 
 # Map /etc/os-release ID to package manager family
 distro() {
-  source /etc/os-release 2>/dev/null
+  source /etc/os-release
   case "${ID:-}" in fedora|rhel|centos|rocky|almalinux) echo "redhat";; ubuntu|debian|mint) echo "debian";; arch|manjaro|endeavouros) echo "arch";; opensuse*|sles) echo "suse";; *) echo "unknown";; esac
 }
 
 echo "=== update ==="
 sudo -v
 
-# System packages
+echo "  system ..."
 case "$(distro)" in
   redhat) sudo dnf upgrade --refresh -y ;;
   debian) sudo apt update && sudo apt full-upgrade -y ;;
@@ -21,39 +20,33 @@ case "$(distro)" in
   suse) sudo zypper dup -y ;;
 esac
 
-# Language runtimes & package managers
 echo "  runtimes ..."
-has flatpak && q flatpak update -y
+has flatpak && flatpak update -y
 has snap && sudo snap refresh
-has bun && q bun upgrade && q bun update -g
-has npm && q npm update -g && npm install -g npm@latest 2>/dev/null
-has pnpm && q pnpm update -g && q pnpm self-update
-has uv && q uv self update
-has pipx && pipx upgrade-all | grep -v "^  "
-has rustup && rustup update 2>/dev/null | grep -v "^info:" || true
-has fwupdmgr && fwupdmgr refresh && fwupdmgr update
+has bun && bun upgrade && bun update -g
+has npm && npm update -g
+has pnpm && pnpm update -g && pnpm self-update
+has uv && uv self update
+has pipx && pipx upgrade-all
+has rustup && rustup update
 
-# Supabase CLI — manual github release dance since there's no self-update
-has supabase && { v=$(curl -fsSL https://api.github.com/repos/supabase/cli/releases/latest | jq -r '.tag_name' 2>/dev/null | sed 's/^v//'); cur=$(supabase --version | grep -oE '[\d.]+'); [[ -n "$v" && "$cur" != "$v" ]] && curl -fsSL "https://github.com/supabase/cli/releases/download/v${v}/supabase_${v}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin supabase && echo "  supabase $cur → $v"; }
+echo "  cargo ..."
+has cargo && cargo install-update -a
 
-# Go dev tools
 echo "  go tools ..."
 has go && for p in golang.org/x/tools/gopls@latest honnef.co/go/tools/cmd/staticcheck@latest golang.org/x/vuln/cmd/govulncheck@latest; do
-  q go install "$p"
+  go install "$p"
 done
 
-# GitHub CLI extensions
 echo "  gh extensions ..."
-has gh && q gh extension upgrade --all
+has gh && gh extension upgrade --all
 
-# Refresh running docker images
 echo "  docker images ..."
-has docker && docker info &>/dev/null && docker ps --format '{{.Image}}' | sort -u | while read -r img; do q docker pull "$img"; done
+has docker && docker ps -q && docker ps --format '{{.Image}}' | sort -u | while read -r img; do docker pull "$img"; done
 
-# Pull all git repos
 echo "  git repos ..."
 has git && [[ -d "$HOME/Documents/GitHub" ]] && find "$HOME/Documents/GitHub" -maxdepth 2 -name ".git" | while read -r g; do
-  q git -C "$(dirname "$g")" pull --ff-only
+  git -C "$(dirname "$g")" pull --ff-only
 done
 
 echo "✓ done"
