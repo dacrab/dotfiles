@@ -50,7 +50,7 @@ stow niri-stow fuzzel-stow
 
 | Alias | Script | What it does |
 |-------|--------|--------------|
-| `sweep` | cleanup_storage.sh | Cleans caches, logs, trash, dev artifacts, containers |
+| `sweep` | sweep.sh | Cleans caches, logs, trash, dev artifacts, containers |
 | `wall` | random-wall.sh | Sets a random wallpaper (supports Hyprland/Niri/GNOME) |
 | `update` | update.sh | System-wide updater (packages, runtimes, tools) |
 
