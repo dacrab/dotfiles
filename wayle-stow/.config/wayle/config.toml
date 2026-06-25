@@ -1,32 +1,64 @@
+[styling]
+rounding = "none"
+
 [styling.palette]
-bg = "#0c0c0c"
-surface = "#0c0c0c"
-fg = "#cccccc"
-fg-muted = "#555555"
-primary = "#aaaaaa"
+bg = "#0a0a0f"
+surface = "#121218"
+elevated = "#1a1a24"
+fg = "#d0d4e0"
+fg-muted = "#606470"
+primary = "#8090b0"
+red = "#d06070"
+yellow = "#d0b860"
+green = "#70c888"
+blue = "#8090b0"
+
+[general]
+font-sans = "Inter"
 
 [bar]
-location = "top"
-inset-edge = 6
-inset-ends = 6
-button-icon-size = 0.8
-button-label-size = 0.8
-module-gap = 0
+inset-edge = 0
+inset-ends = 0
+padding = 0.15
+padding-ends = 0.3
+module-gap = 0.3
+background-opacity = 80
+button-variant = "block-prefix"
+button-bg-opacity = 0
+button-icon-size = 0.7
+button-icon-padding = 0.6
+button-label-size = 0.7
+button-label-weight = "light"
+button-label-padding = 0.6
+button-rounding = "none"
+button-gap = 0.5
+button-group-opacity = 0
+button-border-location = "none"
+dropdown-shadow = false
+dropdown-opacity = 92
 
 [[bar.layout]]
-monitor = "HDMI-A-1"
+monitor = "*"
 left = ["hyprland-workspaces", "window-title"]
 center = ["clock"]
-right = ["volume", "network", "bluetooth", "battery", "power"]
+right = ["keyboard-input", "volume", "network", "bluetooth", "battery", "power"]
 
 [modules.clock]
 format = "%H:%M"
+icon-show = false
 
 [modules.volume]
 on-click = "wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle"
 
 [modules.network]
+label-show = false
 on-click = "nm-connection-editor"
 
+[modules.battery]
+label-show = false
+
+[modules.bluetooth]
+
+[modules.keyboard-input]
+
 [modules.power]
-on-click = "nwg-bar"
