@@ -1,0 +1,17 @@
+[[bar.layout]]
+monitor = "*"
+show = true
+left = [
+    "hyprland-workspaces",
+    "window-title",
+]
+center = ["clock"]
+right = [
+    "systray",
+    "keyboard-input",
+    "volume",
+    "network",
+    "bluetooth",
+    "battery",
+    "power",
+]
