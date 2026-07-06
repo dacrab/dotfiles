@@ -35,6 +35,13 @@ esac
 inf "Packages updated"
 
 # ──────────────────────────────────────────────
+title "Spicetify"
+if has spicetify; then
+  echo "  → spicetify"
+  spicetify update
+fi
+
+# ──────────────────────────────────────────────
 title "Runtimes"
 if has flatpak; then
   echo "  → flatpak"
