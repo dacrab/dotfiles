@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+SPICETIFY_BIN="$HOME/.spicetify/spicetify"
+
+if [[ $# -eq 0 ]]; then
+  exec "$SPICETIFY_BIN"
+fi
+
+case "$1" in
+  update)
+    echo ">>> Upgrading spicetify..."
+    "$SPICETIFY_BIN" upgrade
+    echo
+    echo ">>> Restoring backup and applying customizations..."
+    "$SPICETIFY_BIN" restore backup apply
+    ;;
+  *)
+    exec "$SPICETIFY_BIN" "$@"
+    ;;
+esac

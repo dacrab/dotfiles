@@ -53,7 +53,7 @@
   },
 
   "custom/media": {
-    "format": "{icon} {}",
+    "format": "{icon} {text}",
     "format-icons": {
       "Playing": "󰐊",
       "Paused": "󰏤"

@@ -43,12 +43,6 @@ last_wallpaper
 hypr-stow/.config/hypr/configs/last_wallpaper
 hypr-stow/.config/hypr/hyprpaper.conf
 
-# Matugen-generated files
-hypr-stow/.config/hypr/hyprland/colors.conf
-
-# Spicetify: ignore vendored Marketplace app code (keeps local installs untracked)
-spicetify-stow/.config/spicetify/CustomApps/marketplace/
-spicetify-stow/.config/spicetify/Themes/marketplace/
 
 # SSH (sensitive)
 # Keep only non-sensitive SSH files (e.g., config, *.pub) in repo
