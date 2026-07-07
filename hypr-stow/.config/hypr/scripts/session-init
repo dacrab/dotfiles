@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 if pgrep -x gnome-keyring-daemon &>/dev/null; then
   export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring"
   export SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
 elif command -v gnome-keyring-daemon &>/dev/null; then
-  eval "$(gnome-keyring-daemon --start --components=secrets,ssh 2>/dev/null || true)"
+  eval "$(gnome-keyring-daemon --start --components=secrets,ssh)"
 fi
-[ -n "${SSH_AUTH_SOCK:-}" ] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}" &>/dev/null || true
+
+[[ -n "${SSH_AUTH_SOCK:-}" ]] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}"
 
 for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/polkit-kde-authentication-agent-1 lxqt-policykit-agent; do
   command -v "$agent" &>/dev/null || [[ -x "$agent" ]] || continue
@@ -15,9 +16,9 @@ for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /u
   break
 done
 
-dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP GNOME_KEYRING_CONTROL SSH_AUTH_SOCK &>/dev/null || true
-systemctl --user start xdg-desktop-portal-hyprland &>/dev/null || true
-if ! systemctl --user start xdg-desktop-portal &>/dev/null; then
-  /usr/libexec/xdg-desktop-portal &>/dev/null &
-  /usr/libexec/xdg-desktop-portal-gtk &>/dev/null &
+dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+systemctl --user start xdg-desktop-portal-hyprland
+if ! systemctl --user start xdg-desktop-portal; then
+  /usr/libexec/xdg-desktop-portal &
+  /usr/libexec/xdg-desktop-portal-gtk &
 fi
