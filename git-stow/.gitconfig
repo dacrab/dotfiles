@@ -12,7 +12,5 @@
 	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
-[coderabbit]
-	machineId = cli/48a10a33093548488580c6184fe357c0
 [core]
 	excludesfile = ~/.gitignore_global

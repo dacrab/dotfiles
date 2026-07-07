@@ -12,7 +12,7 @@
   {
     "label": "Suspend",
     "exec": "systemctl suspend",
-    "icon": "/usr/share/nwg-bar/images/system-lock-screen.svg"
+    "icon": "/usr/share/nwg-bar/images/system-suspend.svg"
   },
   {
     "label": "Reboot",

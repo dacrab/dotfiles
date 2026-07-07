@@ -21,7 +21,6 @@ Stow-managed configs for my Linux environment: Hyprland/Niri, panels, terminals,
 - **ssh-stow** — SSH config and public keys only
 - **gtk-stow** — GTK themes, cursor, fonts
 - **browser-flags-stow** — Chrome/Code Wayland flags
-- **spicetify-stow** — Spicetify config
 - **zed-stow** — Zed editor settings
 
 ## Install
@@ -33,7 +32,7 @@ cd ~/dotfiles
 # Core
 stow mybash git-stow fzf-stow scripts-stow ssh-stow \
      ghostty-stow fastfetch-stow browser-flags-stow \
-     gtk-stow spicetify-stow zed-stow
+     gtk-stow zed-stow
 
 # Hyprland desktop
 stow hypr-stow wayle-stow waybar-stow vicinae-stow wofi-stow nwg-bar-stow

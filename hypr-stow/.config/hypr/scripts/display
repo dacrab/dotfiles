@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
 
 get_builtin() {
-  hyprctl monitors all 2>/dev/null | awk '/^Monitor/{if ($2 ~ /^eDP-/) print $2}' | head -1 || true
+  hyprctl monitors all 2>/dev/null | awk '/^Monitor/{if ($2 ~ /^eDP-/) print $2}' | head -1
 }
 
 is_enabled() {
@@ -26,7 +26,6 @@ enable() {
   local res="${2:-1920x1080@60}"
   local pos="${3:-0x0}"
   hyprctl keyword monitor "$name,$res,$pos,1"
-  has "$HOME/.config/hypr/scripts/wallpaper" && "$HOME/.config/hypr/scripts/wallpaper" sync &>/dev/null || true
 }
 
 disable() {
