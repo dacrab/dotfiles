@@ -36,8 +36,9 @@ has pipx     && pipx upgrade-all
 has rustup   && rustup update
 
 if has cargo; then
-  ! cargo install-update --version &>/dev/null && cargo install cargo-update
-  cargo install-update -a
+  cargo install --list 2>/dev/null | awk '/^[a-zA-Z]/{print $1}' | while read -r crate; do
+    cargo install "$crate" --quiet &>/dev/null
+  done
 fi
 
 if has go; then
