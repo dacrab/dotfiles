@@ -60,10 +60,8 @@ if has uv; then uv cache clean; fi
 if has go; then go clean -modcache && go clean -cache; fi
 if has rustup; then rustup clean; fi
 if has cargo; then
-  cargo cache --autoclean || {
-    clean "$HOME/.cargo/registry/cache" cargo-registry
-    clean "$HOME/.cargo/git/db" cargo-git
-  }
+  clean "$HOME/.cargo/registry/cache" cargo-registry
+  clean "$HOME/.cargo/git/db" cargo-git
 fi
 if has poetry; then poetry cache clear --all --no-interaction; fi
 clean "$HOME/.gradle/caches" gradle

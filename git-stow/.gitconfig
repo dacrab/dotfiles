@@ -14,3 +14,10 @@
 	smudge = git-lfs smudge -- %f
 [core]
 	excludesfile = ~/.gitignore_global
+	pager = delta
+[delta]
+	side-by-side = true
+	line-numbers = true
+	navigate = true
+[interactive]
+	diffFilter = delta --color-only
