@@ -52,6 +52,10 @@ set_wall() {
   local wallpaper="$1"
 
   if pgrep -x Hyprland || [[ "${XDG_CURRENT_DESKTOP:-}" == *Hyprland* ]]; then
+    for _ in {1..10}; do
+      hyprctl hyprpaper list >/dev/null 2>&1 && break
+      sleep 0.3
+    done
     hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"",$2); print $2}' | while read -r m; do
       hyprctl hyprpaper wallpaper "$m,$wallpaper,cover"
     done
