@@ -35,7 +35,7 @@ has uv       && uv self update
 has pipx     && pipx upgrade-all
 has rustup   && rustup update
 
-if has cargo; then
+if has cargo && [[ -f "$HOME/.crates.toml" ]]; then
   cargo install --list 2>/dev/null | awk '/^[a-zA-Z]/{print $1}' | while read -r crate; do
     cargo install "$crate" --quiet &>/dev/null
   done
