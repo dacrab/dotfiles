@@ -66,8 +66,8 @@ fi
 if has poetry; then poetry cache clear --all --no-interaction; fi
 clean "$HOME/.gradle/caches" gradle
 
-for d in node-gyp ms-playwright deno biome goimports gopls typescript prisma aws; do
-  clean "$HOME/.cache/$d" "$d"
+for d in node-gyp deno biome gopls typescript prisma; do
+  has "${d%%-*}" && clean "$HOME/.cache/$d" "$d"
 done
 
 for e in Code Cursor Windsurf VSCodium; do
