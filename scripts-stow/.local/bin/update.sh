@@ -25,7 +25,14 @@ case "$(distro)" in
   suse)   sudo zypper dup -y ;;
 esac
 
-has spicetify && "$HOME/.spicetify/spicetify" upgrade && "$HOME/.spicetify/spicetify" restore backup apply
+has spicetify && {
+  spotify_flatpak="$(flatpak info --show-location com.spotify.Client 2>/dev/null)/files/extra/share/spotify"
+  if [[ -d "$spotify_flatpak" ]]; then
+    sudo chmod a+wr "$spotify_flatpak"
+    sudo chmod a+wr -R "$spotify_flatpak/Apps"
+  fi
+  "$HOME/.spicetify/spicetify" upgrade && "$HOME/.spicetify/spicetify" restore backup apply
+}
 has flatpak  && (flatpak update --appstream; flatpak update -y)
 has snap     && sudo snap refresh
 has bun      && (bun upgrade; bun update -g)
@@ -53,8 +60,9 @@ if has docker && docker ps -q &>/dev/null; then
   docker ps --format '{{.Image}}' | sort -u | xargs -r docker pull
 fi
 
-if has git && [[ -d "$HOME/Documents/GitHub" ]]; then
-  find "$HOME/Documents/GitHub" -maxdepth 2 -name ".git" | while read -r g; do
+REPOS_DIR="${REPOS_DIR:-$HOME/Documents/GitHub}"
+if has git && [[ -d "$REPOS_DIR" ]]; then
+  find "$REPOS_DIR" -maxdepth 2 -name ".git" | while read -r g; do
     dir="$(dirname "$g")"
     upstream="$(git -C "$dir" rev-parse --abbrev-ref --symbolic-full-name "@{upstream}" 2>/dev/null)"
     [[ -z "$upstream" ]] && continue
