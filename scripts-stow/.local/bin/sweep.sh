@@ -53,18 +53,23 @@ if has podman; then podman system prune -f; fi
 if has npm; then npm cache clean --force; fi
 if has pnpm; then pnpm store prune; fi
 if has yarn; then yarn cache clean; fi
-if has bun; then bun pm cache rm; fi
+if has bun; then bun pm cache rm 2>/dev/null; fi
 if has pip3; then pip3 cache purge; fi
 if has pip; then pip cache purge; fi
 if has uv; then uv cache clean; fi
 if has go; then go clean -modcache && go clean -cache; fi
-if has rustup; then rustup clean; fi
 if has cargo; then
+  if has cargo-cache; then cargo cache --autoclean; fi
   clean "$HOME/.cargo/registry/cache" cargo-registry
+  clean "$HOME/.cargo/registry/src" cargo-src
   clean "$HOME/.cargo/git/db" cargo-git
+  clean "$HOME/.cargo/git/checkouts" cargo-checkouts
 fi
-if has poetry; then poetry cache clear --all --no-interaction; fi
+if has poetry; then poetry cache clear . --all --no-interaction; fi
 clean "$HOME/.gradle/caches" gradle
+clean "$HOME/.m2/repository" maven
+clean "$HOME/.ivy2/cache" ivy
+clean "$HOME/.sbt" sbt
 
 for d in node-gyp deno biome gopls typescript prisma; do
   has "${d%%-*}" && clean "$HOME/.cache/$d" "$d"
