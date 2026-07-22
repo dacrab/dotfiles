@@ -75,6 +75,20 @@ for d in node-gyp deno biome gopls typescript prisma; do
   has "${d%%-*}" && clean "$HOME/.cache/$d" "$d"
 done
 
+clean "$HOME/.cache/ms-playwright-go" playwright
+clean "$HOME/.cache/opencode" opencode
+clean "$HOME/.cache/net.imput.helium" helium
+clean "$HOME/.cache/libdnf5" libdnf5
+clean "$HOME/.cache/gnome-software" gnome-software
+clean "$HOME/.cache/tracker3" tracker3
+clean "$HOME/.cache/flatpak" flatpak-cache
+clean "$HOME/.cache/mesa_shader_cache" mesa-shader
+clean "$HOME/.cache/wayle" wayle
+clean "$HOME/.cache/fontconfig" fontconfig
+clean "$HOME/.cache/mimocode" mimocode
+clean "$HOME/.cache/gstreamer-1.0" gstreamer
+clean "$HOME/.cache/gnome-desktop-thumbnailer" gnome-thumbnails
+
 for e in Code Cursor Windsurf VSCodium; do
   [[ -d "$HOME/.config/$e" ]] || continue
   for c in CachedData Cache GPUCache "Code Cache"; do
@@ -82,7 +96,7 @@ for e in Code Cursor Windsurf VSCodium; do
   done
 done
 
-for d in less vimundo nvim/undo nvim/swap nvim/shada; do
+for d in less vimundo nvim/undo nvim/swap nvim/shada spicetify warp-terminal; do
   clean "$HOME/.local/state/$d" "$d"
 done
 
