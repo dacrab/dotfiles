@@ -33,7 +33,7 @@ has spicetify && {
   fi
   "$HOME/.spicetify/spicetify" upgrade && "$HOME/.spicetify/spicetify" restore backup apply
 }
-has flatpak  && (flatpak update --appstream; flatpak update -y)
+has flatpak  && { flatpak update --appstream; flatpak update -y; } || true
 has snap     && sudo snap refresh
 has bun      && (bun upgrade; bun update -g)
 has npm      && npm update -g
