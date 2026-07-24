@@ -42,10 +42,8 @@ has uv       && uv self update
 has pipx     && pipx upgrade-all
 has rustup   && rustup update
 
-if has cargo && [[ -f "$HOME/.crates.toml" ]]; then
-  cargo install --list 2>/dev/null | awk '/^[a-zA-Z]/{print $1}' | while read -r crate; do
-    cargo install "$crate" --quiet &>/dev/null
-  done
+if has cargo; then
+  if has cargo-install-update; then cargo install-update -a; fi
 fi
 
 if has go; then
@@ -55,6 +53,8 @@ if has go; then
 fi
 
 has gh && gh extension upgrade --all
+
+has fwupdmgr && sudo fwupdmgr refresh --no-metadata-check && sudo fwupdmgr update -y
 
 if has docker && docker ps -q &>/dev/null; then
   docker ps --format '{{.Image}}' | sort -u | xargs -r docker pull
