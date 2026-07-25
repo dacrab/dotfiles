@@ -41,7 +41,14 @@ has pip3      && pip3 cache purge
 has pip       && pip cache purge
 has uv        && uv cache clean
 has go        && go clean -modcache && go clean -cache
-has cargo     && cargo cache --autoclean 2>/dev/null || true
+if has cargo; then
+  cargo cache --autoclean 2>/dev/null || {
+    clean "$HOME/.cargo/registry/cache" cargo-registry
+    clean "$HOME/.cargo/registry/src" cargo-src
+    clean "$HOME/.cargo/git/db" cargo-git
+    clean "$HOME/.cargo/git/checkouts" cargo-checkouts
+  }
+fi
 has poetry    && poetry cache clear . --all --no-interaction
 has flatpak   && flatpak uninstall --unused -y
 
