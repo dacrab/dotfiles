@@ -27,7 +27,7 @@ has pnpm     && pnpm update -g && pnpm self-update
 has uv       && uv self update
 has pipx     && pipx upgrade-all
 has rustup   && rustup update
-has cargo    && cargo-install-update -a 2>/dev/null || true
+has cargo    && cargo install-update -a 2>/dev/null || true
 has gh       && gh extension upgrade --all
 has fwupdmgr && sudo fwupdmgr refresh --no-metadata-check && sudo fwupdmgr update -y
 
