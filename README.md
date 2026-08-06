@@ -1,27 +1,26 @@
 # dotfiles
 
-Stow-managed configs for my Linux environment: Hyprland/Niri, panels, terminals, shell, and helper scripts.
+My Linux environment, managed with GNU Stow. Covers my desktop (Hyprland/Niri), terminals, shell, and the little scripts I run daily.
 
-## Contents
+## What's here
 
-- **hypr-stow** — Hyprland compositor (modular config, hyprpaper, scripts)
-- **niri-stow** — Niri compositor config
-- **wayle-stow** — Wayle bar/panel (Hyprland)
-- **waybar-stow** — Waybar panel (Niri)
-- **wofi-stow** — Wofi launcher (fallback)
-- **vicinae-stow** — Vicinae launcher (install via Terra: `sudo dnf install vicinae`)
-- **nwg-bar-stow** — nwg-bar power menu
-- **fuzzel-stow** — Fuzzel launcher
-- **ghostty-stow** — Ghostty terminal
-- **mybash** — Bash config + Starship prompt
-- **git-stow** — Global git configuration
-- **fzf-stow** — fzf shell integration
-- **fastfetch-stow** — Fastfetch system info config
-- **scripts-stow** — Helper scripts (`sweep`, `wall`, `update`)
-- **ssh-stow** — SSH config and public keys only
-- **gtk-stow** — GTK themes, cursor, fonts
-- **browser-flags-stow** — Chrome/Code Wayland flags
-- **zed-stow** — Zed editor settings
+| Package | What it is |
+|---------|-----------|
+| `mybash` | Bash config + Starship prompt (separate repo, see below) |
+| `hypr-stow` | Hyprland compositor config |
+| `niri-stow` | Niri compositor config |
+| `wayle-stow` / `waybar-stow` | Panels for Hyprland / Niri |
+| `wofi-stow` / `vicinae-stow` / `fuzzel-stow` | App launchers |
+| `nwg-bar-stow` | Power menu |
+| `ghostty-stow` | Terminal |
+| `git-stow` | Global git config |
+| `fzf-stow` | fzf shell integration |
+| `fastfetch-stow` | System info at shell start |
+| `scripts-stow` | Helper scripts (`sweep`, `wall`, `update`) |
+| `ssh-stow` | SSH config and public keys |
+| `gtk-stow` | GTK themes, cursor, fonts |
+| `browser-flags-stow` | Chrome/VS Code Wayland flags |
+| `zed-stow` | Zed editor settings |
 
 ## Install
 
@@ -29,7 +28,7 @@ Stow-managed configs for my Linux environment: Hyprland/Niri, panels, terminals,
 git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
-# Core
+# Core shell + tools
 stow mybash git-stow fzf-stow scripts-stow ssh-stow \
      ghostty-stow fastfetch-stow browser-flags-stow \
      gtk-stow zed-stow
@@ -41,17 +40,23 @@ stow hypr-stow wayle-stow vicinae-stow wofi-stow nwg-bar-stow
 stow niri-stow waybar-stow fuzzel-stow
 ```
 
-- Re-stow after updates: `stow -R <package>`
-- Unstow to remove: `stow -D <package>`
-- Preview changes: `stow --simulate <package>`
+### Stow basics
 
-## Scripts
+- Refresh a package after changes: `stow -R <package>`
+- Remove it: `stow -D <package>`
+- Dry run first: `stow --simulate <package>`
+
+## Helper scripts
 
 | Alias | Script | What it does |
 |-------|--------|--------------|
 | `sweep` | sweep.sh | Cleans caches, logs, trash, dev artifacts, containers |
-| `wall` | random-wall.sh | Sets a random wallpaper (supports Hyprland/Niri/GNOME) |
-| `update` | update.sh | System-wide updater (packages, runtimes, tools) |
+| `wall` | random-wall.sh | Sets a random wallpaper (Hyprland, Niri, GNOME) |
+| `update` | update.sh | Updates packages, runtimes, and tools |
+
+## Notes
+
+- `mybash` lives in its own repo: [dacrab/mybash](https://github.com/dacrab/mybash)
 
 ## License
 
