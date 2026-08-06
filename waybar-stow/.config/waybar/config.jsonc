@@ -1,5 +1,8 @@
+// ============================================
+// Waybar — Niri bar.
+// ============================================
 {
-  "output": "HDMI-A-1",
+  // ----- Global -----
   "layer": "top",
   "position": "top",
   "height": 28,
@@ -8,11 +11,12 @@
   "margin-left": 6,
   "margin-right": 6,
 
-  "modules-left": ["hyprland/workspaces", "hyprland/window"],
+  // ----- Modules -----
+  "modules-left": ["niri/workspaces", "niri/window"],
   "modules-center": ["clock"],
   "modules-right": ["tray", "custom/media", "pulseaudio", "network", "bluetooth", "battery", "custom/power"],
 
-  "hyprland/workspaces": {
+  "niri/workspaces": {
     "format": "{icon}",
     "format-icons": {
       "active": "●",
@@ -23,12 +27,13 @@
     "sort-by-number": true
   },
 
-  "hyprland/window": {
+  "niri/window": {
     "format": "{}",
     "max-length": 40,
     "separate-outputs": true
   },
 
+  // ----- Clock -----
   "clock": {
     "format": "{:%a %d %b  %H:%M}",
     "format-alt": "{:%Y-%m-%d  %H:%M:%S}",
@@ -52,6 +57,7 @@
     "spacing": 8
   },
 
+  // ----- Media player -----
   "custom/media": {
     "format": "{icon} {text}",
     "format-icons": {
@@ -64,6 +70,7 @@
     "on-click": "playerctl play-pause"
   },
 
+  // ----- Audio -----
   "pulseaudio": {
     "format": "{icon} {volume}%",
     "format-bluetooth": "󰂯 {volume}%",
@@ -79,6 +86,7 @@
     "tooltip-format": "{desc} | {volume}%"
   },
 
+  // ----- Network / bluetooth / battery -----
   "network": {
     "format-wifi": "󰤨 {signalStrength}%",
     "format-ethernet": "󰈀",
@@ -112,6 +120,7 @@
     "tooltip-format": "{timeTo}\n{power}W"
   },
 
+  // ----- Power menu -----
   "custom/power": {
     "format": "⏻",
     "tooltip": false,

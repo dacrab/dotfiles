@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
+# ============================================
+# sweep — system-wide cache & junk cleanup.
+# Runs safe cleanup for every tool that's installed.
+# ============================================
 set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
 
+# Delete $1 if present and larger than 100 KB, printing freed space as $2.
 clean() {
   [[ -e "$1" ]] || return
   local kb
@@ -15,10 +20,17 @@ clean() {
   fi
 }
 
-echo "===== System Sweep ====="
-START=$(date +%s)
+# ----- XDG base dirs -----
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}"
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-sudo -v
+has sudo && sudo -v
+
+# ============================================
+# System package cleanup
+# ============================================
 has apt    && sudo apt autoremove --purge -y
 has dnf    && sudo dnf clean all -q && sudo dnf autoremove -y -q
 has pacman && sudo pacman -Qdtq | xargs -r sudo pacman -Rns
@@ -26,21 +38,35 @@ has zypper && sudo zypper clean -a
 has brew   && brew cleanup -s
 has snap   && snap list --all | awk '/disabled/{print $1, $3}' | while read -r n r; do sudo snap remove "$n" --revision="$r"; done
 
-has journalctl && sudo journalctl --vacuum-time=3d 2>&1 | tail -1
-has trash-empty && trash-empty -f 7 || clean "$HOME/.local/share/Trash" Trash
-clean "$HOME/.cache/thumbnails" thumbnails
+# ============================================
+# System logs & trash
+# ============================================
+has journalctl  && sudo journalctl --vacuum-time=3d 2>&1 | tail -1
+has trash-empty && trash-empty -f 7 || clean "$DATA/Trash" Trash
+clean "$CACHE/thumbnails" thumbnails
 
-[[ -S /var/run/docker.sock ]] && docker system prune -f && docker builder prune -af
-has podman    && podman system prune -f
+# ============================================
+# Containers
+# ============================================
+if has docker; then
+  docker system prune -f 2>/dev/null
+  docker builder prune -af 2>/dev/null
+fi
 
-has npm       && npm cache clean --force
-has pnpm      && pnpm store prune
-has yarn      && yarn cache clean
-has bun       && bun pm cache rm 2>/dev/null
-has pip3      && pip3 cache purge
-has pip       && pip cache purge
-has uv        && uv cache clean
-has go        && go clean -modcache && go clean -cache
+has podman && podman system prune -f
+
+# ============================================
+# Language caches
+# ============================================
+has npm  && npm cache clean --force 2>/dev/null
+has pnpm && pnpm store prune
+has yarn && yarn cache clean
+has bun  && bun pm cache rm 2>/dev/null
+has pip3 && pip3 cache purge
+has pip  && pip cache purge
+has uv   && uv cache clean
+has go   && go clean -modcache && go clean -cache
+
 if has cargo; then
   cargo cache --autoclean 2>/dev/null || {
     clean "$HOME/.cargo/registry/cache" cargo-registry
@@ -49,22 +75,30 @@ if has cargo; then
     clean "$HOME/.cargo/git/checkouts" cargo-checkouts
   }
 fi
-has poetry    && poetry cache clear . --all --no-interaction
-has flatpak   && flatpak uninstall --unused -y
 
+has poetry  && poetry cache clear . --all --no-interaction
+has flatpak && flatpak uninstall --unused -y
+
+# ============================================
+# Tool caches
+# ============================================
 for d in node-gyp deno biome gopls typescript prisma; do
-  has "${d%%-*}" && clean "$HOME/.cache/$d" "$d"
+  clean "$CACHE/$d" "$d"
 done
 
+# ============================================
+# Editor caches
+# ============================================
 for e in Code Cursor Windsurf VSCodium; do
-  [[ -d "$HOME/.config/$e" ]] || continue
+  [[ -d "$CONFIG/$e" ]] || continue
   for c in CachedData Cache GPUCache "Code Cache"; do
-    clean "$HOME/.config/$e/$c" "$e/$c"
+    clean "$CONFIG/$e/$c" "$e/$c"
   done
 done
 
+# ============================================
+# State dirs
+# ============================================
 for d in less vimundo nvim/undo nvim/swap nvim/shada; do
-  clean "$HOME/.local/state/$d" "$d"
+  clean "$STATE/$d" "$d"
 done
-
-echo "===== Done ($(( $(date +%s) - START ))s) ====="

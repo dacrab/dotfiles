@@ -13,8 +13,7 @@ Thumbs.db
 *.swo
 .vscode/
 .idea/
-.sass-cache
-**/.sass-cache/
+.sass-cache/
 *.scssc
 
 # Environment files
@@ -34,11 +33,6 @@ Thumbs.db
 # Personal notes
 NOTES.md
 TODO.md
-
-# Wallpaper state files (generated at runtime)
-last_wallpaper
-hypr-stow/.config/hypr/configs/last_wallpaper
-hypr-stow/.config/hypr/hyprpaper.conf
 
 # Streak CLI timestamp (auto-updated runtime data)
 .streak

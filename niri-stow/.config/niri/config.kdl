@@ -51,7 +51,6 @@ layout {
 
 // Startup
 spawn-at-startup "waybar"
-spawn-sh-at-startup "${HOME}/.local/bin/random-wall.sh"
 
 screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
@@ -71,7 +70,7 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
     Super+Return { spawn "ghostty"; }
     Super+E { spawn "nautilus"; }
-    Super+R { spawn "${HOME}/.local/bin/vicinae" "toggle"; }
+    Super+R { spawn "vicinae" "toggle"; }
     Super+B { spawn "${HOME}/AppImages/helium.appimage"; }
     Mod+D { spawn "fuzzel"; }
     Super+Alt+L { spawn "swaylock"; }

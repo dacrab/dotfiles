@@ -12,11 +12,7 @@
   "minimap": {
     "show": "always"
   },
-  "icon_theme": {
-    "mode": "dark",
-    "light": "Material Icon Theme",
-    "dark": "Material Icon Theme"
-  },
+  "icon_theme": "Material Icon Theme",
   "disable_ai": true,
   "ui_font_family": "GeistMono Nerd Font",
   "terminal": {

@@ -1,3 +1,8 @@
+# ============================================
+# Global git configuration
+# ============================================
+
+# GitHub credentials via gh CLI
 [credential "https://github.com"]
 	helper = 
 	helper = !/usr/bin/env gh auth git-credential
