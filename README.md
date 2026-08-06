@@ -4,10 +4,10 @@ Stow-managed configs for my Linux environment: Hyprland/Niri, panels, terminals,
 
 ## Contents
 
-- **hypr-stow** — Hyprland compositor (modular config, hyprpaper, hyprlock, scripts)
+- **hypr-stow** — Hyprland compositor (modular config, hyprpaper, scripts)
 - **niri-stow** — Niri compositor config
-- **wayle-stow** — Wayle bar/panel
-- **waybar-stow** — Waybar panel
+- **wayle-stow** — Wayle bar/panel (Hyprland)
+- **waybar-stow** — Waybar panel (Niri)
 - **wofi-stow** — Wofi launcher (fallback)
 - **vicinae-stow** — Vicinae launcher (install via Terra: `sudo dnf install vicinae`)
 - **nwg-bar-stow** — nwg-bar power menu
@@ -35,10 +35,10 @@ stow mybash git-stow fzf-stow scripts-stow ssh-stow \
      gtk-stow zed-stow
 
 # Hyprland desktop
-stow hypr-stow wayle-stow waybar-stow vicinae-stow wofi-stow nwg-bar-stow
+stow hypr-stow wayle-stow vicinae-stow wofi-stow nwg-bar-stow
 
 # Niri desktop
-stow niri-stow fuzzel-stow
+stow niri-stow waybar-stow fuzzel-stow
 ```
 
 - Re-stow after updates: `stow -R <package>`

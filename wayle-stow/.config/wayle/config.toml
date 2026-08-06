@@ -1,6 +1,12 @@
+# ============================================
+# Wayle — desktop shell / bar (Hyprland)
+# ============================================
+
+# ----- Styling: rounding -----
 [styling]
 rounding = "none"
 
+# ----- Styling: palette -----
 [styling.palette]
 bg = "#0a0a0f"
 surface = "#121218"
@@ -13,9 +19,11 @@ yellow = "#d0b860"
 green = "#70c888"
 blue = "#8090b0"
 
+# ----- General -----
 [general]
 font-sans = "Inter"
 
+# ----- Bar chrome -----
 [bar]
 inset-edge = 0
 inset-ends = 0
@@ -37,12 +45,14 @@ button-border-location = "none"
 dropdown-shadow = false
 dropdown-opacity = 92
 
+# ----- Bar layout -----
 [[bar.layout]]
 monitor = "*"
 left = ["hyprland-workspaces", "window-title"]
 center = ["clock"]
-right = ["keyboard-input", "volume", "network", "bluetooth", "battery", "power"]
+right = ["systray", "keyboard-input", "volume", "network", "bluetooth", "battery", "power"]
 
+# ----- Modules -----
 [modules.clock]
 format = "%H:%M"
 icon-show = false

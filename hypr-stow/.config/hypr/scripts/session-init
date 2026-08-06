@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
+# ============================================
+# Hyprland session init — runs once at login.
+# Starts keyring, polkit agent, and portals.
+# ============================================
 set -uo pipefail
 
+# ----- Keyring -----
 if pgrep -x gnome-keyring-daemon &>/dev/null; then
   export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring"
   export SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
@@ -10,12 +15,14 @@ fi
 
 [[ -n "${SSH_AUTH_SOCK:-}" ]] && hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}"
 
+# ----- Polkit agent (first one found) -----
 for agent in hyprpolkitagent /usr/libexec/polkit-gnome-authentication-agent-1 /usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1 /usr/lib/polkit-kde-authentication-agent-1 lxqt-policykit-agent; do
   command -v "$agent" &>/dev/null || [[ -x "$agent" ]] || continue
   pgrep -f "${agent##*/}" &>/dev/null || "$agent" &
   break
 done
 
+# ----- XDG desktop portals -----
 dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
 systemctl --user start xdg-desktop-portal-hyprland
 if ! systemctl --user start xdg-desktop-portal; then

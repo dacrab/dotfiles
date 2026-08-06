@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# ============================================
+# Display helper — toggle / enable / disable
+# a monitor (defaults to the built-in panel).
+# ============================================
 set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }

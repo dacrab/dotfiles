@@ -1,51 +1,67 @@
 #!/usr/bin/env bash
+# ============================================
+# update — update the system, runtimes, and tools.
+# Safe no-op for anything that isn't installed.
+# ============================================
 set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
+run() { has "$1" && "$@"; }
 
 distro() {
   source /etc/os-release 2>/dev/null
-  echo "${ID_LIKE:-$ID}"
+  echo "${ID_LIKE:-${ID:-}}"
 }
 
-echo "===== System Update ====="
-START=$(date +%s)
+has sudo && sudo -v
 
-sudo -v
+# ============================================
+# System packages
+# ============================================
 case "$(distro)" in
-  *fedora*|*rhel*) sudo dnf upgrade --refresh -y ;;
-  *ubuntu*|*debian*) sudo apt update && sudo apt full-upgrade -y ;;
-  *arch*) sudo pacman -Syu --noconfirm ;;
-  *suse*) sudo zypper dup -y ;;
+  *fedora*|*rhel*)      sudo dnf upgrade --refresh -y ;;
+  *ubuntu*|*debian*)    sudo apt update && sudo apt full-upgrade -y ;;
+  *arch*)               sudo pacman -Syu --noconfirm ;;
+  *suse*)               sudo zypper dup -y ;;
 esac
 
-has flatpak  && flatpak update -y || true
+has flatpak  && flatpak update -y
 has snap     && sudo snap refresh
-has bun      && bun upgrade && bun update -g
-has npm      && npm update -g
-has pnpm     && pnpm update -g && pnpm self-update
-has uv       && uv self update
-has pipx     && pipx upgrade-all
-has rustup   && rustup update
-has cargo    && cargo install-update -a 2>/dev/null || true
-has gh       && gh extension upgrade --all
 has fwupdmgr && sudo fwupdmgr refresh --no-metadata-check && sudo fwupdmgr update -y
 
-if has go; then
-  go install golang.org/x/tools/gopls@latest
-  go install honnef.co/go/tools/cmd/staticcheck@latest
-fi
+# ============================================
+# Language runtimes & package managers
+# ============================================
+run rustup update
 
+run go install golang.org/x/tools/gopls@latest
+run go install honnef.co/go/tools/cmd/staticcheck@latest
+
+run bun upgrade && run bun update -g
+run npm update -g
+run pnpm update -g && run pnpm self-update
+run uv self update && run uv tool upgrade --all
+run pipx upgrade-all
+run cargo install-update -a
+
+# ============================================
+# CLI tools
+# ============================================
+run gh extension upgrade --all
+
+# ============================================
+# Containers
+# ============================================
 if has docker && docker ps -q &>/dev/null; then
   docker ps --format '{{.Image}}' | sort -u | xargs -r docker pull
 fi
 
+# ============================================
+# Git repos
+# ============================================
 if has git; then
   REPOS_DIR="${REPOS_DIR:-$HOME/Documents/GitHub}"
   [[ -d "$REPOS_DIR" ]] && find "$REPOS_DIR" -maxdepth 2 -name ".git" | while read -r g; do
-    dir="$(dirname "$g")"
-    git -C "$dir" pull --ff-only 2>/dev/null || true
+    git -C "$(dirname "$g")" pull --ff-only 2>/dev/null || true
   done
 fi
-
-echo "===== Done ($(( $(date +%s) - START ))s) ====="
