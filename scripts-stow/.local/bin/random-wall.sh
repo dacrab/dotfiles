@@ -8,6 +8,7 @@
 set -uo pipefail
 
 BASE="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
+WALL_EXT="${WALL_EXT:-jpg jpeg png webp}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/random-wall"
 mkdir -p "$STATE"
 
@@ -25,7 +26,13 @@ DIR=$(get_dir "${1:-}")
 [[ ! -d "$DIR" ]] && echo "no wallpapers dir" >&2 && exit 1
 
 # ----- Pick a random image, avoiding the last one -----
-mapfile -d '' ALL < <(find "$DIR" -type f \( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' \) -print0 | sort -z)
+read -ra exts <<< "${WALL_EXT}"
+exp=()
+for ext in "${exts[@]}"; do
+  ((${#exp[@]})) && exp+=(-o)
+  exp+=(-iname "*.$ext")
+done
+mapfile -d '' ALL < <(find "$DIR" -type f \( "${exp[@]}" \) -print0)
 ((${#ALL[@]} == 0)) && echo "no images in $DIR" >&2 && exit 1
 
 LAST=$(cat "$STATE/last" 2>/dev/null || true)
@@ -46,9 +53,9 @@ set_wall() {
       sleep 0.3
     done
     hyprctl hyprpaper preload "$wallpaper"
-    hyprctl monitors | awk '/^Monitor/{gsub(/[":]/,"",$2); print $2}' | while read -r m; do
-      hyprctl hyprpaper wallpaper "$m,$wallpaper"
-    done
+    while read -r _ mon; do
+      hyprctl hyprpaper wallpaper "$mon,$wallpaper"
+    done < <(hyprctl monitors)
     hyprctl hyprpaper unload unused
     return
   fi

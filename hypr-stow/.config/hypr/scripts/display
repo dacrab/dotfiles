@@ -7,28 +7,38 @@ set -uo pipefail
 
 has() { command -v "$1" &>/dev/null; }
 
+# ----- Tunables (override via env) -----
+BUILTIN_PREFIX="${BUILTIN_PREFIX:-eDP-}"
+DISPLAY_RES="${DISPLAY_RES:-1920x1080@60}"
+DISPLAY_POS="${DISPLAY_POS:-0x0}"
+
 get_builtin() {
-  hyprctl monitors all 2>/dev/null | awk '/^Monitor/{if ($2 ~ /^eDP-/) print $2}' | head -1
+  local mon
+  while read -r _ mon; do
+    [[ "$mon" == "$BUILTIN_PREFIX"* ]] && { echo "$mon"; return; }
+  done < <(hyprctl monitors all 2>/dev/null)
 }
 
 is_enabled() {
-  hyprctl monitors | grep -q "Monitor $1"
+  local out
+  out=$(hyprctl monitors 2>/dev/null)
+  [[ "$out" == *"Monitor $1"* ]]
 }
 
 toggle() {
   local name="${1:-$(get_builtin)}"
   [[ -z "$name" ]] && echo "No built-in display found" >&2 && exit 1
   if is_enabled "$name"; then
-    hyprctl keyword monitor "$name,disable"
+    disable "$name"
   else
-    hyprctl keyword monitor "$name,1920x1080@60.01,auto-right,1"
+    enable "$name" "$DISPLAY_RES" "auto-right"
   fi
 }
 
 enable() {
   local name="$1"
-  local res="${2:-1920x1080@60}"
-  local pos="${3:-0x0}"
+  local res="${2:-$DISPLAY_RES}"
+  local pos="${3:-$DISPLAY_POS}"
   hyprctl keyword monitor "$name,$res,$pos,1"
 }
 
