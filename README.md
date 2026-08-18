@@ -17,7 +17,6 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `fzf-stow` | fzf shell integration |
 | `fastfetch-stow` | System info on terminal start |
 | `scripts-stow` | Helper scripts (`sweep`, `wall`, `update`) |
-| `ssh-stow` | SSH config and public keys |
 | `gtk-stow` | GTK themes, cursor, fonts |
 | `browser-flags-stow` | Wayland flags for Chrome/VS Code |
 | `zed-stow` | Zed editor settings |
@@ -29,7 +28,7 @@ git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Core shell + tools
-stow mybash git-stow fzf-stow scripts-stow ssh-stow \
+stow mybash git-stow fzf-stow scripts-stow \
      ghostty-stow fastfetch-stow browser-flags-stow \
      gtk-stow zed-stow
 
