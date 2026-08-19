@@ -1,10 +1,18 @@
-[misc]
-# topgrade.toml - update everything in one run.
+# topgrade.toml - update everything in one run, no prompts.
 # System packages, flatpak, firmware, runtimes, and tools are auto-detected.
+
+[misc]
+assume_yes = true
+ask_retry = false
+pre_sudo = true
+notify_end = "never"
 
 # Pull git repos kept in DEV_DIR.
 [git]
 repos = ["~/Documents/GitHub"]
+
+[linux]
+dnf_arguments = "--refresh"
 
 # Tools topgrade doesn't detect on its own.
 [commands]
