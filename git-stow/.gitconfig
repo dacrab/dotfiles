@@ -1,7 +1,3 @@
-# ============================================
-# Global git configuration
-# ============================================
-
 # GitHub credentials via gh CLI
 [credential "https://github.com"]
 	helper = 

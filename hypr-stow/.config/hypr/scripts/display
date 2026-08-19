@@ -1,55 +1,15 @@
 #!/usr/bin/env bash
-# ============================================
-# Display helper — toggle / enable / disable
-# a monitor (defaults to the built-in panel).
-# ============================================
+# display - toggle/enable/disable the built-in panel (default: eDP-*).
 set -uo pipefail
 
-has() { command -v "$1" &>/dev/null; }
+BUILTIN="${BUILTIN_PREFIX:-eDP-}"
+RES="${DISPLAY_RES:-1920x1080@60}"
 
-# ----- Tunables (override via env) -----
-BUILTIN_PREFIX="${BUILTIN_PREFIX:-eDP-}"
-DISPLAY_RES="${DISPLAY_RES:-1920x1080@60}"
-DISPLAY_POS="${DISPLAY_POS:-0x0}"
-
-get_builtin() {
-  local mon
-  while read -r _ mon; do
-    [[ "$mon" == "$BUILTIN_PREFIX"* ]] && { echo "$mon"; return; }
-  done < <(hyprctl monitors all 2>/dev/null)
-}
-
-is_enabled() {
-  local out
-  out=$(hyprctl monitors 2>/dev/null)
-  [[ "$out" == *"Monitor $1"* ]]
-}
-
-toggle() {
-  local name="${1:-$(get_builtin)}"
-  [[ -z "$name" ]] && echo "No built-in display found" >&2 && exit 1
-  if is_enabled "$name"; then
-    disable "$name"
-  else
-    enable "$name" "$DISPLAY_RES" "auto-right"
-  fi
-}
-
-enable() {
-  local name="$1"
-  local res="${2:-$DISPLAY_RES}"
-  local pos="${3:-$DISPLAY_POS}"
-  hyprctl keyword monitor "$name,$res,$pos,1"
-}
-
-disable() {
-  local name="$1"
-  hyprctl keyword monitor "$name,disable"
-}
+mon() { hyprctl monitors all | awk -v p="$BUILTIN" '/^Monitor/{if ($2 ~ p) print $2}'; }
 
 case "${1:-}" in
-  toggle)  toggle "${2:-}" ;;
-  enable)  enable "${2:?name}" "${3:-}" "${4:-}" ;;
-  disable) disable "${2:?name}" ;;
-  *)       echo "usage: $0 {toggle|enable <name> [res] [pos]|disable <name>}"; exit 1 ;;
+  toggle)  hyprctl keyword monitor "$(mon),toggle" ;;
+  enable)  hyprctl keyword monitor "${2:-$(mon)},$RES,0x0,1" ;;
+  disable) hyprctl keyword monitor "${2:-$(mon)},disable" ;;
+  *) echo "usage: $0 {toggle|enable [mon]|disable [mon]}"; exit 1 ;;
 esac
