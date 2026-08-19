@@ -13,7 +13,3 @@ repos = ["~/Documents/GitHub"]
 
 [linux]
 dnf_arguments = "--refresh"
-
-# Tools topgrade doesn't detect on its own.
-[commands]
-"Go tools" = "go install golang.org/x/tools/gopls@latest && go install honnef.co/go/tools/cmd/staticcheck@latest"
