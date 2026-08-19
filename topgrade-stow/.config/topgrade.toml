@@ -1,0 +1,11 @@
+[misc]
+# topgrade.toml - update everything in one run.
+# System packages, flatpak, firmware, runtimes, and tools are auto-detected.
+
+# Pull git repos kept in DEV_DIR.
+[git]
+repos = ["~/Documents/GitHub"]
+
+# Tools topgrade doesn't detect on its own.
+[commands]
+"Go tools" = "go install golang.org/x/tools/gopls@latest && go install honnef.co/go/tools/cmd/staticcheck@latest"

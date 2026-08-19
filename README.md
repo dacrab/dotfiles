@@ -14,10 +14,12 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `git-stow` | Git settings |
 | `fzf-stow` | fzf shell integration |
 | `fastfetch-stow` | System info on terminal start |
-| `scripts-stow` | Helper scripts (`sweep`, `random-wall.sh`, `update`) |
+| `scripts-stow` | Helper scripts (`sweep`, `random-wall.sh`) |
 | `gtk-stow` | GTK themes, cursor, fonts |
 | `browser-flags-stow` | Wayland flags for Chrome/VS Code |
 | `zed-stow` | Zed editor settings |
+| `yazi-stow` | yazi TUI file manager |
+| `topgrade-stow` | Updates everything in one run (`update`) |
 
 ## Install
 
@@ -28,7 +30,7 @@ cd ~/dotfiles
 # Core shell + tools
 stow mybash git-stow fzf-stow scripts-stow \
      ghostty-stow fastfetch-stow browser-flags-stow \
-     gtk-stow zed-stow
+     gtk-stow zed-stow yazi-stow topgrade-stow
 
 # Hyprland desktop
 stow hypr-stow vicinae-stow nwg-bar-stow
@@ -49,7 +51,7 @@ Each `*-stow` folder holds files that belong in your home folder. Stow links the
 |-------|--------------|
 | `sweep` | Frees disk space by cleaning caches, logs, and trash |
 | `random-wall.sh` | Sets a random wallpaper (Hyprland) |
-| `update` | Updates your system, runtimes, and tools |
+| `update` | Runs topgrade (system, runtimes, tools, git repos) |
 
 ### Customizing the scripts
 
@@ -61,7 +63,6 @@ DISPLAY_RES=2560x1440@60 display toggle
 
 | Script | Variable | What it does | Default |
 |--------|----------|--------------|---------|
-| update | `REPOS_DIR` | Where to look for git repos to update | `$HOME/Documents/GitHub` |
 | random-wall.sh | `WALLPAPER_DIR` | Where your wallpapers live | `$HOME/Pictures/wallpapers` |
 | | `WALL_EXT` | Image types to pick from | `jpg jpeg png webp` |
 | display | `BUILTIN_PREFIX` | How your laptop's built-in screen appears to Hyprland | `eDP-` |
