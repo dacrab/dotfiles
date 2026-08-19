@@ -6,7 +6,7 @@
   },
   {
     "label": "Logout",
-    "exec": "hyprctl dispatch exit || niri msg action quit",
+    "exec": "hyprctl dispatch exit",
     "icon": "/usr/share/nwg-bar/images/system-log-out.svg"
   },
   {
