@@ -1,6 +1,6 @@
 # yazi.toml - TUI file manager tweaks.
 # HiDPI image preview: bigger decode budget, higher-quality downscale.
 [preview]
-image_alloc = 512 * 1024 * 1024
+image_alloc = 536870912
 image_bound = [ 2560, 1440 ]
 image_filter = "lanczos3"
