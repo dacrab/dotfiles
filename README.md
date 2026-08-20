@@ -50,7 +50,7 @@ Each `*-stow` folder holds files that belong in your home folder. Stow links the
 | Alias | What it does |
 |-------|--------------|
 | `sweep` | Frees disk space by cleaning caches, logs, and trash |
-| `random-wall.sh` | Sets a random wallpaper (Hyprland) |
+| `random-wall.sh` | Sets a random wallpaper (Hyprland, GNOME) |
 | `update` | Runs topgrade (system, runtimes, tools, git repos) |
 
 ### Customizing the scripts

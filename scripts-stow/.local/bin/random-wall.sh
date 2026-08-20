@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# random-wall - set a random wallpaper via hyprpaper IPC.
+# random-wall - set a random wallpaper.
 #   random-wall          pick from the default folder
 #   random-wall <dir>    pick from <dir> (path or name under $WALLPAPER_DIR)
+# Works on Hyprland (hyprpaper IPC) and GNOME (gsettings).
 set -uo pipefail
 
 BASE="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
@@ -29,16 +30,36 @@ for img in "${ALL[@]}"; do [[ "$img" != "$LAST" ]] && POOL+=("$img"); done
 
 PICK="${POOL[$((RANDOM % ${#POOL[@]}))]}"
 
-# wait for the hyprpaper socket, then set via IPC
-runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-for _ in {1..50}; do
-  sock=$(find "$runtime/hypr" -maxdepth 2 -name .hyprpaper.sock -print -quit 2>/dev/null)
-  [[ -n "$sock" ]] && break
-  sleep 0.1
-done
+set_hyprland() {
+  # wait for the hyprpaper socket, then set via IPC
+  local runtime sock mon
+  runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+  for _ in {1..50}; do
+    sock=$(find "$runtime/hypr" -maxdepth 2 -name .hyprpaper.sock -print -quit 2>/dev/null)
+    [[ -n "$sock" ]] && break
+    sleep 0.1
+  done
+  while read -r mon; do
+    hyprctl hyprpaper wallpaper "$mon,$1"
+  done < <(hyprctl monitors | awk '/^Monitor /{print $2}')
+}
 
-mapfile -t mons < <(hyprctl monitors | awk '/^Monitor /{print $2}')
-for mon in "${mons[@]}"; do
-  hyprctl hyprpaper wallpaper "$mon,$PICK"
-done
+set_gnome() {
+  local option
+  option=$(gsettings get org.gnome.desktop.background picture-options)
+  gsettings set org.gnome.desktop.background picture-uri "file://$1"
+  gsettings set org.gnome.desktop.background picture-uri-dark "file://$1"
+  gsettings set org.gnome.desktop.background picture-options "scaled"
+  gsettings set org.gnome.desktop.background picture-options "$option"
+}
+
+if [[ "${XDG_CURRENT_DESKTOP:-}" == *Hyprland* ]] || pgrep -x Hyprland &>/dev/null; then
+  set_hyprland "$PICK"
+elif [[ "${XDG_CURRENT_DESKTOP:-}" == *GNOME* ]] || pgrep -x gnome-shell &>/dev/null; then
+  set_gnome "$PICK"
+else
+  echo "unsupported desktop (Hyprland/GNOME only)" >&2
+  exit 1
+fi
+
 printf '%s' "$PICK" > "$STATE/last"
