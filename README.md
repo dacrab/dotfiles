@@ -8,6 +8,7 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 |---------|-----------|
 | `mybash` | Shell setup + Starship prompt (separate repo, see below) |
 | `hypr-stow` | Hyprland window manager config |
+| `wayle-stow` | Wayle shell/bar (hyprpanel fork) |
 | `vicinae-stow` | App launcher |
 | `nwg-bar-stow` | Power menu |
 | `ghostty-stow` | Terminal |
@@ -33,7 +34,7 @@ stow mybash git-stow fzf-stow scripts-stow \
      gtk-stow zed-stow yazi-stow topgrade-stow
 
 # Hyprland desktop
-stow hypr-stow vicinae-stow nwg-bar-stow
+stow hypr-stow wayle-stow vicinae-stow nwg-bar-stow
 ```
 
 ### Stow basics
