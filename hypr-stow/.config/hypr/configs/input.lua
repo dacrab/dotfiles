@@ -1,0 +1,14 @@
+hl.config({
+  input = {
+    kb_layout = "us,gr",
+    follow_mouse = 1,
+    sensitivity = 0.3,
+    accel_profile = "adaptive",
+    scroll_method = "2fg",
+    repeat_rate = 25,
+    repeat_delay = 600,
+    touchpad = {
+      disable_while_typing = true,
+    },
+  },
+})
