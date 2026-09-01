@@ -6,6 +6,8 @@ assume_yes = true
 ask_retry = false
 pre_sudo = true
 notify_end = "never"
+# No plugins used; hyprpm source-builds need a pile of -devel packages we don't keep.
+disable = ["hyprpm"]
 
 # Pull git repos kept in DEV_DIR.
 [git]
