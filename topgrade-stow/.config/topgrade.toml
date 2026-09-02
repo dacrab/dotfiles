@@ -5,13 +5,24 @@
 assume_yes = true
 ask_retry = false
 pre_sudo = true
-notify_end = "never"
+notify_end = "on_failure"
+# Clear topgrade's temp/cache dirs after each run.
+cleanup = true
 # No plugins used; hyprpm source-builds need a pile of -devel packages we don't keep.
 disable = ["hyprpm"]
 
-# Pull git repos kept in DEV_DIR.
+# Pull git repos kept in DEV_DIR (glob each subdirectory; topgrade skips non-repos).
 [git]
-repos = ["~/Documents/GitHub"]
+repos = ["~/Documents/GitHub/*/"]
+arguments = "--rebase --autostash"
 
 [linux]
 dnf_arguments = "--refresh"
+
+# Flatpak OS updates need host perms; no user-flatpak here.
+[flatpak]
+use_sudo = true
+
+# Only pull images for containers we actually run (none right now).
+[containers]
+system_prune = false
