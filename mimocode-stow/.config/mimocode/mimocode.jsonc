@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "doppler": {
+      "type": "local",
+      "command": ["npx", "-y", "@dopplerhq/mcp-server"],
+      "enabled": true,
+    },
+  },
+}

@@ -12,6 +12,15 @@ hl.window_rule({
   no_focus = true,
 })
 
+-- Minecraft (native Wayland via GLFW): let the game manage its own fullscreen
+hl.window_rule({
+  name = "minecraft-fullscreen",
+  match = {
+    class = "^(minecraft|MC26\.2)$",
+  },
+  suppress_event = "fullscreen maximize",
+})
+
 -- Float dialogs & popups
 hl.window_rule({
   name = "float-dialogs",
