@@ -5,7 +5,7 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 ## What's here
 
 | Package | What it is |
-|---------|-----------|
+| --------- | ----------- |
 | `mybash` | Shell setup + Starship prompt (separate repo, see below) |
 | `hypr-stow` | Hyprland window manager config |
 | `wayle-stow` | Wayle shell/bar (hyprpanel fork) |
@@ -13,13 +13,16 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `nwg-bar-stow` | Power menu |
 | `ghostty-stow` | Terminal |
 | `git-stow` | Git settings |
-| `fzf-stow` | fzf shell integration |
+| `gh-stow` | GitHub CLI settings |
 | `fastfetch-stow` | System info on terminal start |
 | `scripts-stow` | Helper scripts (`sweep`, `random-wall.sh`) |
 | `gtk-stow` | GTK themes, cursor, fonts |
-| `browser-flags-stow` | Wayland flags for Chrome/VS Code |
+| `atuin-stow` | Shell history sync settings |
+| `editor-stow` | Editor settings (VS Code) |
 | `zed-stow` | Zed editor settings |
 | `yazi-stow` | yazi TUI file manager |
+| `opencode-stow` | opencode AI agent config |
+| `mimocode-stow` | mimocode AI agent config |
 | `topgrade-stow` | Updates everything in one run (`update`) |
 
 ## Install
@@ -29,9 +32,10 @@ git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 
 # Core shell + tools
-stow mybash git-stow fzf-stow scripts-stow \
-     ghostty-stow fastfetch-stow browser-flags-stow \
-     gtk-stow zed-stow yazi-stow topgrade-stow
+stow mybash git-stow gh-stow scripts-stow \
+     ghostty-stow fastfetch-stow atuin-stow \
+     gtk-stow zed-stow yazi-stow topgrade-stow \
+     editor-stow opencode-stow mimocode-stow
 
 # Hyprland desktop
 stow hypr-stow wayle-stow vicinae-stow nwg-bar-stow
@@ -49,8 +53,8 @@ Each `*-stow` folder holds files that belong in your home folder. Stow links the
 ## Helper scripts
 
 | Alias | What it does |
-|-------|--------------|
-| `sweep` | Frees disk space by cleaning caches, logs, and trash |
+| ------- | -------------- |
+| `sweep` | Frees disk space by cleaning caches, logs, and trash (`sweep --dry-run` to preview) |
 | `random-wall.sh` | Sets a random wallpaper (Hyprland, GNOME) |
 | `update` | Runs topgrade (system, runtimes, tools, git repos) |
 
@@ -63,7 +67,11 @@ DISPLAY_RES=2560x1440@60 display toggle
 ```
 
 | Script | Variable | What it does | Default |
-|--------|----------|--------------|---------|
+| -------- | ---------- | -------------- | --------- |
+| sweep | `SWEEP_TRASH_DAYS` | Purge trash older than N days (0 disables) | `7` |
+| | `SWEEP_JOURNAL_AGE` | journalctl `--vacuum-time` value | `3d` |
+| | `SWEEP_COREDUMP_DAYS` | Delete coredumps older than N days | `7` |
+| | `SWEEP_DOCKER` | Set to `1` to also prune stopped containers/dangling images | off |
 | random-wall.sh | `WALLPAPER_DIR` | Where your wallpapers live | `$HOME/Pictures/wallpapers` |
 | | `WALL_EXT` | Image types to pick from | `jpg jpeg png webp` |
 | display | `BUILTIN_PREFIX` | How your laptop's built-in screen appears to Hyprland | `eDP-` |

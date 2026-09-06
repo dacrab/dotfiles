@@ -1,0 +1,35 @@
+{
+    "files.autoSave": "afterDelay",
+    "window.customTitleBarVisibility": "auto",
+    "window.titleBarStyle": "custom",
+    "editor.fontFamily": "GeistMono Nerd Font Mono",
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "editor.cursorBlinking": "expand",
+    "editor.cursorSmoothCaretAnimation": "on",
+    "workbench.list.smoothScrolling": true,
+    "editor.smoothScrolling": true,
+    "terminal.integrated.smoothScrolling": true,
+    "git.openRepositoryInParentFolders": "always",
+    "[html]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.inlineSuggest.suppressSuggestions": true,
+    "[css]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.fontSize": 12,
+    "terminal.integrated.fontSize": 12,
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Catppuccin Macchiato",
+    "containers.containerClient": "com.microsoft.visualstudio.containers.docker",
+    "containers.orchestratorClient": "com.microsoft.visualstudio.orchestrators.dockercompose",
+    "svelte.enable-ts-plugin": true,
+    "terminal.integrated.fontFamily": "GeistMono Nerd Font Mono",
+    "editor.fontLigatures": true,
+    "terminal.integrated.ignoreBracketedPasteMode": true,
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "workbench.secondarySideBar.defaultVisibility": "hidden",
+    "workbench.startupEditor": "none"
+}
