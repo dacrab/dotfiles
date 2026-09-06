@@ -1,29 +1,29 @@
 # dotfiles
 
-My Linux desktop setup, kept in one place and managed with [Stow](https://www.gnu.org/software/stow/). It covers the window manager I use (Hyprland), terminals, shell, and a few helper scripts for everyday tasks.
+My Linux desktop setup, kept in one place and managed with [Stow](https://www.gnu.org/software/stow/). It covers the window manager I use (Hyprland), my terminal, shell, and a few helper scripts for everyday tasks.
 
 ## What's here
 
 | Package | What it is |
-| --------- | ----------- |
-| `mybash` | Shell setup + Starship prompt (separate repo, see below) |
-| `hypr-stow` | Hyprland window manager config |
-| `wayle-stow` | Wayle shell/bar (hyprpanel fork) |
+| ------- | ---------- |
+| `mybash` | Shell setup + prompt (separate repo, see below) |
+| `hypr-stow` | Hyprland window manager |
+| `wayle-stow` | Desktop bar/shell |
 | `vicinae-stow` | App launcher |
-| `nwg-bar-stow` | Power menu |
+| `nwg-bar-stow` | Power menu (logout/reboot/shutdown) |
 | `ghostty-stow` | Terminal |
 | `git-stow` | Git settings |
 | `gh-stow` | GitHub CLI settings |
-| `fastfetch-stow` | System info on terminal start |
+| `fastfetch-stow` | System info shown when a terminal opens |
 | `scripts-stow` | Helper scripts (`sweep`, `random-wall.sh`) |
-| `gtk-stow` | GTK themes, cursor, fonts |
-| `atuin-stow` | Shell history sync settings |
-| `editor-stow` | Editor settings (VS Code) |
-| `zed-stow` | Zed editor settings |
-| `yazi-stow` | yazi TUI file manager |
-| `opencode-stow` | opencode AI agent config |
-| `mimocode-stow` | mimocode AI agent config |
-| `topgrade-stow` | Updates everything in one run (`update`) |
+| `gtk-stow` | GTK theme, cursor, fonts |
+| `atuin-stow` | Shell history settings |
+| `zed-stow` | Zed editor |
+| `editor-stow` | VS Code settings (kept for backup) |
+| `yazi-stow` | Terminal file manager |
+| `opencode-stow` | opencode (AI coding agent) config |
+| `mimocode-stow` | mimocode (AI coding agent) config |
+| `topgrade-stow` | One-command system updater |
 
 ## Install
 
@@ -41,43 +41,41 @@ stow mybash git-stow gh-stow scripts-stow \
 stow hypr-stow wayle-stow vicinae-stow nwg-bar-stow
 ```
 
-### Stow basics
-
-Each `*-stow` folder holds files that belong in your home folder. Stow links them in, so you keep one copy of your config.
+Each `*-stow` folder links its files into your home folder, so you keep one copy of every config and it stays under version control:
 
 - `stow <package>` — turn a package on
-- `stow -R <package>` — refresh after you change a file
+- `stow -R <package>` — refresh links after you add/remove files
 - `stow -D <package>` — turn a package off
-- `stow --simulate <package>` — preview what would happen
+- `stow --simulate <package>` — preview before doing anything
 
 ## Helper scripts
 
 | Alias | What it does |
-| ------- | -------------- |
-| `sweep` | Frees disk space by cleaning caches, logs, and trash (`sweep --dry-run` to preview) |
-| `random-wall.sh` | Sets a random wallpaper (Hyprland, GNOME) |
-| `update` | Runs topgrade (system, runtimes, tools, git repos) |
+| ----- | ------------ |
+| `sweep` | Frees disk space by clearing caches, logs, and old trash. Use `sweep --dry-run` to preview first |
+| `update` | Updates everything in one run (system packages, flatpaks, tools, git repos) |
+| `random-wall.sh` | Sets a random wallpaper (Hyprland and GNOME) |
 
-### Customizing the scripts
+### Tweaking their behavior
 
-A few scripts read a variable from the environment before running. For example:
+The scripts read a few variables from the environment if you want to change how they behave. For example:
 
 ```bash
 DISPLAY_RES=2560x1440@60 display toggle
 ```
 
-| Script | Variable | What it does | Default |
-| -------- | ---------- | -------------- | --------- |
-| sweep | `SWEEP_TRASH_DAYS` | Purge trash older than N days (0 disables) | `7` |
-| | `SWEEP_JOURNAL_AGE` | journalctl `--vacuum-time` value | `3d` |
-| | `SWEEP_COREDUMP_DAYS` | Delete coredumps older than N days | `7` |
-| | `SWEEP_DOCKER` | Set to `1` to also prune stopped containers/dangling images | off |
-| random-wall.sh | `WALLPAPER_DIR` | Where your wallpapers live | `$HOME/Pictures/wallpapers` |
-| | `WALL_EXT` | Image types to pick from | `jpg jpeg png webp` |
-| display | `BUILTIN_PREFIX` | How your laptop's built-in screen appears to Hyprland | `eDP-` |
-| | `DISPLAY_RES` | Resolution used when turning a screen back on | `1920x1080@60` |
-| mybash | `DOTFILES_DIR` | Where this repo lives (used by `dot` and `dev`) | `$HOME/dotfiles` |
-| | `DEV_DIR` | Where you keep your projects (used by `dev`) | `$HOME/Documents/GitHub` |
+| Script | Variable | What it controls | Default |
+| ------ | -------- | ---------------- | ------- |
+| sweep | `SWEEP_TRASH_DAYS` | Empty the trash only after N days (0 = never) | `7` |
+| | `SWEEP_JOURNAL_AGE` | How old system logs can get before they're removed | `3d` |
+| | `SWEEP_COREDUMP_DAYS` | How old crash reports can get before they're removed | `7` |
+| | `SWEEP_DOCKER` | `1` = also clean up stopped Docker containers | off |
+| random-wall.sh | `WALLPAPER_DIR` | Folder to pick wallpapers from | `~/Pictures/wallpapers` |
+| | `WALL_EXT` | File types to pick from | `jpg jpeg png webp` |
+| display | `BUILTIN_PREFIX` | Name of the laptop's built-in screen | `eDP-` |
+| | `DISPLAY_RES` | Screen resolution when turning it back on | `1920x1080@60` |
+| mybash | `DOTFILES_DIR` | Where this repo lives (used by `dot` and `dev`) | `~/dotfiles` |
+| | `DEV_DIR` | Where your projects live (used by `dev`) | `~/Documents/GitHub` |
 
 ## Notes
 
