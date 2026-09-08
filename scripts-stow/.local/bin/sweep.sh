@@ -70,10 +70,10 @@ has pacman && as_root pacman -Sc --noconfirm
 has zypper && as_root zypper clean -a
 has brew && run brew cleanup -s
 
-# stale snap revisions
+# stale snap revisions (columns: Name Version Rev Tracking Publisher Notes)
 if has snap; then
-       while read -r name rev rest; do
-              [[ "$rest" == *disabled* ]] && as_root snap remove "$name" --revision="$rev"
+       while read -r name _ rev rest; do
+               [[ "$rest" == *disabled* ]] && as_root snap remove "$name" --revision="$rev"
        done < <(snap list --all 2>/dev/null)
 fi
 

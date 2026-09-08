@@ -11,7 +11,8 @@ set -uo pipefail
 
 AUTO=0
 if [[ "${1:-}" == --autostart ]]; then
-  AUTO=1; shift
+  AUTO=1
+  shift
 fi
 
 # --autostart mode: exit quietly if Hyprland is up (it autostarts this
@@ -27,16 +28,22 @@ mkdir -p "$STATE"
 
 DIR="${1:-$BASE/nord}"
 [[ -d "$DIR" ]] || DIR="$BASE/${1:-nord}"
-[[ -d "$DIR" ]] || { echo "no wallpapers dir: $DIR" >&2; exit 1; }
+[[ -d "$DIR" ]] || {
+  echo "no wallpapers dir: $DIR" >&2
+  exit 1
+}
 
-read -ra exts <<< "${WALL_EXT}"
+read -ra exts <<<"${WALL_EXT}"
 exp=()
 for ext in "${exts[@]}"; do
   ((${#exp[@]})) && exp+=(-o)
   exp+=(-iname "*.$ext")
 done
 mapfile -d '' ALL < <(find "$DIR" -type f \( "${exp[@]}" \) -print0)
-((${#ALL[@]} == 0)) && { echo "no images in $DIR" >&2; exit 1; }
+((${#ALL[@]} == 0)) && {
+  echo "no images in $DIR" >&2
+  exit 1
+}
 
 # pick a different wallpaper than last time (when possible)
 LAST=$(cat "$STATE/last" 2>/dev/null || true)
@@ -68,7 +75,7 @@ set_gsettings() {
   gsettings set "$schema" picture-uri "file://$img"
   gsettings set "$schema" picture-uri-dark "file://$img"
   gsettings set "$schema" picture-options "scaled"
-  [[ -n "$option" && "$option" != "scaled" ]] && \
+  [[ -n "$option" && "$option" != "scaled" ]] &&
     gsettings set "$schema" picture-options "$option"
 }
 
@@ -83,7 +90,7 @@ set_xfce() {
   screens=$(xfconf-query -c xfce4-desktop -p /backdrop/screens -l 2>/dev/null)
   while read -r scr; do
     rprops+=("$(xfconf-query -c xfce4-desktop -p "$scr" -l 2>/dev/null | grep last-image | head -1)")
-  done <<< "$screens"
+  done <<<"$screens"
   for p in "${rprops[@]}"; do
     [[ -n "$p" ]] && xfconf-query -c xfce4-desktop -p "$p" -s "$1"
   done
@@ -100,30 +107,37 @@ set_swaybg() {
 
 detect_desktop() {
   case "${XDG_CURRENT_DESKTOP:-}" in
-    *Hyprland*) echo hyprland ;;
-    *GNOME*)    echo gnome ;;   # GNOME and Budgie (both use org.gnome.desktop)
-    *Cinnamon*) echo cinnamon ;;
-    *MATE*)     echo mate ;;
-    *XFCE*)     echo xfce ;;
-    *sway*|*wlroots*) echo sway ;;
-    *) # fall back to what's running
-       if pgrep -x Hyprland &>/dev/null; then echo hyprland
-       elif pgrep -x gnome-shell &>/dev/null; then echo gnome
-       elif pgrep -x sway &>/dev/null; then echo sway
-       elif pgrep -x xfce4-session &>/dev/null; then echo xfce
-       else echo ""; fi ;;
+  *Hyprland*) echo hyprland ;;
+  *GNOME*) echo gnome ;; # GNOME and Budgie (both use org.gnome.desktop)
+  *Cinnamon*) echo cinnamon ;;
+  *MATE*) echo mate ;;
+  *XFCE*) echo xfce ;;
+  *sway* | *wlroots*) echo sway ;;
+  *) # fall back to what's running
+    if pgrep -x Hyprland &>/dev/null; then
+      echo hyprland
+    elif pgrep -x gnome-shell &>/dev/null; then
+      echo gnome
+    elif pgrep -x sway &>/dev/null; then
+      echo sway
+    elif pgrep -x xfce4-session &>/dev/null; then
+      echo xfce
+    else echo ""; fi ;;
   esac
 }
 
 DESKTOP=$(detect_desktop)
 case "$DESKTOP" in
-  hyprland) set_hyprland "$PICK" ;;
-  gnome)    set_gsettings org.gnome.desktop.background "$PICK" ;;
-  cinnamon) set_gsettings org.cinnamon.desktop.background "$PICK" ;;
-  mate)     set_mate "$PICK" ;;
-  xfce)     set_xfce "$PICK" ;;
-  sway)     set_swaybg "$PICK" ;;
-  *) echo "unsupported desktop" >&2; exit 1 ;;
+hyprland) set_hyprland "$PICK" ;;
+gnome) set_gsettings org.gnome.desktop.background "$PICK" ;;
+cinnamon) set_gsettings org.cinnamon.desktop.background "$PICK" ;;
+mate) set_mate "$PICK" ;;
+xfce) set_xfce "$PICK" ;;
+sway) set_swaybg "$PICK" ;;
+*)
+  echo "unsupported desktop" >&2
+  exit 1
+  ;;
 esac
 
-printf '%s' "$PICK" > "$STATE/last"
+printf '%s' "$PICK" >"$STATE/last"
