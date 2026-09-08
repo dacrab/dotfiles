@@ -54,7 +54,7 @@ Each `*-stow` folder links its files into your home folder, so you keep one copy
 | ----- | ------------ |
 | `sweep` | Frees disk space by clearing caches, logs, and old trash. Use `sweep --dry-run` to preview first |
 | `update` | Updates everything in one run (system packages, flatpaks, tools, git repos) |
-| `random-wall.sh` | Sets a random wallpaper (Hyprland and GNOME) |
+| `random-wall.sh` | Sets a random wallpaper (Hyprland, GNOME, XFCE, MATE, Cinnamon, Sway) |
 
 ### Tweaking their behavior
 
