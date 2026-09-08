@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Random Wallpaper
+Comment=Pick a different wallpaper at each login
+Exec=sh -c "exec \$HOME/.local/bin/random-wall.sh --autostart"
+Icon=preferences-desktop-wallpaper
+Terminal=false
+NoDisplay=true
