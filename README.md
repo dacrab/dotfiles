@@ -8,6 +8,7 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | ------- | ---------- |
 | `mybash` | Shell setup + prompt (separate repo, see below) |
 | `hypr-stow` | Hyprland window manager |
+| `ashell-stow` | Desktop bar + notifications |
 | `wayle-stow` | Desktop bar/shell |
 | `vicinae-stow` | App launcher |
 | `nwg-bar-stow` | Power menu (logout/reboot/shutdown) |
@@ -38,7 +39,7 @@ stow mybash git-stow gh-stow scripts-stow \
      editor-stow opencode-stow mimocode-stow
 
 # Hyprland desktop
-stow hypr-stow wayle-stow vicinae-stow nwg-bar-stow
+stow hypr-stow ashell-stow vicinae-stow nwg-bar-stow
 ```
 
 Each `*-stow` folder links its files into your home folder, so you keep one copy of every config and it stays under version control:

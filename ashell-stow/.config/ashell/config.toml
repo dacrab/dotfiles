@@ -1,0 +1,109 @@
+# ashell — desktop bar & notification daemon (Hyprland)
+
+# ── General ───────────────────────────────────────────────────────────────────
+
+position = "Top"
+# layer = "Bottom"           # "Bottom" (default), "Top", "Overlay"
+# outputs = "All"            # "All" (default), "Active", or { Targets = ["HDMI-A-1"] }
+region = "en-GB"             # metric units: Celsius, 24h dates
+
+[logging]
+# level = "warn"             # "error", "warn", "info", "debug"; supports per-module filters
+# target = "file"            # "file" (default), "stdout", "stderr"
+
+[osd]
+enabled = true
+# timeout = 1500             # auto-hide delay in ms
+
+[animations]
+enabled = true
+
+# ── Modules ────────────────────────────────────────────────────────────────────
+# Mirrors the old wayle layout:
+#   left   -> workspaces + window title
+#   center -> clock
+#   right  -> tray, settings (audio/network/bluetooth/battery/power)
+
+[modules]
+left = ["Workspaces", "WindowTitle"]
+center = ["Tempo"]
+right = [["SystemInfo", "Tray", "Settings"], "Notifications"]
+
+[workspaces]
+visibility_mode = "MonitorSpecific"
+group_by_monitor = true
+# indicator_format = "Name"  # "Name" (default) or "NameAndIcons"
+
+[window_title]
+# mode = "Title"             # "Title" (default), "Class", "InitialTitle", "InitialClass"
+truncate_title_after_length = 60
+
+[tempo]
+clock_format = "%H:%M"
+# timezones = ["Europe/London"]
+
+[system_info]
+indicators = ["Cpu", "Memory", "Temperature"]
+# interval = 5
+
+[system_info.temperature]
+units = "Celsius"
+
+[settings]
+battery_format = "Icon"
+battery_hide_when_full = true
+network_indicator_format = "Icon"
+bluetooth_indicator_format = "Icon"
+audio_indicator_format = "Icon"
+microphone_indicator_format = "Icon"
+brightness_indicator_format = "Icon"
+wifi_more_cmd = "nm-connection-editor"
+
+[notifications]
+show_bodies = true
+grouped = true
+toast = true
+toast_position = "TopRight"
+toast_timeout = 5000
+toast_limit = 5
+
+# ── Appearance (Nord — matches ghostty / GTK / vicinae) ────────────────────────
+
+[appearance]
+font_name = "JetBrains Mono"
+scale_factor = 0.8           # smaller bar
+blur = "always"
+workspace_colors = ["#81a1c1", "#b48ead", "#a3be8c", "#ebcb8b", "#8fbcbb", "#bf616a"]
+
+[appearance.bar]
+surface = "transparent"     # islands: grouped modules share one background
+# radius = "none"           # none|sm|md|lg|xl (solid only)
+# margin = "none"           # none|xxs..xxl
+
+[appearance.menu]
+backdrop = 0.0              # no full-screen darkening when menus open
+
+# Nord palette (rgb(d8dee9) on rgb(2e3440), accents from hyprland/colors.lua)
+[appearance.background_color]
+base = "#2e3440"
+weak = "#3b4252"
+strong = "#4c566a"
+# text = "#d8dee9"
+
+[appearance.primary_color]
+base = "#81a1c1"
+# strong = "#88c0d0"
+# weak = "#8fbcbb"
+# text = "#2e3440"
+
+[appearance.success_color]
+base = "#a3be8c"
+
+[appearance.warning_color]
+base = "#ebcb8b"
+
+[appearance.danger_color]
+base = "#bf616a"
+
+[appearance.text_color]
+base = "#d8dee9"

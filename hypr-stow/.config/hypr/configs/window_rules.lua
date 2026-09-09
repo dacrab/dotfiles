@@ -12,15 +12,6 @@ hl.window_rule({
   no_focus = true,
 })
 
--- Minecraft (native Wayland via GLFW): let the game manage its own fullscreen
-hl.window_rule({
-  name = "minecraft-fullscreen",
-  match = {
-    class = "^(minecraft|MC26\.2)$",
-  },
-  suppress_event = "fullscreen maximize",
-})
-
 -- Float dialogs & popups
 hl.window_rule({
   name = "float-dialogs",
@@ -61,6 +52,16 @@ hl.layer_rule({
   name = "vicinae-blur",
   match = {
     namespace = "vicinae",
+  },
+  blur = true,
+  ignore_alpha = 0,
+})
+
+-- ashell bar, menus, OSD, notification toasts and idle-inhibitor layer
+hl.layer_rule({
+  name = "ashell-blur",
+  match = {
+    namespace = "^(ashell-main-layer|ashell-menu-layer|ashell-osd-layer|ashell-toast-layer)$",
   },
   blur = true,
   ignore_alpha = 0,
