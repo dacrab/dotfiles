@@ -9,7 +9,6 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `mybash` | Shell setup + prompt (separate repo, see below) |
 | `hypr-stow` | Hyprland window manager |
 | `ashell-stow` | Desktop bar + notifications |
-| `wayle-stow` | Desktop bar/shell |
 | `vicinae-stow` | App launcher |
 | `nwg-bar-stow` | Power menu (logout/reboot/shutdown) |
 | `ghostty-stow` | Terminal |

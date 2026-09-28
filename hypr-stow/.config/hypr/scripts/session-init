@@ -9,9 +9,13 @@ export SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
 hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}"
 
 # polkit agent (GUI privilege prompts) — skip if one is already running
-pgrep -x xfce-polkit >/dev/null || /usr/libexec/xfce-polkit >/dev/null 2>&1 &
+if ! pgrep -x xfce-polkit >/dev/null; then
+  /usr/libexec/xfce-polkit >/dev/null 2>&1 &
+fi
 
 # portals (systemd start needs graphical-session.target; fall back to direct launch)
 dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
 systemctl --user start xdg-desktop-portal-hyprland
-systemctl --user start xdg-desktop-portal 2>/dev/null || /usr/libexec/xdg-desktop-portal >/dev/null 2>&1 &
+systemctl --user start xdg-desktop-portal 2>/dev/null || {
+  /usr/libexec/xdg-desktop-portal >/dev/null 2>&1 &
+}
