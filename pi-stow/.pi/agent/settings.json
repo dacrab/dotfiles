@@ -1,0 +1,28 @@
+{
+  "lastChangelogVersion": "0.87.1",
+  "theme": "dark/dark",
+  "defaultProvider": "tokenrouter",
+  "defaultModel": "z-ai/glm-5.3-free",
+  "models": [
+    "tokenrouter/*",
+    "cloudflare-workers-ai-free/*",
+    "opencode/*"
+  ],
+  "packages": [
+    "npm:pi-mcp-adapter",
+    "npm:pi-lens",
+    "npm:pi-web-access",
+    "npm:pi-subagents"
+  ],
+  "thinkingBudgets": {
+    "minimal": 1024,
+    "low": 4096,
+    "medium": 10240,
+    "high": 32768
+  },
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 16384,
+    "keepRecentTokens": 20000
+  }
+}

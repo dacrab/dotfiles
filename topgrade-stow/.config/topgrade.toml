@@ -8,10 +8,10 @@ pre_sudo = true
 notify_end = "on_failure"
 # Clear topgrade's temp/cache dirs after each run.
 cleanup = true
-# No plugins used; hyprpm source-builds need a pile of -devel packages we don't keep.
+# Disable hyprpm; source-builds need a pile of -devel packages we don't keep.
 disable = ["hyprpm"]
 
-# Pull git repos kept in DEV_DIR (glob each subdirectory; topgrade skips non-repos).
+# Pull git repos matching ~/Documents/GitHub/*/ (topgrade skips non-repos).
 [git]
 repos = ["~/Documents/GitHub/*/"]
 arguments = "--rebase --autostash"
@@ -19,10 +19,10 @@ arguments = "--rebase --autostash"
 [linux]
 dnf_arguments = "--refresh"
 
-# Flatpak OS updates need host perms; no user-flatpak here.
+# Use sudo for system-wide Flatpak updates.
 [flatpak]
 use_sudo = true
 
-# Only pull images for containers we actually run (none right now).
+# Don't prune unused system container images.
 [containers]
 system_prune = false

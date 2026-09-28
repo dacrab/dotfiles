@@ -5,11 +5,112 @@ set -uo pipefail
 BUILTIN="${BUILTIN_PREFIX:-eDP-}"
 RES="${DISPLAY_RES:-1920x1080@60}"
 
-mon() { hyprctl monitors all | awk -v p="$BUILTIN" '/^Monitor/{if ($2 ~ p) print $2}'; }
+usage() {
+  printf 'usage: %s {toggle [mon]|enable [mon]|disable [mon]}\n' "$0"
+}
 
-case "${1:-}" in
-  toggle)  hyprctl keyword monitor "$(mon),toggle" ;;
-  enable)  hyprctl keyword monitor "${2:-$(mon)},$RES,0x0,1" ;;
-  disable) hyprctl keyword monitor "${2:-$(mon)},disable" ;;
-  *) echo "usage: $0 {toggle|enable [mon]|disable [mon]}"; exit 1 ;;
+error() {
+  printf 'display: %s\n' "$*" >&2
+}
+
+if (($# == 0)); then
+  usage >&2
+  exit 1
+fi
+ACTION=$1
+shift
+case "$ACTION" in
+  toggle | enable | disable)
+    if (($# > 1)); then
+      usage >&2
+      exit 2
+    fi
+    if (($# == 1)); then
+      REQUESTED=$1
+      HAS_REQUESTED=1
+    else
+      REQUESTED=
+      HAS_REQUESTED=0
+    fi
+    ;;
+  *)
+    usage >&2
+    exit 1
+    ;;
 esac
+
+if ! command -v jq >/dev/null 2>&1; then
+  error "jq is required"
+  exit 1
+fi
+
+if ! MONITORS=$(hyprctl -j monitors all); then
+  error "failed to query monitors"
+  exit 1
+fi
+if ! jq -e 'type == "array" and all(.[]; ((.name | type) == "string" and (.disabled | type) == "boolean"))' <<<"$MONITORS" >/dev/null; then
+  error "invalid monitor JSON"
+  exit 1
+fi
+
+if ((HAS_REQUESTED)); then
+  if ! jq -e --arg name "$REQUESTED" 'map(select(.name == $name)) | length == 1' <<<"$MONITORS" >/dev/null; then
+    error "monitor not found: $REQUESTED"
+    exit 1
+  fi
+  MONITOR=$REQUESTED
+else
+  mapfile -t BUILTINS < <(
+    jq -r --arg prefix "$BUILTIN" '.[] | select(.name | startswith($prefix)) | .name' <<<"$MONITORS"
+  )
+  if ((${#BUILTINS[@]} != 1)); then
+    error "expected exactly one monitor matching $BUILTIN, found ${#BUILTINS[@]}"
+    exit 1
+  fi
+  MONITOR=${BUILTINS[0]}
+fi
+
+if ! STATE=$(jq -r --arg name "$MONITOR" 'map(select(.name == $name)) | if length == 1 then .[0].disabled else empty end' <<<"$MONITORS"); then
+  error "failed to read monitor state"
+  exit 1
+fi
+if [[ "$STATE" != true && "$STATE" != false ]]; then
+  error "monitor has no boolean disabled state: $MONITOR"
+  exit 1
+fi
+
+lua_string() {
+  jq -rn --arg value "$1" '$value | @json'
+}
+
+if ! MONITOR_JSON=$(lua_string "$MONITOR"); then
+  error "failed to encode monitor name"
+  exit 1
+fi
+
+case "$ACTION" in
+  toggle)
+    if [[ "$STATE" == true ]]; then
+      DESIRED=false
+    else
+      DESIRED=true
+    fi
+    LUA="hl.monitor({ output = $MONITOR_JSON, disabled = $DESIRED })"
+    ;;
+  enable)
+    if ! RES_JSON=$(lua_string "$RES"); then
+      error "failed to encode display mode"
+      exit 1
+    fi
+    LUA="hl.monitor({ output = $MONITOR_JSON, mode = $RES_JSON, position = \"0x0\", scale = 1, disabled = false })"
+    ;;
+  disable)
+    LUA="hl.monitor({ output = $MONITOR_JSON, disabled = true })"
+    ;;
+esac
+
+if ! hyprctl eval "$LUA"; then
+  error "hyprctl eval failed"
+  exit 1
+fi
+exit 0
