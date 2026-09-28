@@ -28,6 +28,7 @@ Thumbs.db
 
 # Backup files
 *.bak
+*.bak.*
 *.backup
 
 # Personal notes

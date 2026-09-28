@@ -16,6 +16,7 @@
 [core]
 	excludesfile = ~/.gitignore_global
 	pager = delta
+	quotepath = false
 [delta]
 	side-by-side = true
 	line-numbers = true

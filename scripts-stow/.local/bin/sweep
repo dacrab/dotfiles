@@ -1,0 +1,295 @@
+#!/usr/bin/env bash
+# sweep - portable cache/junk cleaner; see `sweep --help`.
+set -uo pipefail
+shopt -s nullglob
+
+DRY=""
+usage() {
+  cat <<'EOF'
+sweep - portable cache/junk cleaner, topgrade-style.
+Detects what is installed and cleans only that, skipping the rest.
+
+Usage: sweep [-n|--dry-run] [-h|--help]
+
+Env overrides (see dotfiles/README.md "Helper scripts"):
+  SWEEP_TRASH_DAYS      purge trash older than N days (default 7, 0 disables)
+  SWEEP_JOURNAL_AGE     journalctl --vacuum-time value (default 3d)
+  SWEEP_COREDUMP_DAYS   delete coredumps older than N days (default 7)
+  SWEEP_CONTAINERS      1 = prune docker/podman (default off; SWEEP_DOCKER=1 also works)
+  SWEEP_FLATPAK_UNUSED  1 = flatpak uninstall --unused (default 1, 0 disables)
+EOF
+}
+
+if (($# > 1)); then
+  echo "sweep: too many arguments (try --help)" >&2
+  exit 2
+fi
+case "${1:-}" in
+  -n | --dry-run) DRY=1 ;;
+  -h | --help) usage; exit 0 ;;
+  "") ;;
+  *)
+    echo "sweep: unknown option: $1 (try --help)" >&2
+    exit 2
+    ;;
+esac
+
+TRASH_DAYS="${SWEEP_TRASH_DAYS:-7}"
+JOURNAL_AGE="${SWEEP_JOURNAL_AGE:-3d}"
+COREDUMP_DAYS="${SWEEP_COREDUMP_DAYS:-7}"
+CONTAINERS="${SWEEP_CONTAINERS:-${SWEEP_DOCKER:-0}}"
+FLATPAK_UNUSED="${SWEEP_FLATPAK_UNUSED:-1}"
+
+[[ "$TRASH_DAYS" =~ ^[0-9]+$ ]] \
+  || { echo "sweep: SWEEP_TRASH_DAYS must be a non-negative integer" >&2; exit 2; }
+[[ "$COREDUMP_DAYS" =~ ^[0-9]+$ ]] \
+  || { echo "sweep: SWEEP_COREDUMP_DAYS must be a non-negative integer" >&2; exit 2; }
+
+has() { command -v "$1" &>/dev/null; }
+
+CACHE="${XDG_CACHE_HOME:-$HOME/.cache}"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}"
+DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
+
+FAILED=0
+CLEAN_TARGETS=()
+declare -A SEEN=()
+
+# Roots that must never be removed, even if a variable expands wrongly.
+PROTECTED=("$HOME" "$CACHE" "$CONFIG" "$DATA" "$STATE" "/")
+
+section() { printf '\n==> %s\n' "$*"; }
+
+# Queue a path for removal at the end (dry-run just lists it).
+# Missing paths and exact dupes are skipped. Existence is rechecked at
+# removal time, so a child queued under an already-removed parent is
+# silently skipped instead of failing.
+clean() {
+  local target=${1%/}
+  [[ -n "$target" ]] || target=/
+  [[ -e "$target" || -L "$target" ]] || return 0
+  local p
+  for p in "${PROTECTED[@]}"; do
+    if [[ "$target" == "$p" ]]; then
+      echo "sweep: refusing to clean $target" >&2
+      FAILED=1
+      return 1
+    fi
+  done
+  [[ -n "${SEEN[$target]:-}" ]] && return 0
+  SEEN[$target]=1
+  CLEAN_TARGETS+=("$target")
+}
+
+clean_targets() {
+  local target
+  for target in ${CLEAN_TARGETS[@]+"${CLEAN_TARGETS[@]}"}; do
+    [[ -e "$target" || -L "$target" ]] || continue
+    if [[ -n "$DRY" ]]; then
+      printf '  rm -rf -- %q\n' "$target"
+    elif ! rm -rf -- "$target"; then
+      FAILED=1
+    fi
+  done
+}
+
+run() {
+  if [[ -n "$DRY" ]]; then
+    printf '  %s\n' "$*"
+    return 0
+  fi
+  "$@" || { FAILED=1; return 1; }
+}
+
+as_root() {
+  if [[ $EUID -eq 0 ]]; then
+    run "$@"
+  elif has sudo; then
+    if [[ -n "$DRY" ]]; then
+      printf '  sudo %s\n' "$*"
+    else
+      run sudo "$@"
+    fi
+  elif [[ -n "$DRY" ]]; then
+    printf '  (needs root) %s\n' "$*"
+  else
+    echo "sweep: cannot run $1 without root or sudo" >&2
+    FAILED=1
+    return 1
+  fi
+}
+
+clean_pkg_caches() {
+  section "package manager caches"
+  has apt-get && as_root apt-get clean
+  has dnf && as_root dnf clean all -q
+  has pacman && as_root pacman -Sc --noconfirm
+  has zypper && as_root zypper clean -a
+  has brew && run brew cleanup -s
+}
+
+# Remove disabled snap revisions. Columns: Name Version Rev Tracking ...
+clean_stale_snaps() {
+  local snap_list name rev tracking
+  has snap || return 0
+  snap_list=$(snap list --all 2>/dev/null) || { FAILED=1; return 1; }
+  while read -r name _version rev tracking _rest; do
+    [[ "$name" == "Name" || -z "$name" ]] && continue
+    [[ "$tracking" == "disabled" ]] && as_root snap remove "$name" "--revision=$rev"
+  done <<<"$snap_list"
+}
+
+clean_logs() {
+  section "system logs and crash dumps"
+  has journalctl && as_root journalctl --vacuum-time="$JOURNAL_AGE"
+  [[ -d /var/lib/systemd/coredump ]] \
+    && as_root find /var/lib/systemd/coredump -maxdepth 1 -type f -mtime +"$COREDUMP_DAYS" -delete
+}
+
+# Prefer trash-cli (respects age); otherwise delete trash entries older
+# than TRASH_DAYS directly. gio has no age filter, so it is not used here.
+purge_trash_fallback() {
+  local trash_base="$DATA/Trash"
+  [[ -d "$trash_base/files" ]] || return 0
+  if [[ -n "$DRY" ]]; then
+    printf '  find %s/files %s/info -mindepth 1 -maxdepth 1 -mtime +%s -exec rm -rf {} +\n' \
+      "$trash_base" "$trash_base" "$TRASH_DAYS"
+    return 0
+  fi
+  find "$trash_base/files" -mindepth 1 -maxdepth 1 -mtime +"$TRASH_DAYS" -exec rm -rf {} + \
+    || { FAILED=1; return 1; }
+  find "$trash_base/info" -mindepth 1 -maxdepth 1 -mtime +"$TRASH_DAYS" -delete 2>/dev/null || true
+}
+
+clean_trash() {
+  if [[ "$TRASH_DAYS" == 0 ]]; then
+    return 0
+  fi
+  if has trash-empty; then
+    run trash-empty -f "$TRASH_DAYS"
+  else
+    purge_trash_fallback
+  fi
+  clean "$CACHE/thumbnails"
+}
+
+clean_lang_caches() {
+  section "language and runtime caches"
+  has npm && run npm cache clean --force --silent
+  has pnpm && run pnpm store prune
+  has yarn && run yarn cache clean
+  if has pip; then
+    run pip cache purge
+  elif has pip3; then
+    run pip3 cache purge
+  fi
+  has uv && run uv cache clean
+  if has go; then
+    run go clean -cache
+  else
+    clean "$CACHE/go-build" # regenerable; covers machines without go on PATH
+  fi
+  has poetry && run poetry cache clear . --all --no-interaction
+  has cargo && has cargo-cache && run cargo cache --autoclean
+  clean "$HOME/.npm/_npx"
+  # `bun pm cache rm` fails outside a project dir, so clean its
+  # global caches directly - both regenerate on demand.
+  if has bun; then
+    clean "${BUN_INSTALL:-$HOME/.bun}/install/cache"
+    clean "$CACHE/bun"
+  fi
+}
+
+clean_flatpak() {
+  local dir
+  section "flatpak"
+  has flatpak || return 0
+  for dir in "$HOME/.var/app/"*/cache; do
+    clean "$dir"
+  done
+  [[ "$FLATPAK_UNUSED" == 1 ]] && run flatpak uninstall --unused -y
+}
+
+clean_tool_caches() {
+  local dir
+  section "tool caches"
+  for dir in node-gyp electron deno biome gopls typescript prisma opencode \
+    vicinae opengrep tealdeer mozilla libreoffice Unity unityhub unity3d \
+    golangci-lint tracker3 libdnf5 gnome-software flatpak fontconfig \
+    mesa_shader_cache radv_builtin_shaders gstreamer-1.0 \
+    gnome-desktop-thumbnailer go-build; do
+    clean "$CACHE/$dir"
+  done
+}
+
+clean_editors() {
+  local editor cache_dir
+  section "editor caches"
+  for editor in Code "Code - OSS" VSCodium Cursor Windsurf; do
+    [[ -d "$CONFIG/$editor" ]] || continue
+    for cache_dir in CachedData Cache CachedProfilesData CachedExtensionVSIXs \
+      GPUCache "Code Cache" DawnGraphiteCache DawnWebGPUCache logs; do
+      clean "$CONFIG/$editor/$cache_dir"
+    done
+  done
+  # Zed: logs only. languages/extensions are downloads, not caches.
+  [[ -d "$DATA/zed/logs" ]] && clean "$DATA/zed/logs"
+}
+
+# Only cache-named dirs are removed; profile data is never touched.
+CHROMIUM_CACHE_DIRS=(
+  Cache "Code Cache" "Media Cache" GPUCache CacheStorage
+  DawnGraphiteCache DawnWebGPUCache GraphiteDawnCache GPUPersistentCache
+  ShaderCache GrShaderCache component_crx_cache
+)
+
+clean_chromium_tree() { # clean_chromium_tree root
+  local root=$1 cache_name found
+  for cache_name in "${CHROMIUM_CACHE_DIRS[@]}"; do
+    while IFS= read -r found; do
+      clean "$found"
+    done < <(find "$root" -maxdepth 4 -type d -name "$cache_name" -prune -print 2>/dev/null)
+  done
+  clean "$CACHE/$(basename "$root")"
+}
+
+clean_chromium() {
+  local marker base
+  section "chromium app caches"
+  for base in "$CONFIG" "$HOME/.var/app"; do
+    [[ -d "$base" ]] || continue
+    while IFS= read -r -d '' marker; do
+      clean_chromium_tree "$(dirname "$marker")"
+    done < <(find "$base" -maxdepth 6 -name "Local State" -type f -print0 2>/dev/null)
+  done
+}
+
+clean_containers() {
+  [[ "$CONTAINERS" == 1 ]] || return 0
+  has docker && run docker system prune -f # no --volumes, no -a
+  has podman && run podman system prune -f
+}
+
+main() {
+  clean_pkg_caches
+  clean_stale_snaps
+  clean_logs
+  clean_trash
+  clean_lang_caches
+  clean_flatpak
+  clean_tool_caches
+  clean_editors
+  clean_chromium
+  clean "$STATE/less"
+  clean_containers
+  clean_targets
+  if [[ -n "$DRY" ]]; then
+    echo "sweep done (dry run - nothing was removed)"
+  else
+    echo "sweep done"
+  fi
+  return "$FAILED"
+}
+
+main

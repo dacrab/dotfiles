@@ -16,7 +16,7 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `git-stow` | Git settings |
 | `gh-stow` | GitHub CLI settings |
 | `fastfetch-stow` | System info shown when a terminal opens |
-| `scripts-stow` | Helper scripts (`sweep`, `random-wall.sh`) |
+| `scripts-stow` | Helper scripts (`sweep`, `random-wall`) |
 | `gtk-stow` | GTK theme, cursor, fonts |
 | `atuin-stow` | Shell history settings |
 | `zed-stow` | Zed editor |
@@ -24,6 +24,7 @@ My Linux desktop setup, kept in one place and managed with [Stow](https://www.gn
 | `yazi-stow` | Terminal file manager |
 | `opencode-stow` | opencode (AI coding agent) config |
 | `mimocode-stow` | mimocode (AI coding agent) config |
+| `pi-stow` | Pi (oh-my-pi) intentional configuration; credentials and runtime state stay outside dotfiles |
 | `topgrade-stow` | One-command system updater |
 
 ## Install
@@ -36,7 +37,7 @@ cd ~/dotfiles
 stow mybash git-stow gh-stow scripts-stow \
      ghostty-stow fastfetch-stow atuin-stow \
      gtk-stow zed-stow yazi-stow topgrade-stow \
-     editor-stow opencode-stow mimocode-stow
+     editor-stow opencode-stow mimocode-stow pi-stow
 
 # Hyprland desktop
 stow hypr-stow ashell-stow vicinae-stow nwg-bar-stow
@@ -55,14 +56,14 @@ Each `*-stow` folder links its files into your home folder, so you keep one copy
 | ----- | ------------ |
 | `sweep` | Frees disk space by clearing caches, logs, and old trash. Use `sweep --dry-run` to preview first |
 | `update` | Updates everything in one run (system packages, flatpaks, tools, git repos) |
-| `random-wall.sh` | Sets a random wallpaper (Hyprland, GNOME, XFCE, MATE, Cinnamon, Sway) |
+| `random-wall` | Sets a random wallpaper (Hyprland, GNOME, XFCE, MATE, Cinnamon, Sway); with no argument, picks from `$WALLPAPER_DIR/nord` |
 
 ### Tweaking their behavior
 
 The scripts read a few variables from the environment if you want to change how they behave. For example:
 
 ```bash
-DISPLAY_RES=2560x1440@60 display toggle
+DISPLAY_RES=2560x1440@60 display enable
 ```
 
 | Script | Variable | What it controls | Default |
@@ -70,8 +71,9 @@ DISPLAY_RES=2560x1440@60 display toggle
 | sweep | `SWEEP_TRASH_DAYS` | Empty the trash only after N days (0 = never) | `7` |
 | | `SWEEP_JOURNAL_AGE` | How old system logs can get before they're removed | `3d` |
 | | `SWEEP_COREDUMP_DAYS` | How old crash reports can get before they're removed | `7` |
-| | `SWEEP_DOCKER` | `1` = also clean up stopped Docker containers | off |
-| random-wall.sh | `WALLPAPER_DIR` | Folder to pick wallpapers from | `~/Pictures/wallpapers` |
+| | `SWEEP_CONTAINERS` | `1` = also run `docker/podman system prune` (stopped containers, unused networks, dangling images, and build cache may be removed; volumes and unused tagged images are retained; `SWEEP_DOCKER=1` also works) | off |
+| | `SWEEP_FLATPAK_UNUSED` | `1` = also run `flatpak uninstall --unused` (0 disables) | `1` |
+| random-wall | `WALLPAPER_DIR` | Folder to pick wallpapers from | `~/Pictures/wallpapers` |
 | | `WALL_EXT` | File types to pick from | `jpg jpeg png webp` |
 | display | `BUILTIN_PREFIX` | Name of the laptop's built-in screen | `eDP-` |
 | | `DISPLAY_RES` | Screen resolution when turning it back on | `1920x1080@60` |
