@@ -1,25 +1,33 @@
 #!/usr/bin/env bash
-# random-wall - set a random wallpaper (different one each login).
-# See `random-wall --help`. Autostarted by
-# ~/.config/autostart/random-wall.desktop on GNOME & others.
+# Set a random wallpaper, different from last time. See `random-wall --help`.
 set -uo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: random-wall [--autostart] [<dir>]
+Usage: random-wall [--autostart] [--keep] [<dir>]
   no args      pick from $WALLPAPER_DIR/nord
   <dir>        path, or a name under $WALLPAPER_DIR
   --autostart  login mode: exit quietly when Hyprland is already running this
+  --keep       re-apply the wallpaper used last time instead of picking a new
+               one (use after enabling a monitor)
 EOF
 }
 
-if [[ "${1:-}" == -h || "${1:-}" == --help ]]; then
+case "${1:-}" in
+-h | --help)
   usage
   exit 0
-fi
+  ;;
+esac
+
 AUTO=0
 if [[ "${1:-}" == --autostart ]]; then
   AUTO=1
+  shift
+fi
+KEEP=0
+if [[ "${1:-}" == --keep ]]; then
+  KEEP=1
   shift
 fi
 if (($# > 1)); then
@@ -27,8 +35,7 @@ if (($# > 1)); then
   exit 2
 fi
 
-# --autostart mode: exit quietly if Hyprland is up (it autostarts this
-# script itself, and double-running would race hyprpaper IPC)
+# Hyprland autostarts this script itself; running twice would race hyprpaper IPC.
 if [[ "$AUTO" == 1 ]] && pgrep -x Hyprland &>/dev/null; then
   exit 0
 fi
@@ -37,12 +44,8 @@ BASE="${WALLPAPER_DIR:-$HOME/Pictures/wallpapers}"
 WALL_EXT="${WALL_EXT:-jpg jpeg png webp}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/random-wall"
 
-arg="${1:-nord}"
-if [[ "$arg" == */* ]]; then
-  wall_dir="$arg"
-else
-  wall_dir="$BASE/$arg"
-fi
+wall_dir=${1:-nord}
+[[ "$wall_dir" == */* ]] || wall_dir="$BASE/$wall_dir"
 DIR=$(realpath -e -- "$wall_dir" 2>/dev/null) || {
   echo "no wallpapers dir: $wall_dir" >&2
   exit 1
@@ -53,72 +56,65 @@ if ((${#exts[@]} == 0)); then
   echo "WALL_EXT must contain at least one extension" >&2
   exit 1
 fi
-exp=()
+name_args=()
 for ext in "${exts[@]}"; do
-  ((${#exp[@]} > 0)) && exp+=(-o)
-  exp+=(-iname "*.$ext")
+  name_args+=(-o -iname "*.$ext")
 done
-mapfile -d '' ALL < <(find "$DIR" -type f \( "${exp[@]}" \) -print0)
-((${#ALL[@]} == 0)) && {
+mapfile -d '' ALL < <(find "$DIR" -type f \( "${name_args[@]:1}" \) -print0)
+if ((${#ALL[@]} == 0)); then
   echo "no images in $DIR" >&2
   exit 1
-}
+fi
 
-# pick a different wallpaper than last time (when possible)
 LAST=$(cat "$STATE/last" 2>/dev/null || true)
+
+# Pool excludes LAST so consecutive runs differ when possible.
+found=0
 POOL=()
-for img in "${ALL[@]}"; do [[ "$img" != "$LAST" ]] && POOL+=("$img"); done
-((${#POOL[@]} == 0)) && POOL=("${ALL[@]}")
-
-PICK="${POOL[$((RANDOM % ${#POOL[@]}))]}"
-
-# ---- Hyprland (hyprpaper IPC) --------------------------------------------
-set_hyprland() {
-  local runtime sock monitors keyword mon status=0 found=0
-  runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
-  if [[ ! -d "$runtime/hypr" ]]; then
-    return 1
+for img in "${ALL[@]}"; do
+  if [[ "$img" == "$LAST" ]]; then
+    found=1
+  else
+    POOL+=("$img")
   fi
+done
+
+if [[ "$KEEP" == 1 && "$found" == 1 && -f "$LAST" ]]; then
+  PICK="$LAST"
+else
+  ((${#POOL[@]} > 0)) || POOL=("${ALL[@]}")
+  PICK="${POOL[RANDOM % ${#POOL[@]}]}"
+fi
+
+set_hyprland() {
+  local runtime sock status=0 names=() name
+  runtime="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
   for _ in {1..50}; do
-    if ! sock=$(find "$runtime/hypr" -maxdepth 2 -name .hyprpaper.sock -print -quit 2>/dev/null); then
-      return 1
-    fi
+    sock=$(find "$runtime/hypr" -maxdepth 2 -name .hyprpaper.sock -print -quit 2>/dev/null) || return 1
     [[ -n "$sock" ]] && break
     sleep 0.1
   done
   [[ -n "${sock:-}" ]] || return 1
-  if ! monitors=$(hyprctl monitors 2>/dev/null); then
-    return 1
-  fi
-  while read -r keyword mon _; do
-    [[ "$keyword" == "Monitor" ]] || continue
-    [[ -n "${mon:-}" ]] || continue
-    found=1
-    hyprctl hyprpaper wallpaper "$mon,$1" || status=1
-  done <<<"$monitors"
-  ((found == 1)) || return 1
+  # `monitors` alone lists only enabled outputs; filtering `all` makes the
+  # disabled-panel check explicit. A missing jq or hyprctl yields no names.
+  mapfile -t names < <(hyprctl -j monitors all 2>/dev/null | jq -r '.[] | select(.disabled == false) | .name' 2>/dev/null)
+  ((${#names[@]} > 0)) || return 1
+  for name in "${names[@]}"; do
+    hyprctl hyprpaper wallpaper "$name,$1" || status=1
+  done
   return "$status"
 }
 
-# ---- GNOME / Cinnamon (gsettings/dconf) -----------------------------------
-# usage: set_gsettings <schema>.background <image>
+# Also covers Budgie (uses org.gnome.desktop).
 set_gsettings() {
   local schema=$1 img=$2
   gsettings set "$schema" picture-uri "file://$img" || return 1
   gsettings set "$schema" picture-uri-dark "file://$img"
 }
 
-# ---- MATE (plain paths, no file:// URIs) ----------------------------------
-set_mate() {
-  gsettings set org.mate.background picture-filename "$1"
-}
-
-# ---- XFCE ---------------------------------------------------------------
 set_xfce() {
   local screens props scr prop status=0
-  if ! screens=$(xfconf-query -c xfce4-desktop -p /backdrop/screens -l 2>/dev/null); then
-    return 1
-  fi
+  screens=$(xfconf-query -c xfce4-desktop -p /backdrop/screens -l 2>/dev/null) || return 1
   while IFS= read -r scr; do
     [[ -n "$scr" ]] || continue
     if ! props=$(xfconf-query -c xfce4-desktop -p "$scr" -l 2>/dev/null); then
@@ -134,7 +130,6 @@ set_xfce() {
   return "$status"
 }
 
-# ---- Sway / other wlroots compositors (swaybg) ---------------------------
 set_swaybg() {
   command -v swaybg >/dev/null 2>&1 || return 1
   pkill -x swaybg &>/dev/null || true
@@ -145,12 +140,12 @@ set_swaybg() {
 detect_desktop() {
   case "${XDG_CURRENT_DESKTOP:-}" in
   *Hyprland*) echo hyprland ;;
-  *GNOME*) echo gnome ;; # GNOME and Budgie (both use org.gnome.desktop)
+  *GNOME*) echo gnome ;;
   *Cinnamon*) echo cinnamon ;;
   *MATE*) echo mate ;;
   *XFCE*) echo xfce ;;
   *sway* | *wlroots*) echo sway ;;
-  *) # fall back to what's running
+  *)
     if pgrep -x Hyprland &>/dev/null; then
       echo hyprland
     elif pgrep -x gnome-shell &>/dev/null; then
@@ -159,7 +154,8 @@ detect_desktop() {
       echo sway
     elif pgrep -x xfce4-session &>/dev/null; then
       echo xfce
-    else echo ""; fi ;;
+    fi
+    ;;
   esac
 }
 
@@ -181,18 +177,17 @@ write_state() {
   return 1
 }
 
-DESKTOP=$(detect_desktop)
-case "$DESKTOP" in
-  hyprland) set_hyprland "$PICK" || exit 1 ;;
-  gnome) set_gsettings org.gnome.desktop.background "$PICK" || exit 1 ;;
-  cinnamon) set_gsettings org.cinnamon.desktop.background "$PICK" || exit 1 ;;
-  mate) set_mate "$PICK" || exit 1 ;;
-  xfce) set_xfce "$PICK" || exit 1 ;;
-  sway) set_swaybg "$PICK" || exit 1 ;;
-  *)
-    echo "unsupported desktop" >&2
-    exit 1
-    ;;
+case "$(detect_desktop)" in
+hyprland) set_hyprland "$PICK" || exit 1 ;;
+gnome) set_gsettings org.gnome.desktop.background "$PICK" || exit 1 ;;
+cinnamon) set_gsettings org.cinnamon.desktop.background "$PICK" || exit 1 ;;
+mate) gsettings set org.mate.background picture-filename "$PICK" || exit 1 ;;
+xfce) set_xfce "$PICK" || exit 1 ;;
+sway) set_swaybg "$PICK" || exit 1 ;;
+*)
+  echo "unsupported desktop" >&2
+  exit 1
+  ;;
 esac
 
 write_state || exit 1

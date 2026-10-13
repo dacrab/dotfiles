@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
-# session-init - keyring and portals.
 set -uo pipefail
 
-# keyring (sockets live at /run/user/$UID/keyring)
 gnome-keyring-daemon --start --components=secrets,ssh >/dev/null 2>&1
-export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring"
-export SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
+export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring" \
+  SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
+# Hyprland-launched apps don't inherit this shell's env, so push SSH_AUTH_SOCK into Hyprland's env too.
 hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}"
 
-# polkit agent (GUI privilege prompts) — skip if one is already running
 if ! pgrep -x xfce-polkit >/dev/null; then
   /usr/libexec/xfce-polkit >/dev/null 2>&1 &
 fi
 
-# portals (systemd start needs graphical-session.target; fall back to direct launch)
 dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
 systemctl --user start xdg-desktop-portal-hyprland
+# The generic portal's systemd start can fail (needs graphical-session.target); launch it directly then.
 systemctl --user start xdg-desktop-portal 2>/dev/null || {
   /usr/libexec/xdg-desktop-portal >/dev/null 2>&1 &
 }
