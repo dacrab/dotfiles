@@ -1,104 +1,82 @@
 #!/usr/bin/env bash
-# display - toggle/enable/disable the built-in panel (default: eDP-*).
+# Toggle/enable/disable a monitor (default: built-in eDP-* panel).
 set -uo pipefail
 
 BUILTIN="${BUILTIN_PREFIX:-eDP-}"
-RES="${DISPLAY_RES:-1920x1080@60}"
 
 usage() {
-  printf 'usage: %s {toggle [mon]|enable [mon]|disable [mon]}\n' "$0"
+  printf 'usage: %s {toggle|enable|disable} [monitor]\n' "$0" >&2
 }
 
 error() {
   printf 'display: %s\n' "$*" >&2
 }
 
-(($# >= 1)) || {
-  usage >&2
-  exit 1
-}
+(($# >= 1)) || { usage; exit 1; }
 ACTION=$1
 shift
 case "$ACTION" in
   toggle | enable | disable) ;;
-  *)
-    usage >&2
-    exit 1
-    ;;
+  *) usage; exit 1 ;;
 esac
-if (($# > 1)); then
-  usage >&2
-  exit 2
-fi
+(($# <= 1)) || { usage; exit 2; }
 REQUESTED=${1:-}
 
-command -v jq >/dev/null 2>&1 || {
-  error "jq is required"
-  exit 1
-}
+command -v jq >/dev/null 2>&1 || { error "jq is required"; exit 1; }
 
-MONITORS=$(hyprctl -j monitors all) || {
-  error "failed to query monitors"
-  exit 1
-}
+MONITORS=$(hyprctl -j monitors all) || { error "failed to query monitors"; exit 1; }
 
 if [[ -n "$REQUESTED" ]]; then
-  jq -e --arg name "$REQUESTED" 'map(select(.name == $name)) | length == 1' <<<"$MONITORS" >/dev/null || {
-    error "monitor not found: $REQUESTED"
-    exit 1
-  }
+  jq -e --arg name "$REQUESTED" '[.[] | select(.name == $name)] | length == 1' <<<"$MONITORS" >/dev/null ||
+    { error "monitor not found: $REQUESTED"; exit 1; }
   MONITOR=$REQUESTED
 else
-  mapfile -t BUILTINS < <(
-    jq -r --arg prefix "$BUILTIN" '.[] | select(.name | startswith($prefix)) | .name' <<<"$MONITORS"
-  )
-  ((${#BUILTINS[@]} == 1)) || {
-    error "expected exactly one monitor matching $BUILTIN, found ${#BUILTINS[@]}"
-    exit 1
-  }
+  mapfile -t BUILTINS < <(jq -r --arg p "$BUILTIN" '.[] | select(.name | startswith($p)) | .name' <<<"$MONITORS")
+  ((${#BUILTINS[@]} == 1)) || { error "expected exactly one monitor matching $BUILTIN, found ${#BUILTINS[@]}"; exit 1; }
   MONITOR=${BUILTINS[0]}
 fi
 
-STATE=$(jq -r --arg name "$MONITOR" 'map(select(.name == $name)) | if length == 1 then .[0].disabled else empty end' <<<"$MONITORS") || {
-  error "failed to read monitor state"
-  exit 1
-}
-[[ "$STATE" == true || "$STATE" == false ]] || {
-  error "monitor has no boolean disabled state: $MONITOR"
-  exit 1
-}
-
-lua_string() {
-  jq -rn --arg value "$1" '$value | @json'
-}
-
-MONITOR_JSON=$(lua_string "$MONITOR") || {
-  error "failed to encode monitor name"
-  exit 1
-}
+STATE=$(jq -r --arg name "$MONITOR" '[.[] | select(.name == $name)][0].disabled' <<<"$MONITORS") ||
+  { error "failed to read monitor state"; exit 1; }
+[[ "$STATE" == true || "$STATE" == false ]] ||
+  { error "monitor has no boolean disabled state: $MONITOR"; exit 1; }
 
 case "$ACTION" in
-  toggle)
-    if [[ "$STATE" == true ]]; then
-      DESIRED=false
-    else
-      DESIRED=true
-    fi
-    LUA="hl.monitor({ output = $MONITOR_JSON, disabled = $DESIRED })"
-    ;;
-  enable)
-    RES_JSON=$(lua_string "$RES") || {
-      error "failed to encode display mode"
-      exit 1
-    }
-    LUA="hl.monitor({ output = $MONITOR_JSON, mode = $RES_JSON, position = \"0x0\", scale = 1, disabled = false })"
-    ;;
-  disable)
-    LUA="hl.monitor({ output = $MONITOR_JSON, disabled = true })"
-    ;;
+  toggle) DESIRED=$([[ "$STATE" == true ]] && echo false || echo true) ;;
+  enable) DESIRED=false ;;
+  disable) DESIRED=true ;;
 esac
 
-hyprctl eval "$LUA" || {
-  error "hyprctl eval failed"
-  exit 1
-}
+if [[ "$DESIRED" == true ]]; then
+  LUA=$(jq -rn --arg m "$MONITOR" '"hl.monitor({ output = \($m | @json), disabled = true })"')
+else
+  # Highest resolution, then highest refresh rate among the panel's advertised modes.
+  MODE=${DISPLAY_MODE:-$(jq -r --arg name "$MONITOR" '
+    [ .[] | select(.name == $name) | .availableModes[] as $m
+      | ($m | capture("^(?<w>[0-9]+)x(?<h>[0-9]+)@(?<r>[0-9.]+)Hz$")) as $p
+      | { src: $m, area: (($p.w | tonumber) * ($p.h | tonumber)), r: ($p.r | tonumber) } ]
+    | sort_by([.area, .r]) | last | .src | sub("Hz$"; "")' <<<"$MONITORS")}
+  [[ -n "$MODE" ]] || { error "could not determine a mode for $MONITOR"; exit 1; }
+
+  # HiDPI default for the built-in panel, 1:1 for anything else.
+  DEFAULT_SCALE=1
+  [[ "$MONITOR" == "$BUILTIN"* ]] && DEFAULT_SCALE=1.5
+  SCALE=${DISPLAY_SCALE:-$DEFAULT_SCALE}
+
+  # Placed right of every other enabled output so it never overlaps.
+  LUA=$(jq -r \
+    --arg m "$MONITOR" \
+    --arg mode "$MODE" \
+    --argjson scale "$SCALE" '
+    ([ .[] | select(.name != $m and .disabled == false) | (.x + ((.width / .scale) | floor)) ] | max // 0) as $x
+    | "hl.monitor({ output = \($m | @json), mode = \($mode | @json), position = \("\($x)x0" | @json), scale = \($scale), disabled = false })"' \
+    <<<"$MONITORS") || { error "failed to build monitor command"; exit 1; }
+fi
+
+hyprctl eval "$LUA" || { error "hyprctl eval failed"; exit 1; }
+
+# A newly enabled output starts blank; restore the current wallpaper.
+if [[ "$DESIRED" == false ]] && command -v random-wall >/dev/null 2>&1; then
+  random-wall --keep >/dev/null 2>&1 ||
+    error "monitor enabled, but re-applying the wallpaper failed"
+fi
