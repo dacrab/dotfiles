@@ -1,12 +1,10 @@
 {
-  "lastChangelogVersion": "0.87.1",
+  "lastChangelogVersion": "1.0.3",
   "theme": "dark/dark",
-  "defaultProvider": "tokenrouter",
-  "defaultModel": "z-ai/glm-5.3-free",
-  "models": [
-    "tokenrouter/*",
-    "cloudflare-workers-ai-free/*",
-    "opencode/*"
+  "defaultProvider": "opencode",
+  "defaultModel": "space-bunny-free",
+  "enabledModels": [
+    "opencode/space-bunny-free"
   ],
   "packages": [
     "npm:pi-mcp-adapter",
@@ -24,5 +22,9 @@
     "enabled": true,
     "reserveTokens": 16384,
     "keepRecentTokens": 20000
-  }
+  },
+  "extensions": [
+    "-builtin:mcp"
+  ],
+  "hideThinkingBlock": true
 }
