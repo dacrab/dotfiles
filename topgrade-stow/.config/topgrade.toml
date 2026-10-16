@@ -1,5 +1,6 @@
 # topgrade.toml - update everything in one run, no prompts.
 # System packages, flatpak, firmware, runtimes, and tools are auto-detected.
+# Topgrade itself is RPM-managed (terra), so dnf updates it via the system step.
 
 [misc]
 assume_yes = true
@@ -26,3 +27,9 @@ use_sudo = true
 # Don't prune unused system container images.
 [containers]
 system_prune = false
+
+# zoxide is the only manually-downloaded GitHub release left (rust build, no
+# bun/cargo/npm channel; Fedora's repo version lags). zoxide installs to
+# ~/.local/bin, so this step never needs sudo.
+[commands]
+"GitHub release binaries" = "/home/dacrab/.local/bin/update-gh-release"
