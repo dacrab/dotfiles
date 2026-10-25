@@ -8,6 +8,13 @@
 [user]
 	email = vaggeliskavouras6@gmail.com
 	name = dacrab
+# Used by `update` (topgrade): plain `git pull` rebases and stashes local
+# changes. Keeping this in git config (rather than topgrade's `arguments`)
+# means topgrade's fallback `git fetch` for branchless feature branches works.
+[pull]
+	rebase = true
+[rebase]
+	autoStash = true
 [filter "lfs"]
 	process = git-lfs filter-process
 	required = true
