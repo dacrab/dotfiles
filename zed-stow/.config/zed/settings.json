@@ -5,7 +5,7 @@
     "show": "always"
   },
   "icon_theme": "Material Icon Theme",
-  "disable_ai": true,
+  "disable_ai": false,
   "ui_font_family": "GeistMono Nerd Font",
   "terminal": {
     "font_size": 12.0,
