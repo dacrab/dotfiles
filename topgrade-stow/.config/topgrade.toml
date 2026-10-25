@@ -15,7 +15,13 @@ disable = ["hyprpm"]
 # Pull git repos matching ~/Documents/GitHub/*/ (topgrade skips non-repos).
 [git]
 repos = ["~/Documents/GitHub/*/"]
-arguments = "--rebase --autostash"
+# Work-in-progress feature branches have no upstream, so `git pull` would fail
+# and mark the whole Git Repositories step as FAILED. When a repo is not on its
+# default branch, fetch the remote's default branch instead.
+fallback_to_fetch_default = true
+# NB: no `arguments = "--rebase --autostash"` here. Topgrade also passes those
+# arguments to the fallback `git fetch`, which rejects --rebase. The same
+# behaviour comes from pull.rebase + rebase.autoStash in ~/.gitconfig instead.
 
 [linux]
 dnf_arguments = "--refresh"
