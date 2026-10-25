@@ -1,3 +1,8 @@
+-- Floats, sizes and layer effects.
+local function float(name, match)
+  hl.window_rule({ name = name, match = match, float = true })
+end
+
 -- Ignore ghost/transient XWayland windows
 hl.window_rule({
   name = "ignore-ghost-xwayland",
@@ -13,28 +18,16 @@ hl.window_rule({
 })
 
 -- Float dialogs & popups
-hl.window_rule({
-  name = "float-dialogs",
-  match = {
-    class = "^(pavucontrol|file_progress|confirm|dialog|download|notification|error|splash|confirmreset)$",
-  },
-  float = true,
+float("float-dialogs", {
+  class = "^(pavucontrol|file_progress|confirm|dialog|download|notification|error|splash|confirmreset)$",
 })
 
-hl.window_rule({
-  name = "float-titles",
-  match = {
-    title = "^(Open File|Select a file|Choose Files|Save As|Library Preferences|Settings|Preferences|About)$",
-  },
-  float = true,
+float("float-titles", {
+  title = "^(Open File|Select a file|Choose Files|Save As|Library Preferences|Settings|Preferences|About)$",
 })
 
-hl.window_rule({
-  name = "float-cursor",
-  match = {
-    class = "^(\\(Cursor\\))$",
-  },
-  float = true,
+float("float-cursor", {
+  class = "^\\(Cursor\\)$",
 })
 
 -- Size & position
@@ -47,21 +40,12 @@ hl.window_rule({
   center = true,
 })
 
--- Effects
+-- Effects: ashell needs no rule here (it publishes its own blur region via
+-- ext-background-effect-v1, which Hyprland honours over any layerrule).
 hl.layer_rule({
   name = "vicinae-blur",
   match = {
     namespace = "vicinae",
-  },
-  blur = true,
-  ignore_alpha = 0,
-})
-
--- ashell bar, menus, OSD, notification toasts and idle-inhibitor layer
-hl.layer_rule({
-  name = "ashell-blur",
-  match = {
-    namespace = "^(ashell-main-layer|ashell-menu-layer|ashell-osd-layer|ashell-toast-layer)$",
   },
   blur = true,
   ignore_alpha = 0,

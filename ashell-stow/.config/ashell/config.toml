@@ -6,13 +6,13 @@ outputs = { Targets = ["HDMI-A-1"] }  # bar on external monitor only, never on e
 position = "Top"
 region = "en-GB"             # metric units: Celsius, 24h dates
 
-[logging]
+# ── Behaviour ──────────────────────────────────────────────────────────────────
 
 [osd]
 enabled = true
 
 [animations]
-enabled = true
+enabled = true             # content motion inside ashell; Hyprland fades the surface itself
 
 # ── Modules ────────────────────────────────────────────────────────────────────
 # left: workspaces + window title; center: clock;
@@ -62,7 +62,7 @@ toast_limit = 5
 [appearance]
 font_name = "JetBrains Mono"
 scale_factor = 0.8           # smaller bar
-blur = "always"
+blur = "always"              # ashell publishes its own blur region via ext-background-effect-v1; Hyprland then ignores layerrules
 workspace_colors = ["#81a1c1", "#b48ead", "#a3be8c", "#ebcb8b", "#8fbcbb", "#bf616a"]
 
 [appearance.bar]

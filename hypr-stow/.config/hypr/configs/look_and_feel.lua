@@ -1,6 +1,5 @@
 local colors = require("hyprland/colors")
 
--- General
 hl.config({
   general = {
     gaps_in = 4,
@@ -17,10 +16,7 @@ hl.config({
       nogroup_border = colors.color8,
     },
   },
-})
 
--- Decoration
-hl.config({
   decoration = {
     rounding = 10,
     rounding_power = 2.0,
@@ -28,12 +24,13 @@ hl.config({
     dim_inactive = true,
     dim_strength = 0.1,
 
+    -- Trimmed for the Vega 3 iGPU: one blur pass, smaller kernel, no noise.
     blur = {
       enabled = true,
-      size = 4,
-      passes = 2,
+      size = 3,
+      passes = 1,
       new_optimizations = true,
-      noise = 0.02,
+      noise = 0,
     },
 
     shadow = {
@@ -43,32 +40,38 @@ hl.config({
       color = "rgba(00000055)",
     },
   },
-})
 
--- Animations
-hl.config({
   animations = {
     enabled = true,
   },
 })
 
+-- Curves
 hl.curve("snappy", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.0 } } })
 hl.curve("smooth", { type = "bezier", points = { { 0.25, 1.0 }, { 0.5, 1.0 } } })
 hl.curve("softOut", { type = "bezier", points = { { 0.36, 0.0 }, { 0.66, -0.56 } } })
 hl.curve("popIn", { type = "bezier", points = { { 0.0, 0.8 }, { 0.2, 1.0 } } })
 
+-- Windows
 hl.animation({ leaf = "windowsIn", enabled = true, speed = 4, bezier = "popIn", style = "popin 80%" })
 hl.animation({ leaf = "windowsOut", enabled = true, speed = 4, bezier = "softOut", style = "popin 80%" })
 hl.animation({ leaf = "windowsMove", enabled = true, speed = 3, bezier = "smooth" })
 
+-- Fades
 hl.animation({ leaf = "fadeIn", enabled = true, speed = 3, bezier = "smooth" })
 hl.animation({ leaf = "fadeOut", enabled = true, speed = 3, bezier = "smooth" })
 hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 3, bezier = "smooth" })
 hl.animation({ leaf = "fadeDim", enabled = true, speed = 4, bezier = "smooth" })
 
+-- Workspaces
 hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "snappy", style = "slidefade 20%" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "snappy", style = "slidefadevert -20%" })
 
+-- Border
 hl.animation({ leaf = "border", enabled = true, speed = 5, bezier = "smooth" })
 
-hl.animation({ leaf = "layers", enabled = true, speed = 3, bezier = "popIn", style = "popin 80%" })
+-- Layer surfaces (ashell bar/menus/OSD/toasts, vicinae, notifications).
+-- ashell animates its own content with iced_anim, so scaling the surface
+-- itself (popin 80%) made the two animations fight. Hyprland only fades the
+-- surface in; the shell owns the motion inside it.
+hl.animation({ leaf = "layers", enabled = true, speed = 3, bezier = "smooth", style = "fade" })

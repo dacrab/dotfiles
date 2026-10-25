@@ -4,107 +4,52 @@
     "plan": {},
     "build": {}
   },
-  "provider": {
-    "tiarina-glm": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Tiarina GLM 1",
-      "options": {
-        "baseURL": "https://ai.tiarina.cloud/v1",
-        "apiKey": "{env:TIARINA_API_KEY}"
+  "policies": [
+    // Drop the AgentRouter catalog provider and all of its models.
+    { "action": "provider.use", "resource": "agentrouter", "effect": "deny" }
+  ],
+  "providers": {
+    "river": {
+      "name": "River",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.river.ai/v1",
+        "apiKey": "{env:RIVER_API_KEY}"
       },
       "models": {
-        "glm-5.3-flash:free": {
-          "name": "GLM 5.3 Flash 1",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
-        }
-      }
-    },
-    "tiarina-deepseek": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Tiarina DeepSeek 1",
-      "options": {
-        "baseURL": "https://ai.tiarina.cloud/v1",
-        "apiKey": "{env:TIARINA_API_KEY}"
-      },
-      "models": {
-        "deepseek-v4-flash:free": {
-          "name": "DeepSeek V4 Flash 1",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
+        "zai-org/GLM-5.3-Flash": {
+          "name": "GLM 5.3 Flash (River)"
         },
-        "deepseek-v4.1-flash:free": {
-          "name": "DeepSeek V4.1 Flash 1",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
+        "deepseek-ai/DeepSeek-V4.1-Flash-1017": {
+          "name": "DeepSeek V4.1 Flash 1017 (River)",
+          "capabilities": { "tools": true }
         }
       }
     },
-    "tiarina-glm-2": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Tiarina GLM 2",
-      "options": {
-        "baseURL": "https://ai.tiarina.cloud/v1",
-        "apiKey": "{env:TIARINA_API_KEY_FALLBACK}"
+    "explabs": {
+      "name": "Experiential Labs",
+      "package": "@opencode/ai/providers/openai-compatible",
+      "settings": {
+        "baseURL": "https://api.experientiallabs.ai/v1",
+        "apiKey": "{file:~/.secrets/explabs-api-key}"
       },
       "models": {
-        "glm-5.3-flash:free": {
-          "name": "GLM 5.3 Flash 2",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
-        }
-      }
-    },
-    "tiarina-deepseek-2": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "Tiarina DeepSeek 2",
-      "options": {
-        "baseURL": "https://ai.tiarina.cloud/v1",
-        "apiKey": "{env:TIARINA_API_KEY_FALLBACK}"
-      },
-      "models": {
-        "deepseek-v4-flash:free": {
-          "name": "DeepSeek V4 Flash 2",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
-        },
-        "deepseek-v4.1-flash:free": {
-          "name": "DeepSeek V4.1 Flash 2",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning_content"
-        }
-      }
-    },
-    "apinex": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "ApiNex",
-      "options": {
-        "baseURL": "https://api.apinex.bond/v1",
-        "apiKey": "{env:APINEX_API_KEY}"
-      },
-      "models": {
-        "free/gpt-6-luna": {
-          "name": "GPT 6 Luna (Free)",
-          "tool_call": true
-        }
-      }
-    },
-    "tokenharbor": {
-      "npm": "@ai-sdk/openai-compatible",
-      "name": "TokenHarbor",
-      "options": {
-        "baseURL": "https://tokenharbor.ai/v1",
-        "apiKey": "{env:TOKENHARBOR_API_KEY}"
-      },
-      "models": {
-        "claude-haiku-5.5:free": {
-          "name": "Claude Haiku 5.5 (Free)"
+        "glm-5.3-uncensored": {
+          "name": "GLM 5.3 Uncensored",
+          "limit": {
+            "context": 1048576,
+            "output": 131072
+          },
+          "capabilities": {
+            "tools": true,
+            "temperature": true,
+            "reasoning": { "supported": false }
+          },
+          "cost": {
+            "input": 1.4,
+            "output": 4.4,
+            "cache": { "read": 0.26 }
+          }
         }
       }
     }
