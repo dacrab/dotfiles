@@ -1,25 +1,8 @@
 #!/usr/bin/env bash
-# update-spicetify — topgrade custom step for Spicetify (replaces the built-in
-# `spicetify` step).
-#
-# Spicetify's own update check and installer both go to GitHub:
-#   error  Cannot fetch latest release info
-#   error  GitHub response: API rate limit exceeded for <ip>. ...
-# The built-in step reports OK regardless, which hides that nothing happened.
-#
-# This step:
-#  * compares versions via the anonymous github.com/<repo>/releases/latest
-#    redirect (no REST API, so no shared 60/hour quota);
-#  * downloads the same release tarball install.sh uses through the
-#    authenticated `gh` client (token from the keyring, scopes repo+workflow);
-#  * applies against the installed Spotify client using a run-only config copy
-#    with check_spicetify_update switched off, so the API is never queried and
-#    ~/.config/spicetify stays exactly the user's file.
-#
-# Note: a backup taken against an older Spotify build makes every apply print
-# "Preprocessed Spotify data is outdated". It is safe (the theme still applies);
-# renewing it writes into the Spotify Flatpak, so it is a one-off:
-#   sudo spicetify restore backup apply
+# update-spicetify — topgrade step replacing the built-in, whose
+# `spicetify upgrade` hits api.github.com anonymously and silently does nothing
+# once the shared 60/hour quota is spent. Here the version check uses the
+# public releases/latest redirect and the download goes through `gh`.
 set -euo pipefail
 
 repo=spicetify/cli
@@ -57,9 +40,10 @@ else
   echo "installed spicetify $latest to $dest/spicetify"
 fi
 
-# Apply against the installed Spotify client, from a config copy. Only
-# spicetify's own update check is disabled: a stale backup (see above) fails
-# `apply -q` too, so keep the message when that is what happened.
+# Apply from a config copy with the update check off, so the API is never
+# queried and ~/.config/spicetify stays untouched. A stale backup is not a
+# failure: the theme still applies. Renew it with `sudo spicetify restore
+# backup apply` when that message annoys you.
 mkdir -p "$work/config"
 cp -a "$HOME/.config/spicetify/." "$work/config/"
 sed -i 's/^check_spicetify_update[[:space:]]*=.*/check_spicetify_update = 0/' \

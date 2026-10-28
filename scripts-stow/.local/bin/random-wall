@@ -95,8 +95,6 @@ set_hyprland() {
     sleep 0.1
   done
   [[ -n "${sock:-}" ]] || return 1
-  # `monitors` alone lists only enabled outputs; filtering `all` makes the
-  # disabled-panel check explicit. A missing jq or hyprctl yields no names.
   mapfile -t names < <(hyprctl -j monitors all 2>/dev/null | jq -r '.[] | select(.disabled == false) | .name' 2>/dev/null)
   ((${#names[@]} > 0)) || return 1
   for name in "${names[@]}"; do
@@ -105,7 +103,7 @@ set_hyprland() {
   return "$status"
 }
 
-# Also covers Budgie (uses org.gnome.desktop).
+# Also covers Budgie and Cinnamon, which share org.gnome.desktop.
 set_gsettings() {
   local schema=$1 img=$2
   gsettings set "$schema" picture-uri "file://$img" || return 1
@@ -130,6 +128,7 @@ set_xfce() {
   return "$status"
 }
 
+# sway, i3 and anything else that leaves the wallpaper to swaybg.
 set_swaybg() {
   command -v swaybg >/dev/null 2>&1 || return 1
   pkill -x swaybg &>/dev/null || true
@@ -137,24 +136,19 @@ set_swaybg() {
   nohup swaybg -m fill -i "$1" &>/dev/null &
 }
 
+# Pick the backend from the desktop's identity; only recent to the process
+# table for what is still ambiguous (bare wlroots sessions export little).
 detect_desktop() {
   case "${XDG_CURRENT_DESKTOP:-}" in
   *Hyprland*) echo hyprland ;;
-  *GNOME*) echo gnome ;;
-  *Cinnamon*) echo cinnamon ;;
-  *MATE*) echo mate ;;
+  *GNOME* | *Cinnamon* | *Budgie*) echo gnome ;;
   *XFCE*) echo xfce ;;
-  *sway* | *wlroots*) echo sway ;;
+  *sway* | *i3* | *wlroots*) echo sway ;;
   *)
-    if pgrep -x Hyprland &>/dev/null; then
-      echo hyprland
-    elif pgrep -x gnome-shell &>/dev/null; then
-      echo gnome
-    elif pgrep -x sway &>/dev/null; then
-      echo sway
-    elif pgrep -x xfce4-session &>/dev/null; then
-      echo xfce
-    fi
+    pgrep -x Hyprland &>/dev/null && echo hyprland
+    pgrep -x gnome-shell &>/dev/null && echo gnome
+    pgrep -x xfce4-session &>/dev/null && echo xfce
+    pgrep -x sway &>/dev/null && echo sway
     ;;
   esac
 }
@@ -185,7 +179,7 @@ mate) gsettings set org.mate.background picture-filename "$PICK" || exit 1 ;;
 xfce) set_xfce "$PICK" || exit 1 ;;
 sway) set_swaybg "$PICK" || exit 1 ;;
 *)
-  echo "unsupported desktop" >&2
+  echo "unsupported desktop: ${XDG_CURRENT_DESKTOP:-none}" >&2
   exit 1
   ;;
 esac

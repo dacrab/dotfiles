@@ -1,19 +1,31 @@
 #!/usr/bin/env bash
+# Log-in setup for Hyprland: keyring, polkit, portals.
 set -uo pipefail
 
-gnome-keyring-daemon --start --components=secrets,ssh >/dev/null 2>&1
-export GNOME_KEYRING_CONTROL="/run/user/$UID/keyring" \
-  SSH_AUTH_SOCK="/run/user/$UID/keyring/ssh"
-# Hyprland-launched apps don't inherit this shell's env, so push SSH_AUTH_SOCK into Hyprland's env too.
-hyprctl keyword env "SSH_AUTH_SOCK,${SSH_AUTH_SOCK}"
+has() { command -v "$1" >/dev/null 2>&1; }
 
-if ! pgrep -x xfce-polkit >/dev/null; then
-  /usr/libexec/xfce-polkit >/dev/null 2>&1 &
+has gnome-keyring-daemon && {
+  gnome-keyring-daemon --start --components=secrets,ssh >/dev/null 2>&1
+  export GNOME_KEYRING_CONTROL="${XDG_RUNTIME_DIR:-/run/user/$UID}/keyring" \
+    SSH_AUTH_SOCK="${XDG_RUNTIME_DIR:-/run/user/$UID}/keyring/ssh"
+  # Hyprland-launched apps don't inherit this shell's env, so push it with
+  # eval (`keyword env` is rejected by the Lua config parser).
+  has hyprctl && hyprctl eval "hl.env(\"SSH_AUTH_SOCK\", \"${SSH_AUTH_SOCK}\")" >/dev/null 2>&1
+}
+
+# polkit agent: whichever one is installed (path differs per distro).
+if ! pgrep -x xfce-polkit >/dev/null && has xfce-polkit; then
+  xfce-polkit >/dev/null 2>&1 &
+elif has polkit-gnome-authentication-agent-1; then
+  polkit-gnome-authentication-agent-1 >/dev/null 2>&1 &
 fi
 
-dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
-systemctl --user start xdg-desktop-portal-hyprland
-# The generic portal's systemd start can fail (needs graphical-session.target); launch it directly then.
-systemctl --user start xdg-desktop-portal 2>/dev/null || {
-  /usr/libexec/xdg-desktop-portal >/dev/null 2>&1 &
-}
+has dbus-update-activation-environment &&
+  dbus-update-activation-environment --systemd DISPLAY WAYLAND_DISPLAY XDG_CURRENT_DESKTOP
+
+if has systemctl; then
+  systemctl --user start xdg-desktop-portal-hyprland 2>/dev/null
+  # The generic portal's systemd start can fail (needs graphical-session.target).
+  systemctl --user start xdg-desktop-portal 2>/dev/null ||
+    { has xdg-desktop-portal && xdg-desktop-portal >/dev/null 2>&1 & }
+fi

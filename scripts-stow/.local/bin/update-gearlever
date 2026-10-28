@@ -1,25 +1,12 @@
 #!/usr/bin/env bash
-# update-gearlever — topgrade custom step for the Zsync AppImages managed by
-# Gear Lever (replaces the built-in `gearlever` step).
+# update-gearlever — topgrade step replacing the built-in, whose Gear Lever
+# updater ignores GITHUB_TOKEN (it sends no headers) and dies on the shared
+# 60/hour GitHub quota.
 #
-# Gear Lever's own GitHub updater calls api.github.com anonymously for every
-# app (helium.appimage, pineconemc.appimage) and cannot be authenticated: its
-# `requests.get()` sends no headers, so it ignores GITHUB_TOKEN, and once the
-# shared 60 requests/hour quota is gone every run printed
-#   403 Client Error: rate limit exceeded for url: .../releases/latest
-# and updated nothing.
-#
-# The apps embed an AppImage `gh-releases-zsync|<owner>|<repo>|latest|
-# <file>.zsync` update source, so the current asset comes from the public
-# release page (see update-gearlever-release). Downloading is deliberately not
-# a binary delta: libzsync cannot read GitHub's `.zsync` response (a 302 to a
-# signed URL, so it fails with "could not read control file"), and a full
-# download is simpler than driving ranged requests by hand. The result is
-# checked against the SHA-1 published in the .zsync before it replaces the
-# installed AppImage, whose name and mode are kept so Gear Lever keeps
-# recognising it.
-# The other AppImages in ~/AppImages have no update source (Gear Lever reports
-# UpdatesNotAvailable for them).
+# Kept deliberately dumb: resolve the asset from the public release page, full
+# download (libzsync cannot read GitHub's 302'd .zsync), verify the SHA-1 the
+# .zsync publishes, then swap it in under the old name and mode so Gear Lever
+# still recognises it. The other AppImages here have no update source.
 set -euo pipefail
 
 apps_dir=$HOME/AppImages

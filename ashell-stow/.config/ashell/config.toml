@@ -1,13 +1,8 @@
 # ashell — desktop bar & notification daemon (Hyprland)
 #
-# One flat monochrome strip in GeistMono. Not centred, not symmetric:
-#   left   the workspace numbers, and nothing else
-#   middle nothing at all — the eye is not dragged to the centre of the screen
-#   right  the time, then the date, then the system glyphs
-# Everything that can be silent is silent: no window title, no CPU/RAM
-# readouts, no update badge, no app icons on workspaces, one weight of glyph,
-# one grey for text, one darker grey for surfaces. A state shows as a change
-# in brightness; nothing on the bar has a hue.
+# One flat monochrome strip in GeistMono: workspaces left, clock centred,
+# system glyphs right. No colour anywhere — state reads as brightness.
+# No window title, no CPU/RAM, no update badge, no workspace icons.
 
 # ── General ───────────────────────────────────────────────────────────────────
 
@@ -23,16 +18,13 @@ enabled = true
 timeout = 1500
 
 [animations]
-# ashell's own content motion (bar module widths, menu clip-reveal, toast
-# slides) is fixed in the binary at 100ms EaseOutCubic, 200ms for settings
-# buttons — all inside the panel's ~13ms frame budget, nothing to tune here.
-# Hyprland fades the *surface* (layers 2ds, fadeLayers 1ds); keep that split:
-# if Hyprland starts scaling layer surfaces, both animations fight.
+# ashell animates its own content; leave Hyprland fading only the surface,
+# or the two animations fight.
 enabled = true
 
 # ── Modules ────────────────────────────────────────────────────────────────────
-# left: workspaces only. center: the clock, on its own. right: one group —
-# media, then the system glyphs — with notifications at the edge.
+# left: workspaces. center: the clock. right: media + system glyphs, then
+# notifications at the edge.
 
 [modules]
 left = ["Workspaces"]
