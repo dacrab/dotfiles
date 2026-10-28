@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# update-gearlever-release <owner/repo> [<asset name or glob>]
+#
+# Prints "<tag>\t<absolute URL of the release asset>" for the newest release
+# asset matching <asset>, using only public web pages (no REST API, so no
+# shared 60/hour quota):
+#   - latest tag: the anonymous github.com/<repo>/releases/latest redirect;
+#   - assets: github.com/<repo>/releases/expanded_assets/<tag>, the fragment a
+#     browser loads for a release.
+# Exit status is non-zero when either step fails.
+set -euo pipefail
+
+repo=${1:?usage: update-gearlever-release <owner/repo> [<asset name or glob>]}
+asset=${2:-*}
+url=https://github.com
+
+tag=$(curl -fsSL --retry 2 --max-time 30 -o /dev/null -w '%{url_effective}' \
+    "$url/$repo/releases/latest" |
+  sed -n 's#.*/releases/tag/##p')
+[ -n "$tag" ] || exit 1
+
+asset_url=$(curl -fsSL --retry 2 --max-time 30 \
+    "$url/$repo/releases/expanded_assets/$tag" |
+  grep -oE "href=\"[^\"]*/releases/download/$tag/[^\"]+\"" |
+  sed -e 's/^href="//' -e 's/"$//' |
+  while read -r candidate; do
+    # shellcheck disable=SC2254 # glob is intentional
+    case "${candidate##*/}" in $asset) echo "$url$candidate" ;; esac
+  done | tail -1)
+[ -n "$asset_url" ] || exit 1
+
+printf '%s\t%s\n' "$tag" "$asset_url"

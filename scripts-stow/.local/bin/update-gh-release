@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# update-gh-release — topgrade custom step, zoxide only.
+# zoxide is the last manually-downloaded binary: rust build, no bun/cargo/npm
+# channel, and Fedora's repo package (0.9.8) lags behind releases. No sudo.
+#
+# The latest tag comes from the anonymous HTML redirect on
+# github.com/<repo>/releases/latest instead of api.github.com: the REST API is
+# capped at 60 requests/hour per public IP, shared with every other updater and
+# browser on the machine, so it was regularly exhausted (403) mid-update.
+set -euo pipefail
+
+repo=ajeetdsouza/zoxide
+dest=$HOME/.local/bin
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/update-zoxide.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+latest=$(curl -fsSL --retry 2 --max-time 30 -o /dev/null -w '%{url_effective}' \
+    "https://github.com/$repo/releases/latest" |
+  sed -n 's#.*/releases/tag/v\{0,1\}##p')
+current=$(zoxide -V | awk '{print $2}')
+
+if [ -z "$latest" ]; then
+  echo "error: could not determine the latest $repo release" >&2
+  exit 1
+fi
+
+if [ "$current" = "$latest" ]; then
+  echo "zoxide $current: up-to-date"
+  exit 0
+fi
+
+echo "zoxide: $current -> $latest"
+curl -fsSL --retry 2 --max-time 120 \
+  "https://github.com/$repo/releases/download/v$latest/zoxide-$latest-x86_64-unknown-linux-musl.tar.gz" \
+  -o "$tmp/zoxide.tar.gz"
+tar -xf "$tmp/zoxide.tar.gz" -C "$tmp"
+install -m 0755 "$(find "$tmp" -name zoxide -type f -perm -u+x | head -1)" "$dest/"
+echo "installed zoxide $latest to $dest"
