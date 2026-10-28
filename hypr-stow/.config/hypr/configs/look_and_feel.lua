@@ -33,11 +33,14 @@ hl.config({
       noise = 0,
     },
 
+    -- Softer and cheaper than 12/3: the wider the range and the higher the
+    -- render power, the more of the frame budget the shadow eats while
+    -- windows are animating on the Vega 3.
     shadow = {
       enabled = true,
-      range = 12,
-      render_power = 3,
-      color = "rgba(00000055)",
+      range = 8,
+      render_power = 2,
+      color = "rgba(00000040)",
     },
   },
 
@@ -47,31 +50,46 @@ hl.config({
 })
 
 -- Curves
-hl.curve("snappy", { type = "bezier", points = { { 0.05, 0.9 }, { 0.1, 1.0 } } })
-hl.curve("smooth", { type = "bezier", points = { { 0.25, 1.0 }, { 0.5, 1.0 } } })
-hl.curve("softOut", { type = "bezier", points = { { 0.36, 0.0 }, { 0.66, -0.56 } } })
-hl.curve("popIn", { type = "bezier", points = { { 0.0, 0.8 }, { 0.2, 1.0 } } })
+--
+-- Two curves cover every motion; unset leaves fall back to Hyprland's
+-- `default` (0, 0.75, 0.15, 1), which is already a good decelerating curve.
+-- Times are deciseconds (1 = 100ms). This panel runs at 74.97Hz, so anything
+-- above ~3ds (30 frames) visibly steps instead of glides.
+hl.curve("smooth", { type = "bezier", points = { { 0.2, 0.0 }, { 0.0, 1.0 } } }) -- fast start, long settle
+hl.curve("soft", { type = "bezier", points = { { 0.4, 0.0 }, { 0.2, 1.0 } } })   -- gentler, for fades
 
 -- Windows
-hl.animation({ leaf = "windowsIn", enabled = true, speed = 4, bezier = "popIn", style = "popin 80%" })
-hl.animation({ leaf = "windowsOut", enabled = true, speed = 4, bezier = "softOut", style = "popin 80%" })
+-- `popin 92%` keeps the open/close motion almost imperceptible; no overshoot
+-- curve on close, so windows shrink away instead of dipping past their size.
+hl.animation({ leaf = "windowsIn", enabled = true, speed = 3, bezier = "smooth", style = "popin 92%" })
+hl.animation({ leaf = "windowsOut", enabled = true, speed = 2.5, bezier = "smooth", style = "popin 92%" })
 hl.animation({ leaf = "windowsMove", enabled = true, speed = 3, bezier = "smooth" })
 
--- Fades
-hl.animation({ leaf = "fadeIn", enabled = true, speed = 3, bezier = "smooth" })
-hl.animation({ leaf = "fadeOut", enabled = true, speed = 3, bezier = "smooth" })
-hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 3, bezier = "smooth" })
-hl.animation({ leaf = "fadeDim", enabled = true, speed = 4, bezier = "smooth" })
+-- Fades: all in lockstep at 250ms so open/close/switch read as one motion.
+hl.animation({ leaf = "fadeIn", enabled = true, speed = 2.5, bezier = "soft" })
+hl.animation({ leaf = "fadeOut", enabled = true, speed = 2.5, bezier = "soft" })
+hl.animation({ leaf = "fadeSwitch", enabled = true, speed = 2.5, bezier = "soft" })
+hl.animation({ leaf = "fadeDim", enabled = true, speed = 3, bezier = "soft" })
 
--- Workspaces
-hl.animation({ leaf = "workspaces", enabled = true, speed = 4, bezier = "snappy", style = "slidefade 20%" })
-hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 4, bezier = "snappy", style = "slidefadevert -20%" })
+-- Popups (GTK4 menus, tooltips, Zed/Vicinae dropdowns) are alpha-only in
+-- Hyprland, so a long fade just feels laggy. Left unset they inherit `global`
+-- (8ds = 800ms).
+hl.animation({ leaf = "fadePopups", enabled = true, speed = 2, bezier = "soft" })
 
--- Border
-hl.animation({ leaf = "border", enabled = true, speed = 5, bezier = "smooth" })
+-- Workspaces: shorter slide and less travel; 4ds/20% read as a glide here.
+hl.animation({ leaf = "workspaces", enabled = true, speed = 3, bezier = "smooth", style = "slidefade 12%" })
+hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 3, bezier = "smooth", style = "slidefadevert -12%" })
+
+-- Border: must not lag behind fadeSwitch, or focus looks half-updated.
+hl.animation({ leaf = "border", enabled = true, speed = 2, bezier = "soft" })
 
 -- Layer surfaces (ashell bar/menus/OSD/toasts, vicinae, notifications).
 -- ashell animates its own content with iced_anim, so scaling the surface
 -- itself (popin 80%) made the two animations fight. Hyprland only fades the
 -- surface in; the shell owns the motion inside it.
-hl.animation({ leaf = "layers", enabled = true, speed = 3, bezier = "smooth", style = "fade" })
+hl.animation({ leaf = "layers", enabled = true, speed = 2, bezier = "soft", style = "fade" })
+
+-- fadeLayers is separate from `layers` and unset by default: it inherits the
+-- `fade` branch (3ds), which stacked on top of the 2ds layer fade and made
+-- ashell surfaces settle twice. Keep it at a single frame.
+hl.animation({ leaf = "fadeLayers", enabled = true, speed = 1, bezier = "linear" })

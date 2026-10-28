@@ -5,6 +5,10 @@ window-theme = dark
 window-save-state = always
 maximize
 
+# Close immediately, no "Close Window?" prompt. This also governs the
+# close_surface/close_tab/close_window actions, so SUPER+C is unaffected.
+confirm-close-surface = false
+
 # Mouse settings
 mouse-hide-while-typing = true
 copy-on-select = true
