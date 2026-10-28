@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# update-spicetify — topgrade custom step for Spicetify (replaces the built-in
+# `spicetify` step).
+#
+# Spicetify's own update check and installer both go to GitHub:
+#   error  Cannot fetch latest release info
+#   error  GitHub response: API rate limit exceeded for <ip>. ...
+# The built-in step reports OK regardless, which hides that nothing happened.
+#
+# This step:
+#  * compares versions via the anonymous github.com/<repo>/releases/latest
+#    redirect (no REST API, so no shared 60/hour quota);
+#  * downloads the same release tarball install.sh uses through the
+#    authenticated `gh` client (token from the keyring, scopes repo+workflow);
+#  * applies against the installed Spotify client using a run-only config copy
+#    with check_spicetify_update switched off, so the API is never queried and
+#    ~/.config/spicetify stays exactly the user's file.
+#
+# Note: a backup taken against an older Spotify build makes every apply print
+# "Preprocessed Spotify data is outdated". It is safe (the theme still applies);
+# renewing it writes into the Spotify Flatpak, so it is a one-off:
+#   sudo spicetify restore backup apply
+set -euo pipefail
+
+repo=spicetify/cli
+dest=$HOME/.spicetify
+gh_bin=$(command -v gh || true)
+
+work=$(mktemp -d "${TMPDIR:-/tmp}/update-spicetify.XXXXXX")
+trap 'rm -rf "$work"' EXIT
+
+current=$(spicetify -q --version 2>/dev/null || true)
+current=${current%% *}
+
+tag=$(curl -fsSL --retry 2 --max-time 30 -o /dev/null -w '%{url_effective}' \
+    "https://github.com/$repo/releases/latest" |
+  sed -n 's#.*/releases/tag/v\{0,1\}##p')
+if [ -z "$tag" ]; then
+  echo "error: could not determine the latest $repo release" >&2
+  exit 1
+fi
+latest=${tag#v}
+
+if [ "$current" = "$latest" ]; then
+  echo "spicetify $latest: up-to-date"
+else
+  echo "spicetify: ${current:-unknown} -> $latest"
+  if [ -z "$gh_bin" ]; then
+    echo "error: gh is required to download the release without hitting the rate limit" >&2
+    exit 1
+  fi
+  "$gh_bin" release download "v$latest" --repo "$repo" \
+    --pattern 'spicetify-*-linux-amd64.tar.gz' --dir "$work"
+  # The archive holds the spicetify binary at its root.
+  tar -xzf "$work"/spicetify-*-linux-amd64.tar.gz -C "$work"
+  install -m 0755 "$work/spicetify" "$dest/spicetify"
+  echo "installed spicetify $latest to $dest/spicetify"
+fi
+
+# Apply against the installed Spotify client, from a config copy. Only
+# spicetify's own update check is disabled: a stale backup (see above) fails
+# `apply -q` too, so keep the message when that is what happened.
+mkdir -p "$work/config"
+cp -a "$HOME/.config/spicetify/." "$work/config/"
+sed -i 's/^check_spicetify_update[[:space:]]*=.*/check_spicetify_update = 0/' \
+  "$work/config/config-xpui.ini"
+if ! out=$(SPICETIFY_CONFIG="$work/config" spicetify apply 2>&1); then
+  printf '%s\n' "$out"
+  case "$out" in
+    *"Preprocessed Spotify data is outdated"*)
+      echo "note: the backup predates the installed Spotify build; run" >&2
+      echo "      sudo spicetify restore backup apply" >&2
+      ;;
+    *) exit 1 ;;
+  esac
+fi
+echo "spicetify: theme applied"

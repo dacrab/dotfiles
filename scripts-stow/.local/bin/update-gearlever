@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# update-gearlever — topgrade custom step for the Zsync AppImages managed by
+# Gear Lever (replaces the built-in `gearlever` step).
+#
+# Gear Lever's own GitHub updater calls api.github.com anonymously for every
+# app (helium.appimage, pineconemc.appimage) and cannot be authenticated: its
+# `requests.get()` sends no headers, so it ignores GITHUB_TOKEN, and once the
+# shared 60 requests/hour quota is gone every run printed
+#   403 Client Error: rate limit exceeded for url: .../releases/latest
+# and updated nothing.
+#
+# The apps embed an AppImage `gh-releases-zsync|<owner>|<repo>|latest|
+# <file>.zsync` update source, so the current asset comes from the public
+# release page (see update-gearlever-release). Downloading is deliberately not
+# a binary delta: libzsync cannot read GitHub's `.zsync` response (a 302 to a
+# signed URL, so it fails with "could not read control file"), and a full
+# download is simpler than driving ranged requests by hand. The result is
+# checked against the SHA-1 published in the .zsync before it replaces the
+# installed AppImage, whose name and mode are kept so Gear Lever keeps
+# recognising it.
+# The other AppImages in ~/AppImages have no update source (Gear Lever reports
+# UpdatesNotAvailable for them).
+set -euo pipefail
+
+apps_dir=$HOME/AppImages
+[[ $(uname -m) == x86_64 ]] || { echo "x86_64 only"; exit 0; }
+command -v curl >/dev/null || { echo "error: curl is required" >&2; exit 1; }
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/update-gearlever.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+# repo<TAB>local file<TAB>release asset glob
+sources=(
+  $'imputnet/helium-linux\thelium.appimage\thelium-*-x86_64.AppImage'
+  $'ElyPrismLauncher/Launcher\tpineconemc.appimage\tPineconeMC-*-x86_64.AppImage'
+)
+
+fail=0
+for source in "${sources[@]}"; do
+  IFS=$'\t' read -r repo name glob < <(printf '%s\n' "$source")
+  dest=$apps_dir/$name
+  if [ ! -f "$dest" ]; then
+    echo "$name: not installed, skipping"
+    continue
+  fi
+  if ! release=$(update-gearlever-release "$repo" "$glob"); then
+    echo "error: could not resolve the latest $repo release" >&2
+    fail=1
+    continue
+  fi
+  IFS=$'\t' read -r tag asset_url <<< "$release"
+  asset=${asset_url##*/}
+
+  echo "$name: checking $tag ($asset)"
+  if ! curl -fsSL --retry 2 --max-time 60 "$asset_url.zsync" -o "$tmp/$name.zsync"; then
+    echo "error: could not fetch $asset.zsync" >&2
+    fail=1
+    continue
+  fi
+  remote_sha1=$(sed -n 's/^SHA-1: *//p' "$tmp/$name.zsync" | head -1)
+  if [ "$(sha1sum "$dest" | cut -d' ' -f1)" = "$remote_sha1" ]; then
+    echo "$name: up-to-date"
+    continue
+  fi
+
+  echo "$name: downloading $tag"
+  if ! curl -fsSL --retry 2 --max-time 900 "$asset_url" -o "$tmp/$name.new"; then
+    echo "error: download of $asset failed" >&2
+    fail=1
+    continue
+  fi
+  if [ "$(sha1sum "$tmp/$name.new" | cut -d' ' -f1)" != "$remote_sha1" ]; then
+    echo "error: $asset does not match the SHA-1 in its .zsync" >&2
+    fail=1
+    continue
+  fi
+  chmod "$(stat -c %a "$dest")" "$tmp/$name.new"
+  mv "$tmp/$name.new" "$dest"
+  echo "$name: updated"
+done
+exit "$fail"
