@@ -42,8 +42,9 @@ fi
 
 # Apply from a config copy with the update check off, so the API is never
 # queried and ~/.config/spicetify stays untouched. A stale backup is not a
-# failure: the theme still applies. Renew it with `sudo spicetify restore
-# backup apply` when that message annoys you.
+# failure: the theme still applies. The hint below is not cosmetic — until the
+# backup is rebuilt, every run takes this branch and the theme is never really
+# refreshed. No sudo: the Flatpak Apps/ dir is user-writable.
 mkdir -p "$work/config"
 cp -a "$HOME/.config/spicetify/." "$work/config/"
 sed -i 's/^check_spicetify_update[[:space:]]*=.*/check_spicetify_update = 0/' \
@@ -53,7 +54,7 @@ if ! out=$(SPICETIFY_CONFIG="$work/config" spicetify apply 2>&1); then
   case "$out" in
     *"Preprocessed Spotify data is outdated"*)
       echo "note: the backup predates the installed Spotify build; run" >&2
-      echo "      sudo spicetify restore backup apply" >&2
+      echo "      $dest/spicetify restore backup apply" >&2
       ;;
     *) exit 1 ;;
   esac
