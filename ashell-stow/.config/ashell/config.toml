@@ -7,7 +7,7 @@
 # ── General ───────────────────────────────────────────────────────────────────
 
 outputs = { Targets = ["HDMI-A-1"] }  # bar on external monitor only, never on eDP-1
-layer = "Top"                  # above pleamar-wm's bar if that is ever started too
+layer = "Top"                
 position = "Top"
 region = "en-GB"             # metric units: Celsius, 24h dates
 
