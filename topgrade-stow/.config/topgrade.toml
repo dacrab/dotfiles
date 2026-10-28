@@ -1,5 +1,5 @@
 # topgrade.toml - update everything in one run, no prompts.
-# System packages, flatpak, firmware, runtimes, and tools are auto-detected.
+# System packages, flatpak, firmware, runtimes and tools are auto-detected.
 # Topgrade itself is RPM-managed (terra), so dnf updates it via the system step.
 
 [misc]
@@ -7,54 +7,37 @@ assume_yes = true
 ask_retry = false
 pre_sudo = true
 notify_end = "on_failure"
-# Clear topgrade's temp/cache dirs after each run.
 cleanup = true
-# hyprpm: source-builds need a pile of -devel packages we don't keep.
-# spicetify, bun, gearlever: replaced by the steps below (the built-ins query
-# api.github.com anonymously and die on the shared 60/hour rate limit, or —
-# gearlever — cannot be authenticated at all). bun is kept custom because its
-# token has to be exported by the process that runs `bun upgrade`, and topgrade
-# gives no way to inject a variable into a step.
-# zed is NOT disabled: its built-in step compares versions, then updates this
-# ~/.local/zed.app install itself. Verified end-to-end on this machine, and a
-# second run reports "Zed is up-to-date" instead of reinstalling.
+# hyprpm: source builds need -devel packages we don't keep.
+# spicetify, bun, gearlever: their own updaters query api.github.com
+# anonymously and fail on the shared 60/hour quota (gearlever cannot send a
+# token at all). The [commands] below replace them.
+# zed is NOT disabled: the built-in step updates ~/.local/zed.app itself.
 disable = ["hyprpm", "spicetify", "bun", "gearlever"]
 
 # Pull git repos matching ~/Documents/GitHub/*/ (topgrade skips non-repos).
 [git]
 repos = ["~/Documents/GitHub/*/"]
-# Work-in-progress feature branches have no upstream, so `git pull` would fail
-# and mark the whole Git Repositories step as FAILED. When a repo is not on its
-# default branch, fetch the remote's default branch instead.
+# Feature branches have no upstream, so `git pull` would fail the whole step;
+# fetch the remote's default branch instead.
 fallback_to_fetch_default = true
-# NB: no `arguments = "--rebase --autostash"` here. Topgrade also passes those
-# arguments to the fallback `git fetch`, which rejects --rebase. The same
-# behaviour comes from pull.rebase + rebase.autoStash in ~/.gitconfig instead.
+# No `arguments = "--rebase --autostash"`: topgrade also passes them to the
+# fallback fetch, which rejects --rebase. ~/.gitconfig sets both instead.
 
 [linux]
 dnf_arguments = "--refresh"
 
-# Use sudo for system-wide Flatpak updates.
 [flatpak]
 use_sudo = true
 
-# Don't prune unused system container images.
 [containers]
 system_prune = false
 
-# GitHub release steps. Anything on api.github.com without a token is
-# unreliable (60 requests/hour per public IP, shared with every other updater
-# and browser), so these avoid it:
-#   - update-gh-release: anonymous github.com/<repo>/releases/latest redirect.
-#   - update-bun: exports GITHUB_TOKEN for `bun upgrade` itself. It cannot be
-#     done from [pre_commands]: topgrade runs every command through `sh -c` as
-#     a child of its own (root-owned, RPM) binary, so an export there never
-#     reaches the steps — verified. See the comment on [misc] disable.
-#   - update-gearlever: release page HTML for the asset, then download +
-#     verify against the release's own .zsync checksum.
-# Zed is not here: its built-in step updates this install natively.
+# Everything here avoids the anonymous api.github.com quota: versions come from
+# the public releases/latest redirect, the Gear Lever asset from the release
+# page, and downloads go through `gh` where a token is needed.
 [commands]
-"GitHub release binaries" = "/home/dacrab/.local/bin/update-gh-release"
-"Spicetify" = "/home/dacrab/.local/bin/update-spicetify"
-"Bun" = "/home/dacrab/.local/bin/update-bun"
-"Gear Lever" = "/home/dacrab/.local/bin/update-gearlever"
+"GitHub release binaries" = "~/.local/bin/update-gh-release"
+"Spicetify" = "~/.local/bin/update-spicetify"
+"Bun" = "~/.local/bin/update-bun"
+"Gear Lever" = "~/.local/bin/update-gearlever"

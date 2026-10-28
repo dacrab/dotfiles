@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
-# update-gearlever-release <owner/repo> [<asset name or glob>]
-#
-# Prints "<tag>\t<absolute URL of the release asset>" for the newest release
-# asset matching <asset>, using only public web pages (no REST API, so no
-# shared 60/hour quota):
-#   - latest tag: the anonymous github.com/<repo>/releases/latest redirect;
-#   - assets: github.com/<repo>/releases/expanded_assets/<tag>, the fragment a
-#     browser loads for a release.
-# Exit status is non-zero when either step fails.
+# update-gearlever-release <owner/repo> [<asset glob>]
+# Prints "<tag>\t<asset URL>" for the newest matching release asset, using the
+# public release pages rather than the REST API (no shared quota).
 set -euo pipefail
 
 repo=${1:?usage: update-gearlever-release <owner/repo> [<asset name or glob>]}

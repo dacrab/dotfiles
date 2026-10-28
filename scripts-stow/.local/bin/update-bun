@@ -1,14 +1,8 @@
 #!/usr/bin/env bash
-# update-bun — topgrade custom step for the Bun runtime (replaces the built-in
-# `bun` step, which fails with "Bun upgrade failed with error: HTTPForbidden").
-#
-# `bun upgrade` asks api.github.com for the latest release. That anonymous quota
-# is 60 requests/hour per public IP, shared with every other updater and browser
-# on the machine, so it is usually spent. Point bun at the authenticated GitHub
-# token that `gh` already stores in the keyring for `dacrab` (gh has scopes
-# 'repo' and 'workflow', which read private repos, so it can read the public
-# bun releases): no shared limit, and ANSI-unsafe tokens (e.g. fine-grained
-# PATs) are rejected by bun anyway.
+# update-bun — topgrade step replacing the built-in, which runs `bun upgrade`
+# without a token and fails with HTTPForbidden once the shared 60/hour GitHub
+# quota is spent. The token has to be exported by this process: topgrade gives
+# no way to inject a variable into a step.
 set -euo pipefail
 
 if command -v gh >/dev/null && [ -z "${GITHUB_TOKEN:-}${GITHUB_ACCESS_TOKEN:-}" ]; then
@@ -17,8 +11,7 @@ if command -v gh >/dev/null && [ -z "${GITHUB_TOKEN:-}${GITHUB_ACCESS_TOKEN:-}" 
   fi
 fi
 
-# `bun upgrade` exits non-zero (but says so) when already on the latest
-# version, so compare versions itself to decide success.
+# `bun upgrade` exits non-zero when already current, so it is compared here.
 current=$(bun --version)
 bun upgrade
 latest=$(bun --version)

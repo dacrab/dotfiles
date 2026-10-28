@@ -126,13 +126,12 @@ clean_pkg_caches() {
 
 # Remove disabled snap revisions (columns: Name Version Rev Tracking ...).
 clean_stale_snaps() {
-  local snap_list name rev tracking
+  local name rev tracking
   has snap || return 0
-  snap_list=$(snap list --all 2>/dev/null) || { FAILED=1; return 1; }
   while read -r name _version rev tracking _rest; do
     [[ "$name" == "Name" || -z "$name" ]] && continue
     [[ "$tracking" == "disabled" ]] && as_root snap remove "$name" "--revision=$rev"
-  done <<<"$snap_list"
+  done < <(snap list --all 2>/dev/null) || { FAILED=1; return 1; }
 }
 
 clean_logs() {
@@ -171,17 +170,9 @@ clean_lang_caches() {
   has npm && run npm cache clean --force --silent
   has pnpm && run pnpm store prune
   has yarn && run yarn cache clean
-  if has pip; then
-    run pip cache purge
-  elif has pip3; then
-    run pip3 cache purge
-  fi
+  has pip && run pip cache purge
   has uv && run uv cache clean
-  if has go; then
-    run go clean -cache
-  else
-    clean "$CACHE/go-build"
-  fi
+  has go && run go clean -cache
   has poetry && run poetry cache clear . --all --no-interaction
   has cargo && has cargo-cache && run cargo cache --autoclean
   clean "$HOME/.npm/_npx"
@@ -206,10 +197,10 @@ clean_tool_caches() {
   local dir
   section "tool caches"
   for dir in node-gyp electron deno biome gopls typescript prisma opencode \
-    vicinae opengrep tealdeer mozilla libreoffice Unity unityhub unity3d \
+    vicinae opengrep tealdeer mozilla libreoffice unity unityhub unity3d \
     golangci-lint tracker3 libdnf5 gnome-software flatpak fontconfig \
     mesa_shader_cache radv_builtin_shaders gstreamer-1.0 \
-    gnome-desktop-thumbnailer go-build; do
+    gnome-desktop-thumbnailer; do
     clean "$CACHE/$dir"
   done
 }

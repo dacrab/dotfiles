@@ -1,83 +1,75 @@
 # dotfiles
 
-My Linux desktop setup, kept in one place and managed with [Stow](https://www.gnu.org/software/stow/). It covers the window manager I use (Hyprland), my terminal, shell, and a few helper scripts for everyday tasks.
-
-## What's here
+My Linux desktop, managed with [Stow](https://www.gnu.org/software/stow/).
 
 | Package | What it is |
 | ------- | ---------- |
-| `mybash` | Shell setup + prompt (separate repo, see below) |
 | `hypr-stow` | Hyprland window manager |
 | `ashell-stow` | Desktop bar + notifications |
 | `vicinae-stow` | App launcher |
 | `nwg-bar-stow` | Power menu (logout/reboot/shutdown) |
 | `ghostty-stow` | Terminal |
+| `gtk-stow` | GTK theme, cursor, fonts |
 | `git-stow` | Git settings |
 | `gh-stow` | GitHub CLI settings |
 | `fastfetch-stow` | System info shown when a terminal opens |
-| `scripts-stow` | Helper scripts (`sweep`, `random-wall`) |
-| `gtk-stow` | GTK theme, cursor, fonts |
 | `atuin-stow` | Shell history settings |
 | `zed-stow` | Zed editor |
 | `editor-stow` | VS Code settings (kept for backup) |
 | `yazi-stow` | Terminal file manager |
 | `opencode-stow` | opencode (AI coding agent) config |
 | `mimocode-stow` | mimocode (AI coding agent) config |
-| `pi-stow` | Pi (oh-my-pi) intentional configuration; credentials and runtime state stay outside dotfiles |
+| `pi-stow` | Pi (oh-my-pi) config; credentials and runtime state stay outside the repo |
 | `topgrade-stow` | One-command system updater |
+| `scripts-stow` | Helper scripts (see below) |
+| `mybash` | Shell setup + prompt (separate repo) |
 
 ## Install
 
 ```bash
 git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
-
-# Core shell + tools
-stow mybash git-stow gh-stow scripts-stow \
-     ghostty-stow fastfetch-stow atuin-stow \
-     gtk-stow zed-stow yazi-stow topgrade-stow \
-     editor-stow opencode-stow mimocode-stow pi-stow
-
-# Hyprland desktop
-stow hypr-stow ashell-stow vicinae-stow nwg-bar-stow
+stow mybash git-stow gh-stow scripts-stow ghostty-stow fastfetch-stow \
+     atuin-stow gtk-stow zed-stow yazi-stow topgrade-stow editor-stow \
+     opencode-stow mimocode-stow pi-stow
+stow hypr-stow ashell-stow vicinae-stow nwg-bar-stow   # desktop
 ```
 
-Each `*-stow` folder links its files into your home folder, so you keep one copy of every config and it stays under version control:
+Each `*-stow` folder links its files into `$HOME`, so there is one copy of
+every config and it stays under version control.
 
-- `stow <package>` — turn a package on
-- `stow -R <package>` — refresh links after you add/remove files
-- `stow -D <package>` — turn a package off
-- `stow --simulate <package>` — preview before doing anything
+- `stow <package>` turns a package on; `stow -D <package>` turns it off
+- `stow -R <package>` refreshes links after adding or removing files
+- `stow --simulate <package>` previews without changing anything
 
 ## Helper scripts
 
-| Alias | What it does |
-| ----- | ------------ |
-| `sweep` | Frees disk space by clearing caches, logs, and old trash. Use `sweep --dry-run` to preview first |
+| Script | What it does |
+| ------ | ------------ |
+| `sweep` | Frees disk space: caches, logs, old trash. `sweep --dry-run` previews |
+| `random-wall` | Sets a random wallpaper (Hyprland, GNOME, Cinnamon, XFCE, sway) |
+| `display` | Toggle/enable/disable a monitor, e.g. `display toggle` for the laptop panel |
 | `update` | Updates everything in one run (system packages, flatpaks, tools, git repos) |
-| `random-wall` | Sets a random wallpaper (Hyprland, GNOME, XFCE, MATE, Cinnamon, Sway); with no argument, picks from `$WALLPAPER_DIR/nord` |
+| `update-*` | Per-tool updaters called by `update`; each one works standalone |
 
-### Tweaking their behavior
+Every script detects what is installed and skips the rest, so they behave the
+same on another distro or desktop. Behaviour can be overridden by environment:
 
-The scripts read a few variables from the environment if you want to change how they behave. For example:
+| Variable | Used by | Controls | Default |
+| -------- | ------- | -------- | ------- |
+| `SWEEP_TRASH_DAYS` | sweep | Empty trash only after N days (0 = never) | `7` |
+| `SWEEP_JOURNAL_AGE` | sweep | Age before system logs are vacuumed | `3d` |
+| `SWEEP_COREDUMP_DAYS` | sweep | Age before crash dumps are deleted | `7` |
+| `SWEEP_CONTAINERS` | sweep | `1` = also prune stopped containers | off |
+| `SWEEP_FLATPAK_UNUSED` | sweep | `0` = keep unused runtimes | `1` |
+| `WALLPAPER_DIR` | random-wall | Where wallpapers live | `~/Pictures/wallpapers` |
+| `WALL_EXT` | random-wall | File types to pick from | `jpg jpeg png webp` |
+| `BUILTIN_PREFIX` | display | Name of the laptop panel | `eDP-` |
+| `DISPLAY_MODE` / `DISPLAY_SCALE` | display | Override mode/scale when re-enabling | panel max |
+| `HYPR_MONITOR_MAIN` / `HYPR_MONITOR_INTERNAL` | hyprland.lua | Output names | `HDMI-A-1` / `eDP-1` |
 
-```bash
-DISPLAY_RES=2560x1440@60 display enable
-```
-
-| Script | Variable | What it controls | Default |
-| ------ | -------- | ---------------- | ------- |
-| sweep | `SWEEP_TRASH_DAYS` | Empty the trash only after N days (0 = never) | `7` |
-| | `SWEEP_JOURNAL_AGE` | How old system logs can get before they're removed | `3d` |
-| | `SWEEP_COREDUMP_DAYS` | How old crash reports can get before they're removed | `7` |
-| | `SWEEP_CONTAINERS` | `1` = also run `docker/podman system prune` (stopped containers, unused networks, dangling images, and build cache may be removed; volumes and unused tagged images are retained; `SWEEP_DOCKER=1` also works) | off |
-| | `SWEEP_FLATPAK_UNUSED` | `1` = also run `flatpak uninstall --unused` (0 disables) | `1` |
-| random-wall | `WALLPAPER_DIR` | Folder to pick wallpapers from | `~/Pictures/wallpapers` |
-| | `WALL_EXT` | File types to pick from | `jpg jpeg png webp` |
-| display | `BUILTIN_PREFIX` | Name of the laptop's built-in screen | `eDP-` |
-| | `DISPLAY_RES` | Screen resolution when turning it back on | `1920x1080@60` |
-| mybash | `DOTFILES_DIR` | Where this repo lives (used by `dot` and `dev`) | `~/dotfiles` |
-| | `DEV_DIR` | Where your projects live (used by `dev`) | `~/Documents/GitHub` |
+`mybash` reads `DOTFILES_DIR` (default `~/dotfiles`) and `DEV_DIR` (default
+`~/Documents/GitHub`) for the `dot` and `dev` aliases.
 
 ## Notes
 
