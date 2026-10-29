@@ -1,15 +1,13 @@
-# ashell — desktop bar & notification daemon (Hyprland)
-#
-# One flat monochrome strip in GeistMono: workspaces left, clock centred,
-# system glyphs right. No colour anywhere — state reads as brightness.
-# No window title, no CPU/RAM, no update badge, no workspace icons.
+# ashell — bar + notification daemon (Hyprland), monochrome, GeistMono.
+# workspaces left · clock centred · media, input language, tray and system
+# glyphs right · notifications at the edge.
 
 # ── General ───────────────────────────────────────────────────────────────────
 
-outputs = { Targets = ["HDMI-A-1"] }  # bar on external monitor only, never on eDP-1
-layer = "Top"                
+outputs = { Targets = ["HDMI-A-1"] }  # external monitor only, never on eDP-1
+layer = "Top"
 position = "Top"
-region = "en-GB"             # metric units: Celsius, 24h dates
+region = "en-GB"                      # metric units, 24h dates
 
 # ── Behaviour ──────────────────────────────────────────────────────────────────
 
@@ -18,44 +16,35 @@ enabled = true
 timeout = 1500
 
 [animations]
-# ashell animates its own content; leave Hyprland fading only the surface,
-# or the two animations fight.
+# Hyprland fades the surface; ashell only animates its own content.
 enabled = true
 
 # ── Modules ────────────────────────────────────────────────────────────────────
-# left: workspaces. center: the clock. right: media + system glyphs, then
-# notifications at the edge.
+# No SystemInfo: CPU/RAM/temperature are deliberately not shown.
 
 [modules]
 left = ["Workspaces"]
 center = ["Tempo"]
-right = [["MediaPlayer", "SystemInfo", "Tray", "Settings"], "Notifications"]
+right = [["MediaPlayer", "KeyboardLayout", "Tray", "Settings"], "Notifications"]
 
 [workspaces]
 visibility_mode = "All"
 group_by_monitor = false
-indicator_format = "Name"        # the number only: no app icons anywhere
-
-# the window title is not drawn: the app name belongs in the window, not
-# in a bar competing with the clock
-[window_title]
-mode = "Title"
-truncate_title_after_length = 60
+indicator_format = "Name"        # numbers only, no app icons
 
 [tempo]
-clock_format = "%H:%M  %a %d %b"  # "20:41  Wed 28 Oct": the time leads
+clock_format = "%H:%M  %a %d %b"  # "20:41  Wed 28 Oct"
 
-[system_info]
-# nothing here: CPU/RAM/temperature are the opposite of minimal. Kept as an
-# explicit empty list so the module draws nothing if it is ever re-enabled.
-indicators = []
+[keyboard_layout]
+# Click the label to cycle the layout.
+labels = { "English (US)" = "EN", "Greek" = "GR" }
 
 [media_player]
-indicator_format = "Icon"        # a glyph, like GNOME's media indicator
-indicator_visualizer = "After"   # a small equaliser beside it while playing
+# Icon only: no visualiser beside it or in the menu.
+indicator_format = "Icon"
 
 [settings]
-battery_format = "Icon"          # GNOME shows the cell alone until it matters
+battery_format = "Icon"
 network_indicator_format = "Icon"
 bluetooth_indicator_format = "Icon"
 audio_indicator_format = "Icon"
@@ -63,7 +52,7 @@ microphone_indicator_format = "Icon"
 brightness_indicator_format = "Icon"
 volume_step = 5
 max_volume = 100
-# the "more" buttons point at GNOME's own panels, which are installed
+# "More" buttons open GNOME's own panels.
 audio_sinks_more_cmd = "gnome-control-center sound"
 audio_sources_more_cmd = "gnome-control-center sound"
 wifi_more_cmd = "gnome-control-center wifi"
@@ -84,41 +73,37 @@ toast_timeout = 5000
 toast_limit = 5
 
 # ── Appearance ────────────────────────────────────────────────────────────────
-# Monochrome: no accent colour at all. Surfaces are neutral greys, text is one
-# white and one grey, and every state reads from brightness rather than hue.
-# The font is GeistMono — the same face as the terminal, so the bar and the
-# shell below it belong to the same desktop.
+# One grey, no accent: state reads as brightness rather than hue.
 
 [appearance]
 font_name = "GeistMono Nerd Font"
-scale_factor = 0.9               # GNOME's bar is a slim strip; this matches it
-blur = "never"                   # blur + translucency breaks this Hyprland build
-                                 # (the bar renders garbage); a flat strip is stable
-text_color = "#c9c9c9"           # the one tone: nothing is pure #fff
-warning_color = "#c9c9c9"        # mono: warnings are simply brighter
-danger_color = "#ececec"         # the strongest light, for something wrong
+scale_factor = 0.9               # slim strip, like GNOME's bar
+blur = "never"                   # blur breaks this Hyprland build
+text_color = "#c9c9c9"           # nothing is pure white
+warning_color = "#c9c9c9"        # mono: warnings are just brighter
+danger_color = "#ececec"         # strongest light, for something wrong
 success_color = "#c9c9c9"
-workspace_colors = ["#c9c9c9"]   # no hue: the active workspace is just bright
+workspace_colors = ["#c9c9c9"]   # active workspace reads by brightness
 
 [appearance.primary_color]
-base = "#c9c9c9"                 # the accent is the same light grey
-text = "#1c1c1c"                 # and what sits on it is the bar's own dark
+base = "#c9c9c9"
+text = "#1c1c1c"
 
 [appearance.background_color]
-base = "#1c1c1c"                 # neutral graphite, no blue cast
-weak = "#262626"                 # raised surfaces: menus, cards
+base = "#1c1c1c"                 # neutral graphite
+weak = "#262626"                 # menus, cards
 strong = "#333333"               # borders, pressed states
 text = "#c9c9c9"
 
 [appearance.bar]
-surface = "solid"                # one strip, like the GNOME top bar
-padding = ["xxs", "sm"]          # a little air left and right
+surface = "solid"                # one flat strip
+padding = ["xxs", "sm"]
 
 [appearance.opacity]
 default = 1.0
 bar = 1.0                        # opaque: see the note on blur above
-menu = 0.97                      # menus stay readable over anything
+menu = 0.97
 notifications = 0.95
 
 [appearance.menu]
-backdrop = 0.0                   # GNOME does not dim the screen behind menus
+backdrop = 0.0                   # no dimming behind menus

@@ -56,11 +56,12 @@ if ((${#exts[@]} == 0)); then
   echo "WALL_EXT must contain at least one extension" >&2
   exit 1
 fi
-name_args=()
+find_args=()
 for ext in "${exts[@]}"; do
-  name_args+=(-o -iname "*.$ext")
+  ((${#find_args[@]})) && find_args+=(-o)
+  find_args+=(-iname "*.$ext")
 done
-mapfile -d '' ALL < <(find "$DIR" -type f \( "${name_args[@]:1}" \) -print0)
+mapfile -d '' ALL < <(find "$DIR" -type f \( "${find_args[@]}" \) -print0)
 if ((${#ALL[@]} == 0)); then
   echo "no images in $DIR" >&2
   exit 1
@@ -103,7 +104,7 @@ set_hyprland() {
   return "$status"
 }
 
-# Also covers Budgie and Cinnamon, which share org.gnome.desktop.
+# Also covers Budgie, which shares org.gnome.desktop.
 set_gsettings() {
   local schema=$1 img=$2
   gsettings set "$schema" picture-uri "file://$img" || return 1
@@ -174,8 +175,6 @@ write_state() {
 case "$(detect_desktop)" in
 hyprland) set_hyprland "$PICK" || exit 1 ;;
 gnome) set_gsettings org.gnome.desktop.background "$PICK" || exit 1 ;;
-cinnamon) set_gsettings org.cinnamon.desktop.background "$PICK" || exit 1 ;;
-mate) gsettings set org.mate.background picture-filename "$PICK" || exit 1 ;;
 xfce) set_xfce "$PICK" || exit 1 ;;
 sway) set_swaybg "$PICK" || exit 1 ;;
 *)

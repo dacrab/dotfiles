@@ -1,5 +1,4 @@
--- Hyprland main config — modular: ./configs/*.lua, with colors required by
--- look_and_feel.lua.
+-- Hyprland main config; the modules live in ./configs.
 
 require("configs/environment")
 require("configs/input")
