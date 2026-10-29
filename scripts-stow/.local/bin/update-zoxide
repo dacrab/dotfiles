@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# update-gh-release — topgrade custom step, zoxide only.
+# update-zoxide — topgrade step.
 # zoxide is the last manually-downloaded binary: rust build, no bun/cargo/npm
 # channel, and Fedora's repo package (0.9.8) lags behind releases. No sudo.
 #

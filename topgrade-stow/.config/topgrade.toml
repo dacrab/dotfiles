@@ -9,9 +9,8 @@ pre_sudo = true
 notify_end = "on_failure"
 cleanup = true
 # hyprpm: source builds need -devel packages we don't keep.
-# spicetify, bun, gearlever: their own updaters query api.github.com
-# anonymously and fail on the shared 60/hour quota (gearlever cannot send a
-# token at all). The [commands] below replace them.
+# spicetify, bun, gearlever: their own updaters query api.github.com anonymously
+# and fail on its 60/hour quota, so the [commands] below replace them.
 # zed is NOT disabled: the built-in step updates ~/.local/zed.app itself.
 disable = ["hyprpm", "spicetify", "bun", "gearlever"]
 
@@ -30,14 +29,11 @@ dnf_arguments = "--refresh"
 [flatpak]
 use_sudo = true
 
-[containers]
-system_prune = false
-
-# Everything here avoids the anonymous api.github.com quota: versions come from
-# the public releases/latest redirect, the Gear Lever asset from the release
-# page, and downloads go through `gh` where a token is needed.
+# Every step avoids the anonymous api.github.com quota: versions come from the
+# public releases/latest redirect, the Gear Lever asset from the release page,
+# and downloads go through `gh` where a token is needed.
 [commands]
-"GitHub release binaries" = "~/.local/bin/update-gh-release"
+"Zoxide" = "~/.local/bin/update-zoxide"
 "Spicetify" = "~/.local/bin/update-spicetify"
 "Bun" = "~/.local/bin/update-bun"
 "Gear Lever" = "~/.local/bin/update-gearlever"

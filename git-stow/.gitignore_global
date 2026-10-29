@@ -1,39 +1,19 @@
-# ===========================
-# Global .gitignore
-# ===========================
-
-# OS Files
+# OS / editor noise
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Editor / IDE
-.vscode/
-.idea/
+*~
 *.swp
 *.swo
-*~
-.cursorrules.bak
+.idea/
+.vscode/
 
-# Backup & temp files
+# Backups and logs
 *.bak
 *.bak.*
 *.backup
 *.tmp
-*.temp
-
-# Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
-# Environment / Secrets
+# Secrets
 .env
 .env.local
 .env.*.local
@@ -41,37 +21,23 @@ yarn-error.log*
 *.key
 *.p12
 *.pfx
-id_rsa
-id_rsa.pub
-id_ed25519
-id_ed25519.pub
+id_rsa*
+id_ed25519*
 
-# Dependencies
+# Dependencies and build output
 node_modules/
 vendor/
 venv/
-env/
 __pycache__/
 *.pyc
-
-# Build outputs
 dist/
 build/
 .next/
 .nuxt/
 .output/
 .svelte-kit/
-
-# Cache
-.cache/
-.sass-cache/
-*.sass-cache
-
-# Coverage
 coverage/
-.nyc_output/
 
-# Misc
+# Local databases
 *.sqlite
 *.db
-dump.sql

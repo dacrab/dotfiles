@@ -1,23 +1,7 @@
--- Nord palette (matches ghostty / starship / GTK).
+-- Nord accents used by the Hyprland rules; the full palette lives in the
+-- ghostty and starship configs.
 return {
-  foreground = "rgb(d8dee9)",
-  background = "rgb(2e3440)",
-  cursor = "rgb(d8dee9)",
-
-  color0 = "rgb(3b4252)",
-  color1 = "rgb(bf616a)",
-  color2 = "rgb(a3be8c)",
-  color3 = "rgb(ebcb8b)",
-  color4 = "rgb(81a1c1)",
-  color5 = "rgb(b48ead)",
-  color6 = "rgb(88c0d0)",
-  color7 = "rgb(e5e9f0)",
-  color8 = "rgb(4c566a)",
-  color9 = "rgb(bf616a)",
-  color10 = "rgb(a3be8c)",
-  color11 = "rgb(ebcb8b)",
-  color12 = "rgb(81a1c1)",
-  color13 = "rgb(b48ead)",
-  color14 = "rgb(8fbcbb)",
-  color15 = "rgb(eceff4)",
+  color0 = "rgb(3b4252)", -- inactive border
+  color4 = "rgb(81a1c1)", -- active border
+  color8 = "rgb(4c566a)", -- nogroup border
 }

@@ -15,7 +15,7 @@ Env overrides (see dotfiles/README.md "Helper scripts"):
   SWEEP_TRASH_DAYS      purge trash older than N days (default 7, 0 disables)
   SWEEP_JOURNAL_AGE     journalctl --vacuum-time value (default 3d)
   SWEEP_COREDUMP_DAYS   delete coredumps older than N days (default 7)
-  SWEEP_CONTAINERS      1 = prune docker/podman (default off; SWEEP_DOCKER=1 also works)
+  SWEEP_CONTAINERS      1 = prune docker/podman (default off)
   SWEEP_FLATPAK_UNUSED  1 = flatpak uninstall --unused (default 1, 0 disables)
 EOF
 }
@@ -37,7 +37,7 @@ esac
 TRASH_DAYS="${SWEEP_TRASH_DAYS:-7}"
 JOURNAL_AGE="${SWEEP_JOURNAL_AGE:-3d}"
 COREDUMP_DAYS="${SWEEP_COREDUMP_DAYS:-7}"
-CONTAINERS="${SWEEP_CONTAINERS:-${SWEEP_DOCKER:-0}}"
+CONTAINERS="${SWEEP_CONTAINERS:-0}"
 FLATPAK_UNUSED="${SWEEP_FLATPAK_UNUSED:-1}"
 
 [[ "$TRASH_DAYS" =~ ^[0-9]+$ ]] \
@@ -83,7 +83,7 @@ clean() {
 
 clean_targets() {
   local target
-  for target in ${CLEAN_TARGETS[@]+"${CLEAN_TARGETS[@]}"}; do
+  for target in "${CLEAN_TARGETS[@]}"; do
     [[ -e "$target" || -L "$target" ]] || continue
     if [[ -n "$DRY" ]]; then
       printf '  rm -rf -- %q\n' "$target"
@@ -131,7 +131,7 @@ clean_stale_snaps() {
   while read -r name _version rev tracking _rest; do
     [[ "$name" == "Name" || -z "$name" ]] && continue
     [[ "$tracking" == "disabled" ]] && as_root snap remove "$name" "--revision=$rev"
-  done < <(snap list --all 2>/dev/null) || { FAILED=1; return 1; }
+  done < <(snap list --all 2>/dev/null)
 }
 
 clean_logs() {
