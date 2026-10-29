@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# update-doppler — topgrade step.
+# Doppler CLI is installed as a signed release tarball into ~/.local/bin: the
+# official dnf repo hardcodes sslcacert=/etc/pki/tls/certs/ca-bundle.crt, which
+# Fedora 44 no longer ships, so dnf can't read its metadata. No sudo.
+#
+# The latest tag comes from the anonymous HTML redirect on
+# github.com/<repo>/releases/latest instead of api.github.com: the REST API is
+# capped at 60 requests/hour per public IP, shared with every other updater and
+# browser on the machine.
+set -euo pipefail
+
+repo=DopplerHQ/cli
+dest=$HOME/.local/bin
+arch=amd64
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/update-doppler.XXXXXX")
+trap 'rm -rf "$tmp"' EXIT
+
+latest=$(curl -fsSL --retry 2 --max-time 30 -o /dev/null -w '%{url_effective}' \
+    "https://github.com/$repo/releases/latest" |
+  sed -n 's#.*/releases/tag/v\{0,1\}##p')
+current=$(doppler --version 2>/dev/null | sed -n 's/^v\{0,1\}\([0-9.]*\).*/\1/p')
+
+if [ -z "$latest" ]; then
+  echo "error: could not determine the latest $repo release" >&2
+  exit 1
+fi
+
+if [ "$current" = "$latest" ]; then
+  echo "doppler $current: up-to-date"
+  exit 0
+fi
+
+echo "doppler: ${current:-unknown} -> $latest"
+asset=doppler_${latest}_linux_${arch}.tar.gz
+url="https://github.com/$repo/releases/download/$latest/$asset"
+curl -fsSL --retry 2 --max-time 120 "$url" -o "$tmp/$asset"
+curl -fsSL --retry 2 --max-time 30 "$url.sig" -o "$tmp/$asset.sig"
+
+# Every release asset is GPG-signed by DopplerHQ. Import the key on first run;
+# gpg is a no-op re-receive afterwards.
+if ! gpg --list-keys D3D593D50EE79DEC >/dev/null 2>&1; then
+  gpg --keyserver keyserver.ubuntu.com --recv-keys D3D593D50EE79DEC
+fi
+if ! gpg --verify "$tmp/$asset.sig" "$tmp/$asset" 2>/dev/null; then
+  echo "error: signature verification failed for $asset" >&2
+  exit 1
+fi
+
+tar -xzf "$tmp/$asset" -C "$tmp"
+install -m 0755 "$(find "$tmp" -name doppler -type f -perm -u+x | head -1)" "$dest/"
+echo "installed doppler $latest to $dest"

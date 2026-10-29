@@ -37,3 +37,4 @@ use_sudo = true
 "Spicetify" = "~/.local/bin/update-spicetify"
 "Bun" = "~/.local/bin/update-bun"
 "Gear Lever" = "~/.local/bin/update-gearlever"
+"Doppler" = "~/.local/bin/update-doppler"
