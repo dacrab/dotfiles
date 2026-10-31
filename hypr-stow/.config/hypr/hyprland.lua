@@ -40,6 +40,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd(os.getenv("HOME") .. "/.config/hypr/scripts/session-init")
   autostart("hyprpaper")
   autostart(os.getenv("HOME") .. "/.local/bin/random-wall")
-  autostart("vicinae", "server --replace")
+  -- vicinae is started by vicinae.service (systemd user unit), not here:
+  -- launching it twice registered a duplicate tray icon.
   autostart("ashell")
 end)
