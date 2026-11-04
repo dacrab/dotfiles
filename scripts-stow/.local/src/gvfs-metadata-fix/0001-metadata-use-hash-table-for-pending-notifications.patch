@@ -1,0 +1,110 @@
+--- a/metadata/meta-daemon.c
++++ b/metadata/meta-daemon.c
+@@ -52,6 +52,7 @@
+ } TreeInfo;
+ 
+ typedef struct {
++  gchar *key;
+   gchar *treefile;
+   gchar *path;
+   GVfsMetadata *object;
+@@ -63,7 +64,15 @@
+ #ifdef HAVE_GUDEV
+ static GUdevClient *gudev_client = NULL;
+ #endif
+-static GList *dbus_notification_list = NULL;
++/* Keyed by (treefile, path), so that scheduling and removing a pending
++ * notification is O(1) instead of a linear scan of all pending ones. */
++static GHashTable *dbus_notifications = NULL;
++static gchar *
++bus_notification_key (const gchar *treefile,
++                      const gchar *path)
++{
++  return g_strconcat (treefile, "\n", path, NULL);
++}
+ 
+ static void
+ tree_info_free (TreeInfo *info)
+@@ -116,10 +125,10 @@
+ static void
+ free_bus_notification_info (BusNotificationInfo *info)
+ {
+-  dbus_notification_list = g_list_remove (dbus_notification_list,
+-                                          info);
++  g_hash_table_remove (dbus_notifications, info->key);
+   g_object_unref (info->object);
+   g_source_remove (info->timeout_id);
++  g_free (info->key);
+   g_free (info->path);
+   g_free (info->treefile);
+   g_free (info);
+@@ -143,29 +152,23 @@
+                        const gchar  *treefile,
+                        const gchar  *path)
+ {
+-  GList *iter;
+   BusNotificationInfo *info;
++  gchar *key;
+ 
+-  for (iter = dbus_notification_list; iter != NULL; iter = iter->next)
+-    {
+-      info = iter->data;
+-      if (g_str_equal (info->treefile, treefile) &&
+-          g_str_equal (info->path, path))
+-        {
+-          break;
+-        }
+-    }
+-  if (iter == NULL)
++  key = bus_notification_key (treefile, path);
++  info = g_hash_table_lookup (dbus_notifications, key);
++  if (info == NULL)
+     {
+       info = g_new0 (BusNotificationInfo, 1);
++      info->key = key;
+       info->treefile = g_strdup (treefile);
+       info->path = g_strdup (path);
+       info->object = g_object_ref (object);
+-      dbus_notification_list = g_list_prepend (dbus_notification_list,
+-                                               info);
++      g_hash_table_insert (dbus_notifications, info->key, info);
+     }
+   else
+     {
++      g_free (key);
+       g_source_remove (info->timeout_id);
+     }
+   info->timeout_id = g_timeout_add_seconds (WRITEOUT_TIMEOUT_SECS_DBUS,
+@@ -176,16 +179,21 @@
+ static void
+ flush_all (gboolean send_pending_notifications)
+ {
+-  BusNotificationInfo *info;
++  GList *notifications;
++  GList *l;
+ 
+-  while (dbus_notification_list != NULL)
++  notifications = g_hash_table_get_values (dbus_notifications);
++  for (l = notifications; l != NULL; l = l->next)
+     {
+-      info = (BusNotificationInfo *) dbus_notification_list->data;
++      BusNotificationInfo *info = l->data;
++
+       if (send_pending_notifications)
+         notify_attribute_change (info);
+       else
+         free_bus_notification_info (info);
+     }
++  g_list_free (notifications);
++
+   g_hash_table_foreach (tree_infos, (GHFunc) flush_single, NULL);
+ }
+ 
+@@ -515,6 +523,7 @@
+ 				      g_str_equal,
+ 				      NULL,
+ 				      (GDestroyNotify)tree_info_free);
++  dbus_notifications = g_hash_table_new (g_str_hash, g_str_equal);
+ 
+   loop = g_main_loop_new (NULL, FALSE);
+   g_dbus_connection_set_exit_on_close (conn, FALSE);

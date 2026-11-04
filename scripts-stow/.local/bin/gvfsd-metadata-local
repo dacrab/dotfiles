@@ -1,0 +1,9 @@
+#!/bin/sh
+# Run the locally patched gvfsd-metadata (fix for GNOME/gvfs#885) if it has
+# been built, otherwise fall back to the distribution binary.
+# See ~/.local/src/gvfs-metadata-fix/README.md
+patched="$HOME/.local/opt/gvfs-metadata-patched/libexec/gvfsd-metadata"
+if [ -x "$patched" ]; then
+  exec "$patched" "$@"
+fi
+exec /usr/libexec/gvfsd-metadata "$@"
