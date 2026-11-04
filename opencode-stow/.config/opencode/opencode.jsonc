@@ -1,9 +1,5 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "mode": {
-    "plan": {},
-    "build": {}
-  },
   "policies": [
     // Drop the AgentRouter catalog provider and all of its models.
     { "action": "provider.use", "resource": "agentrouter", "effect": "deny" }
@@ -53,5 +49,5 @@
         }
       }
     }
-  }
+  },
 }
