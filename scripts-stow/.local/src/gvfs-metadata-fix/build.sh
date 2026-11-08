@@ -43,7 +43,7 @@ ninja -C _build install
 # the backends and the data files that `ninja install` also produces.
 find "$prefix/libexec" -mindepth 1 ! -name gvfsd-metadata -delete
 find "$prefix/lib64/gvfs" -mindepth 1 ! -name libgvfscommon.so -delete
-rm -rf "$prefix/share" "$prefix/lib64/gio" "$prefix/bin"
+rm -rf "${prefix:?}/share" "${prefix:?}/lib64/gio" "${prefix:?}/bin"
 
 echo
 echo "Installed to $prefix"
