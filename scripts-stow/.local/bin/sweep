@@ -17,6 +17,8 @@ Env overrides (see dotfiles/README.md "Helper scripts"):
   SWEEP_COREDUMP_DAYS   delete coredumps older than N days (default 7)
   SWEEP_CONTAINERS      1 = prune docker/podman (default off)
   SWEEP_FLATPAK_UNUSED  1 = flatpak uninstall --unused (default 1, 0 disables)
+  SWEEP_PROJECTS        colon-separated roots to scan for build artifacts
+                        (default empty, so no project scan)
 EOF
 }
 
@@ -39,6 +41,7 @@ JOURNAL_AGE="${SWEEP_JOURNAL_AGE:-3d}"
 COREDUMP_DAYS="${SWEEP_COREDUMP_DAYS:-7}"
 CONTAINERS="${SWEEP_CONTAINERS:-0}"
 FLATPAK_UNUSED="${SWEEP_FLATPAK_UNUSED:-1}"
+PROJECTS="${SWEEP_PROJECTS:-}"
 
 [[ "$TRASH_DAYS" =~ ^[0-9]+$ ]] \
   || { echo "sweep: SWEEP_TRASH_DAYS must be a non-negative integer" >&2; exit 2; }
@@ -48,8 +51,6 @@ FLATPAK_UNUSED="${SWEEP_FLATPAK_UNUSED:-1}"
 has() { command -v "$1" &>/dev/null; }
 
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}"
-CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}"
-STATE="${XDG_STATE_HOME:-$HOME/.local/state}"
 DATA="${XDG_DATA_HOME:-$HOME/.local/share}"
 
 FAILED=0
@@ -57,7 +58,7 @@ CLEAN_TARGETS=()
 declare -A SEEN=()
 
 # Roots that must never be removed, even if a variable expands wrongly.
-PROTECTED=("$HOME" "$CACHE" "$CONFIG" "$DATA" "$STATE" "/")
+PROTECTED=("$HOME" "$CACHE" "$DATA" "/")
 
 section() { printf '\n==> %s\n' "$*"; }
 
@@ -83,6 +84,7 @@ clean() {
 
 clean_targets() {
   local target
+  ((${#CLEAN_TARGETS[@]})) && [[ -n "$DRY" ]] && section "removal plan"
   for target in "${CLEAN_TARGETS[@]}"; do
     [[ -e "$target" || -L "$target" ]] || continue
     if [[ -n "$DRY" ]]; then
@@ -162,9 +164,19 @@ clean_trash() {
   else
     purge_trash_fallback
   fi
-  clean "$CACHE/thumbnails"
 }
 
+# Caches are regenerable by definition, so wipe the whole XDG cache directory
+# instead of keeping a list of application-specific subdirectories.
+clean_user_cache() {
+  local entry
+  section "user cache"
+  for entry in "$CACHE"/* "$CACHE"/.[!.]* "$CACHE"/..?*; do
+    clean "$entry"
+  done
+}
+
+# Tool commands also cover caches stored outside XDG_CACHE_HOME.
 clean_lang_caches() {
   section "language and runtime caches"
   has npm && run npm cache clean --force --silent
@@ -175,12 +187,11 @@ clean_lang_caches() {
   has go && run go clean -cache
   has poetry && run poetry cache clear . --all --no-interaction
   has cargo && has cargo-cache && run cargo cache --autoclean
-  clean "$HOME/.npm/_npx"
-  # `bun pm cache rm` fails outside a project dir, so clean its global caches directly.
-  if has bun; then
-    clean "${BUN_INSTALL:-$HOME/.bun}/install/cache"
-    clean "$CACHE/bun"
-  fi
+  has dotnet && run dotnet nuget locals all --clear
+  local gradle="${GRADLE_USER_HOME:-$HOME/.gradle}"
+  clean "$gradle/caches"
+  clean "$gradle/daemon"
+  clean "${BUN_INSTALL:-$HOME/.bun}/install/cache"
 }
 
 clean_flatpak() {
@@ -193,56 +204,44 @@ clean_flatpak() {
   [[ "$FLATPAK_UNUSED" == 1 ]] && run flatpak uninstall --unused -y
 }
 
-clean_tool_caches() {
-  local dir
-  section "tool caches"
-  for dir in node-gyp electron deno biome gopls typescript prisma opencode \
-    vicinae opengrep tealdeer mozilla libreoffice unity unityhub unity3d \
-    golangci-lint tracker3 libdnf5 gnome-software flatpak fontconfig \
-    mesa_shader_cache radv_builtin_shaders gstreamer-1.0 \
-    gnome-desktop-thumbnailer; do
-    clean "$CACHE/$dir"
-  done
-}
-
-clean_editors() {
-  local editor cache_dir
-  section "editor caches"
-  for editor in Code "Code - OSS" VSCodium Cursor Windsurf; do
-    [[ -d "$CONFIG/$editor" ]] || continue
-    for cache_dir in CachedData Cache CachedProfilesData CachedExtensionVSIXs \
-      GPUCache "Code Cache" DawnGraphiteCache DawnWebGPUCache logs; do
-      clean "$CONFIG/$editor/$cache_dir"
-    done
-  done
-  # Zed: logs only. languages/extensions are downloads, not caches.
-  [[ -d "$DATA/zed/logs" ]] && clean "$DATA/zed/logs"
-}
-
-# Only cache-named dirs are removed; profile data is never touched.
-CHROMIUM_CACHE_DIRS=(
-  Cache "Code Cache" "Media Cache" GPUCache CacheStorage
-  DawnGraphiteCache DawnWebGPUCache GraphiteDawnCache GPUPersistentCache
-  ShaderCache GrShaderCache component_crx_cache
-)
-
-clean_chromium_tree() {
-  local root=$1 cache_name found
-  for cache_name in "${CHROMIUM_CACHE_DIRS[@]}"; do
-    while IFS= read -r found; do
-      clean "$found"
-    done < <(find "$root" -maxdepth 4 -type d -name "$cache_name" -prune -print 2>/dev/null)
-  done
-  clean "$CACHE/${root##*/}"
-}
-
-clean_chromium() {
-  local marker base
-  section "chromium app caches"
-  for base in "$CONFIG" "$HOME/.var/app"; do
-    while IFS= read -r -d '' marker; do
-      clean_chromium_tree "$(dirname "$marker")"
-    done < <(find "$base" -maxdepth 6 -name "Local State" -type f -print0 2>/dev/null)
+# Optional project scan: only removes directories whose sibling manifest proves
+# they are generated, so a source tree named "build" or "target" is left alone.
+clean_projects() {
+  local root dir parent
+  [[ -n "$PROJECTS" ]] || return 0
+  section "project build artifacts"
+  local IFS=:
+  for root in $PROJECTS; do
+    root=${root/#\~/$HOME}
+    [[ -d "$root" ]] || continue
+    while IFS= read -r -d '' dir; do
+      parent=${dir%/*}
+      case ${dir##*/} in
+        target)
+          [[ -f "$parent/Cargo.toml" || -f "$parent/pom.xml" ]] || continue
+          ;;
+        node_modules | .next | .svelte-kit | .turbo | .parcel-cache | .vite)
+          [[ -f "$parent/package.json" ]] || continue
+          ;;
+        Library | Temp | Obj | Logs)
+          [[ -d "$parent/Assets" && -d "$parent/ProjectSettings" ]] || continue
+          ;;
+        build | .gradle | .kotlin)
+          [[ -e "$parent/build.gradle" || -e "$parent/build.gradle.kts" \
+            || -e "$parent/settings.gradle" || -e "$parent/settings.gradle.kts" \
+            || -e "$parent/pom.xml" || -e "$parent/gradlew" ]] || continue
+          ;;
+        __pycache__ | .pytest_cache | .mypy_cache | .ruff_cache) ;;
+        *) continue ;;
+      esac
+      clean "$dir"
+    done < <(find "$root" -mindepth 1 -maxdepth 6 \
+      \( -name .git -o -name target -o -name node_modules \
+      -o -name Library -o -name Temp -o -name Obj -o -name Logs \
+      -o -name build -o -name .gradle -o -name .kotlin -o -name .next \
+      -o -name .svelte-kit -o -name .turbo -o -name .parcel-cache \
+      -o -name .vite -o -name __pycache__ -o -name .pytest_cache \
+      -o -name .mypy_cache -o -name .ruff_cache \) -prune -print0 2>/dev/null)
   done
 }
 
@@ -258,11 +257,9 @@ main() {
   clean_logs
   clean_trash
   clean_lang_caches
+  clean_user_cache
   clean_flatpak
-  clean_tool_caches
-  clean_editors
-  clean_chromium
-  clean "$STATE/less"
+  clean_projects
   clean_containers
   clean_targets
   echo "sweep done${DRY:+ (dry run - nothing was removed)}"

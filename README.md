@@ -42,7 +42,7 @@ every config and it stays under version control.
 
 | Script | What it does |
 | ------ | ------------ |
-| `sweep` | Frees disk space: caches, logs, old trash. `sweep --dry-run` previews |
+| `sweep` | Frees disk space: caches, logs, old trash; optional project build output. `sweep --dry-run` previews |
 | `random-wall` | Sets a random wallpaper (Hyprland, GNOME, Cinnamon, XFCE, sway) |
 | `update-*` | Per-tool updaters called by topgrade; each one works standalone |
 
@@ -59,6 +59,7 @@ same on another distro or desktop. Behaviour can be overridden by environment:
 | `SWEEP_COREDUMP_DAYS` | sweep | Age before crash dumps are deleted | `7` |
 | `SWEEP_CONTAINERS` | sweep | `1` = also prune stopped containers | off |
 | `SWEEP_FLATPAK_UNUSED` | sweep | `0` = keep unused runtimes | `1` |
+| `SWEEP_PROJECTS` | sweep | Colon-separated roots scanned for build artifacts | off |
 | `WALLPAPER_DIR` | random-wall | Where wallpapers live | `~/Pictures/wallpapers` |
 | `WALL_EXT` | random-wall | File types to pick from | `jpg jpeg png webp` |
 | `BUILTIN_PREFIX` | display | Name of the laptop panel | `eDP-` |
