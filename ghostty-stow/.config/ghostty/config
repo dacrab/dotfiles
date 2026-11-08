@@ -18,7 +18,8 @@ background = #2e3440
 background-opacity = 0.9
 
 # Font and cursor settings
-font-family = GeistMono Nerd Font
+font-family = Nordwand Mono
+font-family = Symbols Nerd Font Mono
 font-size = 10
 cursor-style = block
 

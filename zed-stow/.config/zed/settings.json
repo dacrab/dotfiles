@@ -5,10 +5,14 @@
     "show": "always"
   },
   "icon_theme": "Material Icon Theme",
-  "ui_font_family": "GeistMono Nerd Font",
+  "ui_font_family": "Nordwand Mono",
+  "ui_font_fallbacks": ["Symbols Nerd Font Mono"],
+  "buffer_font_family": "Nordwand Mono",
+  "buffer_font_fallbacks": ["Symbols Nerd Font Mono"],
   "terminal": {
     "font_size": 12.0,
-    "font_family": "GeistMono Nerd Font"
+    "font_family": "Nordwand Mono",
+    "font_fallbacks": ["Symbols Nerd Font Mono"]
   },
   "ui_font_size": 14.0,
   "buffer_font_size": 12.0,

@@ -1,4 +1,4 @@
-# ashell — bar + notification daemon (Hyprland), monochrome, GeistMono.
+# ashell — bar + notification daemon (Hyprland), monochrome, Nordwand Mono.
 # workspaces left · clock centred · media, input language, tray and system
 # glyphs right · notifications at the edge.
 
@@ -76,7 +76,7 @@ toast_limit = 5
 # One grey, no accent: state reads as brightness rather than hue.
 
 [appearance]
-font_name = "GeistMono Nerd Font"
+font_name = "Nordwand Mono"
 scale_factor = 1.0               # never shrink: fractional scales pixelate the bar
 blur = "never"                   # blur breaks this Hyprland build
 text_color = "#c9c9c9"           # nothing is pure white
