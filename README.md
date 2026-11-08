@@ -9,6 +9,8 @@ My Linux desktop, managed with [Stow](https://www.gnu.org/software/stow/).
 | `vicinae-stow` | App launcher |
 | `ghostty-stow` | Terminal |
 | `gtk-stow` | GTK theme, cursor, fonts |
+| `fontconfig-stow` | Fontconfig overrides (font rendering, Windows font metric aliases) |
+| `mimeapps-stow` | Default applications |
 | `git-stow` | Git settings |
 | `gh-stow` | GitHub CLI settings |
 | `fastfetch-stow` | System info shown when a terminal opens |
@@ -19,7 +21,7 @@ My Linux desktop, managed with [Stow](https://www.gnu.org/software/stow/).
 | `pi-stow` | Pi (oh-my-pi) config; credentials and runtime state stay outside the repo |
 | `topgrade-stow` | One-command system updater |
 | `scripts-stow` | Helper scripts (see below) |
-| `mybash` | Shell setup + prompt (separate repo) |
+| `mybash` | Shell setup + prompt (git submodule) |
 
 ## Install
 
@@ -27,7 +29,8 @@ My Linux desktop, managed with [Stow](https://www.gnu.org/software/stow/).
 git clone --recursive https://github.com/dacrab/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 stow mybash git-stow gh-stow scripts-stow ghostty-stow fastfetch-stow \
-     atuin-stow gtk-stow zed-stow yazi-stow topgrade-stow opencode-stow pi-stow
+     atuin-stow gtk-stow fontconfig-stow mimeapps-stow zed-stow yazi-stow \
+     topgrade-stow opencode-stow pi-stow
 stow hypr-stow ashell-stow vicinae-stow
 ```
 
@@ -37,6 +40,15 @@ every config and it stays under version control.
 - `stow <package>` turns a package on; `stow -D <package>` turns it off
 - `stow -R <package>` refreshes links after adding or removing files
 - `stow --simulate <package>` previews without changing anything
+
+Wallpapers are not tracked: they are large binaries and live outside the
+repo, in `WALLPAPER_DIR` (default `~/Pictures/wallpapers`).
+
+Vicinae ships a user service. Enable it once instead of tracking a symlink:
+
+```bash
+systemctl --user enable --now vicinae.service
+```
 
 ## Helper scripts
 

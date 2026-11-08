@@ -11,6 +11,9 @@ TODO.md
 .env
 .env.*
 
+# Wallpapers are large binaries; keep them out of the repo
+**/backgrounds/
+
 # Tool-generated files next to stowed configs
 opencode-stow/.config/opencode/node_modules/
 opencode-stow/.config/opencode/bun.lock

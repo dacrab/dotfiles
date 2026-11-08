@@ -1,0 +1,41 @@
+name: check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install shellcheck and stow
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck stow
+
+      - name: Shellcheck
+        run: |
+          shellcheck \
+            scripts-stow/.local/bin/* \
+            scripts-stow/.local/src/gvfs-metadata-fix/build.sh \
+            hypr-stow/.config/hypr/scripts/* \
+            mybash/.bash_profile mybash/.bashrc mybash/.profile \
+            mybash/.config/bash/*.sh
+
+      - name: Stow simulation
+        run: |
+          failed=0
+          for pkg in *-stow mybash; do
+            target=$(mktemp -d)
+            echo "== $pkg"
+            if ! stow --simulate --target "$target" "$pkg"; then
+              failed=1
+            fi
+            rm -rf "$target"
+          done
+          exit $failed
